@@ -4,12 +4,17 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/verify"
 	"github.com/Suy56/ProofChain/wallet"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // App struct
 type App struct {
 	ctx context.Context
+	conn *blockchain.ClientConnection
+	instance *blockchain.ContractVerifyOperations
 }
 
 // NewApp creates a new App application struct
@@ -33,6 +38,10 @@ func (app *App)Login(username string, password string)(string,error){
 	if err!=nil{
 		return "",err
 	}
+	err=app.conn.New(privateKey)
+	if err!=nil{
+		return "",err
+	}
 	return privateKey,nil
 }
 
@@ -52,10 +61,34 @@ func (app *App)Register(privateKeyString, username,password string)error{
 	return nil
 }
 
-func(app *App)getVerifiedDocuments(){
-	
+
+func(app *App)getAcceptedDocs()([]verify.VerificationDocument,error){
+	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
+	if err!=nil{
+		return nil,err
+	}
+	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==0},app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ",verifiedDocs)
+	return verifiedDocs,nil
 }
 
-func(app *App)getRejectedDocuments(){
-	
+func(app *App)getRejectedDocuments()([]verify.VerificationDocument,error){
+	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
+	if err!=nil{
+		return nil,err
+	}
+	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==1},app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ",verifiedDocs)
+	return verifiedDocs,nil
+
+}
+
+func(app *App)getPendingDocuments()([]verify.VerificationDocument,error){
+	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
+	if err!=nil{
+		return nil,err
+	}
+	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==3},app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ",verifiedDocs)
+	return verifiedDocs,nil
 }

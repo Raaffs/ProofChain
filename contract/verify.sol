@@ -31,18 +31,23 @@ contract Verification{
         DocStatus   status;     
     }
 
+ 
 
     mapping(address=>Verifier) public verifiers;
     mapping(address=>User) private users;
     mapping(string=>Document) private documentList;
     mapping(address=>bool) userList;
-    mapping(address=>Document[]) userUploadedDocuments;
+    mapping(address=>uint[]) userDocIndex;
 
-   
-    Document[] documents;
-        
+    address[]   requesters;
+    address[]   verifiedBy; 
+    string[]    names;
+    string[]    descriptions;
+    string[]    docAddressOnIPFS; 
+    DocStatus[] status;
+
     uint docIndexCounter=0;
-    uint userDocIndexCounter=0;
+    
     function registerAsUser(string calldata _name, string calldata _email) public{
         users[msg.sender]=User({
             name:       _name,
@@ -60,9 +65,12 @@ contract Verification{
         });
     }
 
+    address private owner;
+    address public accountAddress; 
+    
 
 
-    function addDocument(string calldata _name, string calldata _description, string calldata _docAddressOnIPFS) public {
+    function addDocument(string calldata _name, string calldata _description, string calldata _docAddressOnIPFS) public  {
         bool isUser=userList[msg.sender];
         
         require(isUser==true,"register first to verify");
@@ -79,17 +87,27 @@ contract Verification{
 
 
         documentList[_docAddressOnIPFS]=docs;
-        documents.push(docs);
-        docIndexCounter++;
+        //Only God and I know what I am doing
 
-        userUploadedDocuments[msg.sender].push(docs);
+        //It'd have been great if solidity allowed to return mapping but it doesn't and now I am losing my brain over this
+        //This shit below keeps track of each index of document uploaded by unique each user and stores them in an array 
+        //We using this so that on application side we can properly retrive each document and their correspoing IPFS addresses. 
+        userDocIndex[msg.sender].push(docIndexCounter);
+        requesters.push(msg.sender);
+        verifiedBy.push(address(0));
+        names.push(_name);
+        descriptions.push(_description);
+        docAddressOnIPFS.push(_docAddressOnIPFS);
+        status.push(DocStatus.pending);
+
+        docIndexCounter++;
     }
 
-    function getDocumentList() public view  returns (Document[] memory){
+    function getDocumentList() public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory desc,string[] memory ipfsAddress,DocStatus[] memory stats ,uint[] memory userDocId){
         if(verifiers[msg.sender].isVerifier){
-            return (documents);
+            return (requesters,verifiedBy,names,descriptions,docAddressOnIPFS,status,new uint[](0));
         }
-        return (userUploadedDocuments[msg.sender]);
+        return(requesters,verifiedBy,names,descriptions,new string[](0),status,userDocIndex[msg.sender]);
     }
 
     function verifyDocuments(string memory _docAddressOnIPFS, DocStatus _status) public payable {
@@ -98,8 +116,9 @@ contract Verification{
         documentList[_docAddressOnIPFS].status=_status;
         documentList[_docAddressOnIPFS].verifiedBy=msg.sender;
         uint index = documentList[_docAddressOnIPFS].docIndex;
-        documents[index].status=_status;
-        documents[index].verifiedBy=msg.sender;
+
+        status[index]=_status;
+        verifiedBy[index]=msg.sender;
     }
  
 }
