@@ -23,7 +23,10 @@ type ClientConnection struct {
 
 func (conn *ClientConnection) New(privateKey string) error {
 	conn.ClientURL = "http://localhost:7545"
+	log.Println("Nooo")
+
 	client, err := ethclient.Dial(conn.ClientURL)
+	log.Println("YOO")
 	if err != nil {
 		log.Fatal("Error connecting to the client : ", err)
 	}
@@ -33,7 +36,11 @@ func (conn *ClientConnection) New(privateKey string) error {
 	if err!=nil{
 		log.Fatal("Error getting chainID : ",err)
 	}
-	err=conn.setTxOpts(privateKey)
+	log.Print("moooo")
+
+	err=conn.setTxOpts(privateKey[2:])
+	log.Print("goooo")
+
 	if err!=nil{
 		return err
 	}

@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"log"
 
 	verify "github.com/Suy56/ProofChain/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -34,7 +33,6 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts, name s
 	return nil
 }
 func (cv *ContractVerifyOperations) RegiserVerifier(opts *bind.TransactOpts, name string, email string, aadhar string, institute string) error {
-	log.Println("Opts : ", opts)
 	_, err := cv.Instance.RegisterAsVerifier(opts, name, email, aadhar, institute)
 	if err != nil {
 		return err

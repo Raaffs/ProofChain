@@ -12,14 +12,17 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
-	conn *blockchain.ClientConnection
-	instance *blockchain.ContractVerifyOperations
+	ctx      		context.Context
+	conn		  	*blockchain.ClientConnection
+	instance 		*blockchain.ContractVerifyOperations
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{
+		conn: 		&blockchain.ClientConnection{},
+		instance: 	&blockchain.ContractVerifyOperations{},
+	}
 }
 
 // startup is called when the app starts. The context is saved
@@ -33,62 +36,76 @@ func (app *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
-func (app *App)Login(username string, password string)(string,error){
-	privateKey,err:=wallet.RetriveAccount(username,password)
-	if err!=nil{
-		return "",err
+func (app *App) Login(username string, password string) (string, error) {
+	privateKey, err := wallet.RetriveAccount(username, password)
+	if err != nil {
+		return "", err
 	}
-	err=app.conn.New(privateKey)
-	if err!=nil{
-		return "",err
+	err = app.conn.New(privateKey)
+	if err != nil {
+		return "", err
 	}
-	return privateKey,nil
+	return privateKey, nil
 }
 
-func (app *App)LoginUserTest() bool{
+func (app *App) LoginUserTest() bool {
 	return true
 }
 
-func (app *App)LoginVerifierTest()bool{
+func (app *App) LoginVerifierTest() bool {
 	return true
 }
 
-func (app *App)Register(privateKeyString, username,password string)error{
-	err:=wallet.NewWallet(privateKeyString,username,password)
-	if err!=nil{
+func (app *App) Register(privateKeyString, username, password string) error {
+	err := wallet.NewWallet(privateKeyString, username, password)
+	if err != nil {
+		return err
+	}
+	err = app.conn.New(privateKeyString)
+	if err != nil {
+		return err
+	}
+	app.instance.Client = app.conn.Client
+	err = app.instance.New(blockchain.TempContractAddress, true)
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-
-func(app *App)getAcceptedDocs()([]verify.VerificationDocument,error){
-	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
-	if err!=nil{
-		return nil,err
+func (app *App) GetAcceptedDocs() ([]verify.VerificationDocument, error) {
+	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
+	if err != nil {
+		return nil, err
 	}
-	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==0},app.conn.CallOpts.From)
-	fmt.Println("Verified docs : ",verifiedDocs)
-	return verifiedDocs,nil
+	verifiedDocs := blockchain.GetDocuments(docs, func(doc verify.VerificationDocument, requester common.Address) bool {
+		return doc.Requester == requester && doc.Status == 0
+	}, app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ", verifiedDocs)
+	return verifiedDocs, nil
 }
 
-func(app *App)getRejectedDocuments()([]verify.VerificationDocument,error){
-	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
-	if err!=nil{
-		return nil,err
+func (app *App) GetRejectedDocuments() ([]verify.VerificationDocument, error) {
+	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
+	if err != nil {
+		return nil, err
 	}
-	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==1},app.conn.CallOpts.From)
-	fmt.Println("Verified docs : ",verifiedDocs)
-	return verifiedDocs,nil
+	verifiedDocs := blockchain.GetDocuments(docs, func(doc verify.VerificationDocument, requester common.Address) bool {
+		return doc.Requester == requester && doc.Status == 1
+	}, app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ", verifiedDocs)
+	return verifiedDocs, nil
 
 }
 
-func(app *App)getPendingDocuments()([]verify.VerificationDocument,error){
-	docs,err:=app.instance.GetDocuments(app.conn.CallOpts)
-	if err!=nil{
-		return nil,err
+func (app *App) GetPendingDocuments() ([]verify.VerificationDocument, error) {
+	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
+	if err != nil {
+		return nil, err
 	}
-	verifiedDocs:=blockchain.GetDocuments(docs,func(doc verify.VerificationDocument, requester common.Address) bool {return doc.Requester==requester && doc.Status==3},app.conn.CallOpts.From)
-	fmt.Println("Verified docs : ",verifiedDocs)
-	return verifiedDocs,nil
+	verifiedDocs := blockchain.GetDocuments(docs, func(doc verify.VerificationDocument, requester common.Address) bool {
+		return doc.Requester == requester && doc.Status == 3
+	}, app.conn.CallOpts.From)
+	fmt.Println("Verified docs : ", verifiedDocs)
+	return verifiedDocs, nil
 }

@@ -9,6 +9,7 @@ import {Route,Routes} from "react-router-dom"
 import Topbar from './scenes/global/Topbar';
 import Sidebar from './scenes/global/Sidebar';
 import Dashboard from './scenes/dashboard';
+import RegisterUser from './scenes/auth/register';
 // import Documents from './scenes/documents';
 // import Line from './scenes/line';
 // import Pie from './scenes/pie';
@@ -26,6 +27,7 @@ function App() {
                         <Topbar/>
                         <Routes>
                              <Route path="/" element={<Dashboard/>}/> 
+                             <Route path="/register" element={<RegisterUser/>}/>
                             {/* 
                             <Route path="/documents/approved" element={<Dashboard/>}/>
                             <Route path="/documents/pending" element={<Dashboard/>}/>
