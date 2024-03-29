@@ -36,16 +36,22 @@ func (app *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
-func (app *App) Login(username string, password string) (string, error) {
+func (app *App) Login(username string, password string) (error) {
 	privateKey, err := wallet.RetriveAccount(username, password)
 	if err != nil {
-		return "", err
+		return err
 	}
 	err = app.conn.New(privateKey)
 	if err != nil {
-		return "", err
+		return  err
 	}
-	return privateKey, nil
+	app.instance.Client = app.conn.Client
+	err = app.instance.New(blockchain.TempContractAddress, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (app *App) LoginUserTest() bool {
@@ -70,6 +76,7 @@ func (app *App) Register(privateKeyString, username, password string) error {
 	if err != nil {
 		return err
 	}
+	app.instance.RegisterUser(app.conn.TxOpts,username,password)
 	return nil
 }
 
