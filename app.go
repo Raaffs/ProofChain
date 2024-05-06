@@ -63,11 +63,15 @@ func (app *App) LoginVerifierTest() bool {
 }
 
 func (app *App) Register(privateKeyString, username, password string) error {
-	err := wallet.NewWallet(privateKeyString, username, password)
-	if err != nil {
-		return err
-	}
-	err = app.conn.New(privateKeyString)
+	go func() error{
+		err := wallet.NewWallet(privateKeyString, username, password)
+			if err != nil {
+			return err
+		}
+		return nil
+	}()
+	
+	err := app.conn.New(privateKeyString)
 	if err != nil {
 		return err
 	}

@@ -39,7 +39,6 @@ func (conn *ClientConnection) New(privateKey string) error {
 	log.Print("moooo")
 
 	err=conn.setTxOpts(privateKey[2:])
-	log.Print("goooo")
 
 	if err!=nil{
 		return err
