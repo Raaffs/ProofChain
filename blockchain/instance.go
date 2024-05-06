@@ -1,12 +1,23 @@
 package blockchain
 
 import (
+	"math/big"
 
 	verify "github.com/Suy56/ProofChain/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
+
+type VerificationDocument struct{
+	Requester   common.Address
+	Verifer     common.Address
+	Name        string
+	Desc        string
+	IpfsAddress string
+	Stats       uint8
+	UserDocId   *big.Int
+}
 
 type ContractVerifyOperations struct {
 	Address  common.Address
@@ -40,6 +51,14 @@ func (cv *ContractVerifyOperations) RegiserVerifier(opts *bind.TransactOpts, nam
 	return nil
 }
 
+func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,address common.Address)error{
+	_,err:=cv.Instance.ApproveVerifier(opts, address)
+	if err!=nil{
+		return err
+	}
+	return nil
+}
+
 func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, _name string, _description string, _docAddressOnIPFS string) error {
 	_, err := cv.Instance.AddDocument(opts, _name, _description, _docAddressOnIPFS)
 	if err != nil {
@@ -57,13 +76,23 @@ func (cv *ContractVerifyOperations) VerifyDocument(opts *bind.TransactOpts, _doc
 }
 
 
-func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]verify.VerificationDocument,error){
+func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]VerificationDocument,error){
+	var userDocs []VerificationDocument
 	docs,err:=cv.Instance.GetDocumentList(opts)
 	if err!=nil{
 		return nil,err
 	}
-	return docs,nil
+	for i:=0;i<len(docs.Requester);i++{
+		userDoc:=VerificationDocument{
+			Requester: docs.Requester[i],
+			Verifer: docs.Verifer[i],
+			Name: docs.Name[i],
+			Desc: docs.Desc[i],
+			IpfsAddress: docs.IpfsAddress[i],
+			Stats: docs.Stats[i],
+			UserDocId: docs.UserDocId[i],
+		}
+		userDocs = append(userDocs,userDoc )
+	}
+	return userDocs,nil
 }
-
-
-

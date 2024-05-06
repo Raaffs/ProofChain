@@ -23,10 +23,8 @@ type ClientConnection struct {
 
 func (conn *ClientConnection) New(privateKey string) error {
 	conn.ClientURL = "http://localhost:7545"
-	log.Println("Nooo")
 
 	client, err := ethclient.Dial(conn.ClientURL)
-	log.Println("YOO")
 	if err != nil {
 		log.Fatal("Error connecting to the client : ", err)
 	}

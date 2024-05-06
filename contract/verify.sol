@@ -2,6 +2,10 @@
 pragma solidity ^0.8.0;
 contract Verification{
 
+    constructor(){
+        owner=msg.sender;
+    }
+
     enum DocStatus{
         accepted,
         rejected,
@@ -19,7 +23,7 @@ contract Verification{
         string  institute;
         //Will need this in ./documents.sol to check if account verifying the documents
         //is actually a verifier. 
-        bool    isVerifier;
+        bool    isApprovedVerifier;
     }
     struct Document{
         address     requester;
@@ -31,14 +35,13 @@ contract Verification{
         DocStatus   status;     
     }
 
- 
 
     mapping(address=>Verifier) public verifiers;
     mapping(address=>User) private users;
     mapping(string=>Document) private documentList;
     mapping(address=>bool) userList;
     mapping(address=>uint[]) userDocIndex;
-
+    //jack-ass-hack
     address[]   requesters;
     address[]   verifiedBy; 
     string[]    names;
@@ -61,8 +64,13 @@ contract Verification{
             email:          _email,
             AadharNumber:   _aadharNum,
             institute:      _institute,
-            isVerifier:     true
+            isApprovedVerifier:     false
         });
+    }
+
+    function approveVerifier(address verifier)public{
+        require(msg.sender==owner,"Only admin can perfom this action");
+        verifiers[verifier].isApprovedVerifier=true;
     }
 
     address private owner;
@@ -104,15 +112,15 @@ contract Verification{
     }
 
     function getDocumentList() public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory desc,string[] memory ipfsAddress,DocStatus[] memory stats ,uint[] memory userDocId){
-        if(verifiers[msg.sender].isVerifier){
+        if(verifiers[msg.sender].isApprovedVerifier){
             return (requesters,verifiedBy,names,descriptions,docAddressOnIPFS,status,new uint[](0));
         }
         return(requesters,verifiedBy,names,descriptions,new string[](0),status,userDocIndex[msg.sender]);
     }
 
     function verifyDocuments(string memory _docAddressOnIPFS, DocStatus _status) public payable {
-        bool isVerifier=verifiers[msg.sender].isVerifier;
-        require(isVerifier==true,"You're not verifier");
+        bool isApprovedVerifier=verifiers[msg.sender].isApprovedVerifier;
+        require(isApprovedVerifier==true,"You're not verifier");
         documentList[_docAddressOnIPFS].status=_status;
         documentList[_docAddressOnIPFS].verifiedBy=msg.sender;
         uint index = documentList[_docAddressOnIPFS].docIndex;

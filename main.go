@@ -18,8 +18,7 @@ func main() {
 		conn:     &blockchain.ClientConnection{},
 		instance: &blockchain.ContractVerifyOperations{},
 	}
-
-	// Create application with options
+	
 	err := wails.Run(&options.App{
 		Title:  "ProofChainV2",
 		Width:  1024,
