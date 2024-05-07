@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.7
 
 require (
-	github.com/ethereum/go-ethereum v1.13.14
+	github.com/ethereum/go-ethereum v1.13.15
 	github.com/wailsapp/wails/v2 v2.8.0
 )
 
