@@ -46,7 +46,7 @@ func (app *App) Login(username string, password string) (error) {
 		return  err
 	}
 	app.instance.Client = app.conn.Client
-	err = app.instance.New(blockchain.TempContractAddress, true)
+	err = app.instance.New(blockchain.TempContractAddress)
 	if err != nil {
 		return err
 	}
@@ -62,25 +62,32 @@ func (app *App) LoginVerifierTest() bool {
 	return true
 }
 
+//Concurrent go routines needs to be fixed
+//Also add proper error handling
 func (app *App) Register(privateKeyString, username, password string) error {
-	go func() error{
+	go func() error {
 		err := wallet.NewWallet(privateKeyString, username, password)
 			if err != nil {
 			return err
 		}
 		return nil
 	}()
-	
-	err := app.conn.New(privateKeyString)
-	if err != nil {
+	err:=blockchain.Init(app.conn,privateKeyString)
+	if err!=nil{
 		return err
 	}
+
 	app.instance.Client = app.conn.Client
-	err = app.instance.New(blockchain.TempContractAddress, true)
-	if err != nil {
+
+	err=blockchain.Init(app.instance,"")
+	if err!=nil{
 		return err
 	}
-	app.instance.RegisterUser(app.conn.TxOpts,username,password)
+
+	err=app.instance.RegisterUser(app.conn.TxOpts,username,password)
+	if err!=nil{
+		return err
+	}
 	return nil
 }
 
@@ -119,4 +126,8 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	}, app.conn.CallOpts.From)
 	fmt.Println("Verified docs : ", verifiedDocs)
 	return verifiedDocs, nil
+}
+
+func (app *App)Deploy(){
+	blockchain.Deploy(app.conn.TxOpts,app.conn.Client)
 }

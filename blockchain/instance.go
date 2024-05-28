@@ -25,7 +25,7 @@ type ContractVerifyOperations struct {
 	Client   *ethclient.Client
 }
 
-func (cv *ContractVerifyOperations) New(contractAddr string, newContract bool) error {
+func (cv *ContractVerifyOperations) New(contractAddr string) error {
 	cv.Address = common.HexToAddress(contractAddr)
 	instance, err := verify.NewVerify(cv.Address, cv.Client)
 	if err != nil {

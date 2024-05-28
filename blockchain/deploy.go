@@ -1,18 +1,24 @@
 package blockchain
 
 import (
+	
+	"log"
+
 	"github.com/Suy56/ProofChain/verify"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
+
 //todo: write the contract address in env after deployment
 var TempContractAddress=""
 
-func(conn *ClientConnection)Deploy()(common.Address,*types.Transaction,error){
-	contract,tx,_,err:=verify.DeployVerify(conn.TxOpts,conn.Client)
+func Deploy(txOpts *bind.TransactOpts, client *ethclient.Client)(string,*types.Transaction,error){
+	contractAddr,tx,_,err:=verify.DeployVerify(txOpts,client)
 	if err!=nil{
-		return common.Address{},nil,err
+		log.Print("Error deploying contract")
+		return "",nil,err
 	}
-	TempContractAddress=contract.Hex()
-	return contract,tx,nil
+	return contractAddr.Hex(),tx,err
 }
+
