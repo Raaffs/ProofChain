@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
@@ -23,7 +24,7 @@ type ClientConnection struct {
 	ctx       context.Context
 }
 
-func (conn *ClientConnection) New(privateKey string) error {
+func (conn *ClientConnection)New(privateKey string) error {
 	err:=godotenv.Load()
 	if err!=nil{
 		panic("Error loading env")
@@ -54,6 +55,8 @@ func (conn *ClientConnection) New(privateKey string) error {
 	if err!=nil{
 		return err
 	}
+
+
 	return nil
 }
 
@@ -92,7 +95,14 @@ func (conn *ClientConnection) setTxOpts(privateKeyString string) error {
 	auth.GasLimit = uint64(3000000)
 	auth.GasPrice = gasPrice
 	conn.TxOpts = auth
+	conn.setCallOpts(fromAddress)
 	return nil
+}
+
+func (conn *ClientConnection)setCallOpts(fromAddress common.Address)  {
+	conn.CallOpts=&bind.CallOpts{
+		From: fromAddress,
+	}
 }
 
 

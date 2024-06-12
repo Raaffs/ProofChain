@@ -36,7 +36,7 @@
         }
 
 
-        mapping(string=>Verifier) public verifiers;
+        mapping(address=>Verifier) public verifiers;
         mapping(address=>User) private users;
         mapping(string=>Document) private documentList;
         mapping(address=>bool) userList;
@@ -58,8 +58,8 @@
             });
             userList[msg.sender]=true;
         }
-        function registerAsVerifier(string memory _name, string memory _email, string memory _aadharNum, string memory _institute,string memory _verifierAddr) public{
-            verifiers[_verifierAddr]=Verifier({
+        function registerAsVerifier(string memory _name, string memory _email, string memory _aadharNum, string memory _institute) public{
+            verifiers[msg.sender]=Verifier({
                 name:           _name,
                 email:          _email,
                 AadharNumber:   _aadharNum,
@@ -68,7 +68,7 @@
             });
         }
 
-        function approveVerifier(string memory verifier)public{
+        function approveVerifier(address verifier)public{
             require(msg.sender==owner,"Only admin can perfom this action");
             verifiers[verifier].isApprovedVerifier=true;
         }
@@ -114,23 +114,23 @@
             docIndexCounter++;
         }
 
-        function getDocumentList(string memory verifier) public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory ipfs,string[] memory desc,DocStatus[] memory stats ,uint[] memory userDocId){
-            if(verifiers[verifier].isApprovedVerifier){
+        function getDocumentList() public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory ipfs,string[] memory desc,DocStatus[] memory stats ,uint[] memory userDocId){
+            if(verifiers[msg.sender].isApprovedVerifier){
                 return (requesters,verifiedBy,names,ipfshash,descriptions,status,new uint[](0));
             }
             return(requesters,verifiedBy,names,new string[](0),descriptions,status,userDocIndex[msg.sender]);
         }
 
-        function getDocumentsForVerifier(string memory verifier)public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory ipfs,string[] memory desc,DocStatus[] memory stats){
-            require(verifiers[verifier].isApprovedVerifier,"Only verifier can access this field");
+        function getDocumentsForVerifier()public view returns (address[] memory requester ,address[] memory verifer ,string[] memory name,string[] memory ipfs,string[] memory desc,DocStatus[] memory stats){
+            require(verifiers[msg.sender].isApprovedVerifier,"Only verifier can access this field");
             return (requesters,verifiedBy,names,ipfshash,descriptions,status);
 
         }
 
 
 
-        function verifyDocuments(string memory ipfs, DocStatus _status,string memory verifier) public payable {
-            require(verifiers[verifier].isApprovedVerifier==true,"You're not an approved verifier");
+        function verifyDocuments(string memory ipfs, DocStatus _status) public payable {
+            require(verifiers[msg.sender].isApprovedVerifier==true,"You're not an approved verifier");
             documentList[ipfs].status=_status;
             documentList[ipfs].verifiedBy=msg.sender;
             uint index = documentList[ipfs].docIndex;
@@ -139,8 +139,8 @@
             verifiedBy[index]=msg.sender;
         }
 
-        function checkVerifierStatus(string memory verifier)public view returns (bool){
-            return verifiers[verifier].isApprovedVerifier;
+        function checkVerifierStatus()public view returns (bool){
+            return verifiers[msg.sender].isApprovedVerifier;
         }
     
     }

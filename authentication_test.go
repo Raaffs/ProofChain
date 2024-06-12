@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/ethereum/go-ethereum/common"
 	// "github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
@@ -27,7 +28,7 @@ var App_test=&app{
 			t.Fatal(err)
 		}
 		contractAddr:=os.Getenv("CONTRACT_ADDR")
-		if err:=App_test.conn.New("0xf8f0694170fdcaaa79fb7e15ee467d2c7e7c50c6144fad676911d230a83239c3");err!=nil{
+		if err:=App_test.conn.New("0x5906abc1b858a4dd0da8d309cb9c43c9fa2652e73832fc6805a50754c42e93fd");err!=nil{
 			t.Fatal(err)
 		}
 		App_test.in.Client=App_test.conn.Client
@@ -47,7 +48,7 @@ func TestRegisterVerifier(t *testing.T){
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
 
-	if err:=App_test.conn.New("0x13eb090e28f3d062d01e8caa1e4267b8b61cbd59fa1ba76c05bd052bf8bec3f3");err!=nil{
+	if err:=App_test.conn.New("0x7aba46cec1861fcbe98665858d2030b83dc7810d7173c313c0b93071d861a050");err!=nil{
 		t.Fatal(err)
 	}
 	App_test.in.Client=App_test.conn.Client
@@ -79,8 +80,9 @@ func TestApproveVerifier(t *testing.T){
 		t.Fatal(err)
 	}
 
-
-	err=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"0x7E11d7B81D48c7b54A9D0b3deF1Ab8d12C433A4a")
+	pubAddrHex:="0xE582078b233fDA011eab94bc9833dBA72A6fd21D"
+	pubAddr:=common.HexToAddress(pubAddrHex)
+	err=App_test.in.ApproveVerifier(App_test.conn.TxOpts,pubAddr)
 	if err!=nil{
 		t.Fatal(err)
 	}
@@ -92,16 +94,17 @@ func TestCheckVerifierStatus(t *testing.T){
 		t.Fatal(err)
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
-	if err:=App_test.conn.New("0x96d59c83b86521e8a370dd419d09b59de724a71917d2be18f56a4ad7af234e49");err!=nil{
+	if err:=App_test.conn.New("0x7aba46cec1861fcbe98665858d2030b83dc7810d7173c313c0b93071d861a050");err!=nil{
 		t.Fatal(err)
 	}
 	App_test.in.Client=App_test.conn.Client
 	if err:=App_test.in.New(contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	err=App_test.in.GetVerifierStatus(App_test.conn.CallOpts,"0x7E11d7B81D48c7b54A9D0b3deF1Ab8d12C433A4a")
+	err=App_test.in.GetVerifierStatus(App_test.conn.CallOpts)
 	if err!=nil{
 		t.Fatal(err)
 	}
+	fmt.Println(App_test.conn.CallOpts)
 }
 

@@ -45,15 +45,14 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts, name s
 	return nil
 }
 func (cv *ContractVerifyOperations) RegiserVerifier(opts *bind.TransactOpts, name string, email string, id string,institute string) error {
-	verifierAddr:=opts.From.Hex()
-	_, err := cv.Instance.RegisterAsVerifier(opts, name, email, id,institute,verifierAddr)
+	_, err := cv.Instance.RegisterAsVerifier(opts, name, email, id,institute)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,address string)error{
+func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,address common.Address)error{
 	_,err:=cv.Instance.ApproveVerifier(opts, address)
 	if err!=nil{
 		return err
@@ -71,8 +70,7 @@ func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, _name s
 }
 
 func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, _docAddressOnIPFS string, _status uint8) error {
-	verifierAddr:=opts.From.Hex()
-	_, err := cv.Instance.VerifyDocuments(opts, _docAddressOnIPFS, _status,verifierAddr)
+	_, err := cv.Instance.VerifyDocuments(opts, _docAddressOnIPFS, _status)
 	if err != nil {
 		return err
 	}
@@ -81,9 +79,9 @@ func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, _docA
 
 
 
-func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts, clientAddr string)([]VerificationDocument,error){
+func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]VerificationDocument,error){
 	var userDocs []VerificationDocument
-	docs,err:=cv.Instance.GetDocumentList(opts,clientAddr)
+	docs,err:=cv.Instance.GetDocumentList(opts)
 	fmt.Println("docs ipfs : ",docs.Ipfs)
 	if err!=nil{
 		return nil,err
@@ -114,8 +112,8 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts, clientAddr 
 	return userDocs,nil
 }
 
-func(cv *ContractVerifyOperations)GetVerifierDocuments(opts *bind.CallOpts,verfierAddr string)(error){
-	docs,err:=cv.Instance.GetDocumentsForVerifier(opts, verfierAddr)
+func(cv *ContractVerifyOperations)GetVerifierDocuments(opts *bind.CallOpts)(error){
+	docs,err:=cv.Instance.GetDocumentsForVerifier(opts)
 	if err!=nil{
 		return err
 	}
@@ -146,8 +144,8 @@ func IpfsHashTo32Byte(ipfsHash string) ([32]byte, error) {
 	return byteArray, nil
 }
 
-func(cv *ContractVerifyOperations)GetVerifierStatus(opts *bind.CallOpts, verifierAddr string)(error){
-	status,err:=cv.Instance.CheckVerifierStatus(opts,verifierAddr)
+func(cv *ContractVerifyOperations)GetVerifierStatus(opts *bind.CallOpts)(error){
+	status,err:=cv.Instance.CheckVerifierStatus(opts)
 	if err!=nil{
 		return err
 	}
