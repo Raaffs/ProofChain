@@ -18,6 +18,7 @@ type VerificationDocument struct{
 	Desc        string
 	IpfsAddress string
 	Stats       uint8
+	Filter		func(VerificationDocument,common.Address)bool
 }
 
 type ContractVerifyOperations struct {

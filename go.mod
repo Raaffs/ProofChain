@@ -9,7 +9,7 @@ require (
 	github.com/wailsapp/wails/v2 v2.8.0
 )
 
-require github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
+require github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 
 
 require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.10 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.18.0 
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
