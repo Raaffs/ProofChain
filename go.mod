@@ -9,11 +9,13 @@ require (
 	github.com/wailsapp/wails/v2 v2.8.0
 )
 
+require github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
+
 require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
-	github.com/mr-tron/base58 v1.2.0 
-	github.com/multiformats/go-multihash v0.2.3 
+	github.com/mr-tron/base58 v1.2.0
+	github.com/multiformats/go-multihash v0.2.3
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	lukechampine.com/blake3 v1.1.6 // indirect

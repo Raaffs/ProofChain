@@ -44,33 +44,38 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts, name s
 	}
 	return nil
 }
-func (cv *ContractVerifyOperations) RegiserVerifier(opts *bind.TransactOpts, name string, email string, id string,institute string) error {
-	_, err := cv.Instance.RegisterAsVerifier(opts, name, email, id,institute)
+func (cv *ContractVerifyOperations) RegiserVerifier(opts *bind.TransactOpts, publicKey, institute string) error {
+	_, err := cv.Instance.RegisterInstitution(opts,publicKey,institute )
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,address common.Address)error{
-	_,err:=cv.Instance.ApproveVerifier(opts, address)
+func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_institute string)error{
+	_,err:=cv.Instance.ApproveVerifier(opts, _institute)
 	if err!=nil{
 		return err
 	}
 	return nil
 }
 
-func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, _name string, _docAddressOnIPFS string, _description string) (error) {
-	_, err := cv.Instance.AddDocument(opts, _name, _docAddressOnIPFS,_description)
+func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, _encryptedIPFSHash, _institute, _name, _description string) (error) {
+	institutePubKey,err:=cv.Instance.GetInstituePublicKey(&bind.CallOpts{From: opts.From},_institute)
+	if err!=nil{
+		return err
+	}
+	fmt.Println(institutePubKey)
+	_, err = cv.Instance.AddDocument(opts, _encryptedIPFSHash,_institute,_name,_description)
 	if err != nil {
 		return err
 	}
-	fmt.Println("data : ",_docAddressOnIPFS)
+	fmt.Println("data : ",_encryptedIPFSHash)
 	return err
 }
 
-func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, _docAddressOnIPFS string, _status uint8) error {
-	_, err := cv.Instance.VerifyDocuments(opts, _docAddressOnIPFS, _status)
+func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts,institute string, _docAddressOnIPFS string, _status uint8) error {
+	_, err := cv.Instance.VerifyDocument(opts, institute, _docAddressOnIPFS, _status)
 	if err != nil {
 		return err
 	}
@@ -81,7 +86,7 @@ func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, _docA
 
 func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]VerificationDocument,error){
 	var userDocs []VerificationDocument
-	docs,err:=cv.Instance.GetDocumentList(opts)
+	docs,err:=cv.Instance.GetDocuments(opts)
 	fmt.Println("docs ipfs : ",docs.Ipfs)
 	if err!=nil{
 		return nil,err
@@ -89,8 +94,6 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	for i:=0;i<len(docs.Requester);i++{
 
 		var ipfsAddress string
-
-		
 		
 		if len(docs.Ipfs) > 0 {
 			ipfsAddress = docs.Ipfs[i]
@@ -112,14 +115,7 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	return userDocs,nil
 }
 
-func(cv *ContractVerifyOperations)GetVerifierDocuments(opts *bind.CallOpts)(error){
-	docs,err:=cv.Instance.GetDocumentsForVerifier(opts)
-	if err!=nil{
-		return err
-	}
-	fmt.Println("DOCS : ",docs)
-	return nil
-}
+
 
 func IpfsHashTo32Byte(ipfsHash string) ([32]byte, error) {
 	// Decode the base58 IPFS hash
@@ -144,12 +140,3 @@ func IpfsHashTo32Byte(ipfsHash string) ([32]byte, error) {
 	return byteArray, nil
 }
 
-func(cv *ContractVerifyOperations)GetVerifierStatus(opts *bind.CallOpts)(error){
-	status,err:=cv.Instance.CheckVerifierStatus(opts)
-	if err!=nil{
-		return err
-	}
-
-	fmt.Println("Verifer Status : ",status)
-	return nil
-}

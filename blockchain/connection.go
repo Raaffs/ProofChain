@@ -105,8 +105,4 @@ func (conn *ClientConnection)setCallOpts(fromAddress common.Address)  {
 	}
 }
 
-
-type Connect interface{
-	New (string) error
-}
-
+			

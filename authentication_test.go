@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/Suy56/ProofChain/blockchain"
-	"github.com/ethereum/go-ethereum/common"
-	// "github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
 
@@ -28,7 +26,7 @@ var App_test=&app{
 			t.Fatal(err)
 		}
 		contractAddr:=os.Getenv("CONTRACT_ADDR")
-		if err:=App_test.conn.New("0x5906abc1b858a4dd0da8d309cb9c43c9fa2652e73832fc6805a50754c42e93fd");err!=nil{
+		if err:=App_test.conn.New("0x8789157eb94a5dfdc45dc8ae6bf4a39f40bd304a6d0139b81bb79329a2c7cfd9");err!=nil{
 			t.Fatal(err)
 		}
 		App_test.in.Client=App_test.conn.Client
@@ -48,14 +46,14 @@ func TestRegisterVerifier(t *testing.T){
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
 
-	if err:=App_test.conn.New("0x7aba46cec1861fcbe98665858d2030b83dc7810d7173c313c0b93071d861a050");err!=nil{
+	if err:=App_test.conn.New("0xb4b1cd087d860bb9c9d286ee2b5fd50ffe2a1ffaefcc0a9b8657eefaa69289d8");err!=nil{
 		t.Fatal(err)
 	}
 	App_test.in.Client=App_test.conn.Client
 	if err:=App_test.in.New(contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	err=App_test.in.RegiserVerifier(App_test.conn.TxOpts,"name","string@gmail.com","fd","kj")
+	err=App_test.in.RegiserVerifier(App_test.conn.TxOpts,"123","kj")
 	if err!=nil{
 		log.Fatal(err)
 	}
@@ -79,32 +77,10 @@ func TestApproveVerifier(t *testing.T){
 	if err:=App_test.in.New(contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-
-	pubAddrHex:="0xE582078b233fDA011eab94bc9833dBA72A6fd21D"
-	pubAddr:=common.HexToAddress(pubAddrHex)
-	err=App_test.in.ApproveVerifier(App_test.conn.TxOpts,pubAddr)
+	err=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"kj")
 	if err!=nil{
 		t.Fatal(err)
 	}
 }
 
-func TestCheckVerifierStatus(t *testing.T){
-	err:=godotenv.Load()
-	if err!=nil{
-		t.Fatal(err)
-	}
-	contractAddr:=os.Getenv("CONTRACT_ADDR")
-	if err:=App_test.conn.New("0x7aba46cec1861fcbe98665858d2030b83dc7810d7173c313c0b93071d861a050");err!=nil{
-		t.Fatal(err)
-	}
-	App_test.in.Client=App_test.conn.Client
-	if err:=App_test.in.New(contractAddr);err!=nil{
-		t.Fatal(err)
-	}
-	err=App_test.in.GetVerifierStatus(App_test.conn.CallOpts)
-	if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println(App_test.conn.CallOpts)
-}
 

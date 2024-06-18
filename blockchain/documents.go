@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	// "github.com/Suy56/ProofChain/verify"
 	"github.com/ethereum/go-ethereum/common"
 )
 func GetDocuments(documents []VerificationDocument,condition func(VerificationDocument,common.Address)bool, requester common.Address)[]VerificationDocument{
@@ -13,3 +12,15 @@ func GetDocuments(documents []VerificationDocument,condition func(VerificationDo
 	}
 	return filteredDocs
 }
+
+func FilterDocument[T comparable](docs []VerificationDocument, condition func(VerificationDocument,T)bool, requester T)[]VerificationDocument{
+	var userDocs []VerificationDocument
+	for _,doc :=range docs{
+			if(condition(doc,requester)){
+					userDocs=append(userDocs, doc)
+			}
+	}
+	return userDocs
+}
+
+	
