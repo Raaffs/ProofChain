@@ -10,9 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-//todo: write the contract address in env after deployment
-var TempContractAddress=""
-
 func Deploy(txOpts *bind.TransactOpts, client *ethclient.Client)(string,*types.Transaction,error){
 	contractAddr,tx,_,err:=verify.DeployVerify(txOpts,client)
 	if err!=nil{

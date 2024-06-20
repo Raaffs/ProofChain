@@ -30,7 +30,6 @@ func (app *App) startup(ctx context.Context) {
 	app.ctx = ctx
 }
 
-// Greet returns a greeting for the given name
 func (app *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
@@ -45,7 +44,7 @@ func (app *App) Login(username string, password string) (error) {
 		return  err
 	}
 	app.instance.Client = app.conn.Client
-	err = app.instance.New(blockchain.TempContractAddress)
+	err = app.instance.New("")
 	if err != nil {
 		return err
 	}
@@ -74,7 +73,10 @@ func (app *App) Register(privateKeyString, username, password string) error {
 	if err:=app.conn.New(privateKeyString);err!=nil{
 		return err
 	}
-
+	// Note: The current approach for setting the Client instance is not be optimal.
+	// I tried  to use a method returning *ethclient.Client,
+	// but it resulted in a nil pointer error.
+	// Future improvements may involve revisiting the method approach.
 	app.instance.Client = app.conn.Client
 
 	if err:=app.conn.New(privateKeyString);err!=nil{
@@ -121,6 +123,6 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 		return doc.Requester == requester && doc.Stats == 3
 	}, app.conn.CallOpts.From)
 	fmt.Println("Verified docs : ", verifiedDocs)
-	return verifiedDocs, nil
+		return verifiedDocs, nil
 }
 

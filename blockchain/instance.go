@@ -7,10 +7,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/mr-tron/base58"
-	multihash "github.com/multiformats/go-multihash"
 )
 
+//GetDocument method in Verify.go returns an anonymous struct with corresponding 
+//fields. 
 type VerificationDocument struct{
 	Requester   common.Address
 	Verifer     common.Address
@@ -18,7 +18,6 @@ type VerificationDocument struct{
 	Desc        string
 	IpfsAddress string
 	Stats       uint8
-	Filter		func(VerificationDocument,common.Address)bool
 }
 
 type ContractVerifyOperations struct {
@@ -117,27 +116,4 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 }
 
 
-
-func IpfsHashTo32Byte(ipfsHash string) ([32]byte, error) {
-	// Decode the base58 IPFS hash
-	decoded, err := base58.Decode(ipfsHash)
-	if err != nil {
-		return [32]byte{}, err
-	}
-
-	// Decode the multihash
-	mhash, err := multihash.Decode(decoded)
-	if err != nil {
-		return [32]byte{}, err
-	}
-
-	// Get the digest
-	digest := mhash.Digest
-
-	// Convert to [32]byte
-	var byteArray [32]byte
-	copy(byteArray[:], digest)
-
-	return byteArray, nil
-}
 

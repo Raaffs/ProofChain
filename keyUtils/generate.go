@@ -12,9 +12,15 @@ import (
 type ECKeys struct{
 	Private 	*ecdh.PrivateKey
 	Public		*ecdh.PublicKey
+
+	//Public key of instituition/user is retrieved from blockchain 
+	//for generating shared secret for AES encryption
 	MultiSig	*ecdh.PublicKey 
 }
 
+//Since ECDSA Keys are only used for signing.
+//An ECDH public-private key pair is auto-generated to 
+//encrypt the ipfs hash, so that only user and instituion can view the document
 func(k *ECKeys)OnLogin(user,passphrase string)error{
 	pemKey,err:=DecryptPrivateKeyFile(user,passphrase);if err!=nil{
 		return err
@@ -50,6 +56,8 @@ func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 	return nil
 }
 
+
+//Shared Secret is used for AES encrytion/decryption 
 func(k *ECKeys)GenerateSecret()([]byte,error){
 	if k.MultiSig==nil{
 		return nil,fmt.Errorf("Multi-Sig-Public-Key not provided")
