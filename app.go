@@ -64,8 +64,6 @@ func (app *App) LoginVerifierTest() bool {
 	return true
 }
 
-// Concurrent go routines needs to be fixed
-// Also add proper error handling
 func (app *App) Register(privateKeyString, username, password string) error {
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
@@ -92,24 +90,24 @@ func (app *App) Register(privateKeyString, username, password string) error {
 		}
 	}
 
-	
-	// if err:=app.conn.New(privateKeyString);err!=nil{
-	// 	return err
-	// }
 
-	// // Note: The current approach for setting the Client instance is not be optimal.
-	// // I tried  to use a method returning *ethclient.Client,
-	// // but it resulted in a nil pointer error.
-	// // Future improvements may involve revisiting the method approach.
-	// app.instance.Client = app.conn.Client
+	if err:=app.conn.New(privateKeyString);err!=nil{
+		return err
+	}
 
-	// if err:=app.conn.New(privateKeyString);err!=nil{
-	// 	return err
-	// }
+	// Note: The current approach for setting the Client instance is not be optimal.
+	// I tried  to use a method returning *ethclient.Client,
+	// but it resulted in a nil pointer error.
+	// Future improvements may involve revisiting the method approach.
+	app.instance.Client = app.conn.Client
 
-	// if err:=app.instance.RegisterUser(app.conn.TxOpts,username,password);err!=nil{
-	// 	return err
-	// }
+	if err:=app.conn.New(privateKeyString);err!=nil{
+		return err
+	}
+
+	if err:=app.instance.RegisterUser(app.conn.TxOpts,username,password);err!=nil{
+		return err
+	}
 	return nil
 }
 
