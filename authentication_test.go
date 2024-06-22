@@ -7,17 +7,20 @@ import (
 	"testing"
 
 	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/joho/godotenv"
 )
 
 type app struct{
 	conn	*blockchain.ClientConnection
 	in		*blockchain.ContractVerifyOperations
+	keys	*keyUtils.ECKeys
 }
 
 var App_test=&app{
 	conn: &blockchain.ClientConnection{},
 	in: &blockchain.ContractVerifyOperations{},
+	keys: &keyUtils.ECKeys{},
 }
 
 	func TestRegisterUser(t *testing.T){

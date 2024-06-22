@@ -12,16 +12,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func NewWallet(privateKeyString string, username string, password string) error {
+func NewWallet(privateKeyString string, username string, password string, errchan chan error) {
 	var relativePath string
 	privateKey, err := crypto.HexToECDSA(privateKeyString[2:])
 	if err != nil {
-		return err
+		errchan<-err
+		return
 	}
 	ks := keystore.NewKeyStore("accounts", keystore.StandardScryptN, keystore.StandardScryptP)
 	account, err := ks.ImportECDSA(privateKey, password)
 	if err != nil {
-		return err
+		errchan<-err
+		return
 	}
 	path := account.URL.Path
 	index := strings.Index(path, "accounts")
@@ -30,11 +32,11 @@ func NewWallet(privateKeyString string, username string, password string) error 
 		// Extract substring from "accounts" to the end
 		relativePath = path[index:]
 	} else {
-		return errors.New("path not found")
+		errchan <- errors.New("path not found")
 	}
 	writeAccountToFile(username, relativePath)
 	fmt.Println(relativePath)
-	return nil
+	errchan<-nil
 }
 
 func writeAccountToFile(username string, fileName string) error {

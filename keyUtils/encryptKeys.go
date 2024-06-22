@@ -124,12 +124,13 @@ func RKey(filepath string)(string,error){
 //helper function to write encrypted private key to file
 //file name is generated based on time
 func WKey(user,encryptedData string)(error){
-	filePath:=fmt.Sprintf("%d",time.Now().UnixNano()) 
+	fmt.Print("in keys")
+	filePath:=fmt.Sprintf("keys/%d",time.Now().UnixNano()) 
 	err:=WriteKeyMap(user,filePath)
 	if err!=nil{
 		return err
 	}
-
+	fmt.Println("write map")
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 			return err
@@ -138,6 +139,7 @@ func WKey(user,encryptedData string)(error){
 	_,err=f.Write([]byte(encryptedData)); if err!=nil{
 		return err
 	}
+	fmt.Println("end")
 	return nil
 }
 
@@ -157,7 +159,7 @@ func ReadKeyMap(user string)(string,error){
 }
 
 func WriteKeyMap(user,keyFile string)error{
-	keyFileMap:="keys"
+	keyFileMap:="keys/keyMap"
 	err:=godotenv.Load(keyFileMap)
 	if err!=nil{
 		return err

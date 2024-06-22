@@ -1,15 +1,16 @@
 module github.com/Suy56/ProofChain
 
-go 1.21
-
-toolchain go1.21.7
+go 1.22
 
 require (
 	github.com/ethereum/go-ethereum v1.13.14
 	github.com/wailsapp/wails/v2 v2.8.0
 )
 
-require github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
+require (
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
+	github.com/ipfs/go-ipfs-api v0.7.0
+)
 
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
@@ -17,7 +18,6 @@ require (
 	github.com/crackcomm/go-gitignore v0.0.0-20170627025303-887ab5e44cc3 // indirect
 	github.com/ipfs/boxo v0.12.0 // indirect
 	github.com/ipfs/go-cid v0.4.1 // indirect
-	github.com/ipfs/go-ipfs-api v0.7.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.26.3 // indirect
@@ -34,8 +34,8 @@ require (
 require (
 	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
-	github.com/mr-tron/base58 v1.2.0
-	github.com/multiformats/go-multihash v0.2.3
+	github.com/mr-tron/base58 v1.2.0 // indirect
+	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect

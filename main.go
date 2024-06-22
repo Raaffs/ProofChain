@@ -4,6 +4,7 @@ import (
 	"embed"
 
 	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -17,6 +18,7 @@ func main() {
 	app := &App{
 		conn:     &blockchain.ClientConnection{},
 		instance: &blockchain.ContractVerifyOperations{},
+		keys: 	  &keyUtils.ECKeys{},
 	}
 	
 	err := wails.Run(&options.App{

@@ -21,31 +21,40 @@ type ECKeys struct{
 //Since ECDSA Keys are only used for signing.
 //An ECDH public-private key pair is auto-generated to 
 //encrypt the ipfs hash, so that only user and instituion can view the document
-func(k *ECKeys)OnLogin(user,passphrase string)error{
+func(k *ECKeys)OnLogin(user string,passphrase string, errchan chan error,){
 	pemKey,err:=DecryptPrivateKeyFile(user,passphrase);if err!=nil{
-		return err
+		errchan<-err
+		return
 	}
 	k.Private,err=GetECDSAPrivateKeyFromPEM(string(pemKey)); if err!=nil{
-		return err
+		errchan<-err
+		return
 	}
 	k.Public=k.Private.PublicKey()
-	return nil
+	errchan<-nil
 }
 
 
-func (k *ECKeys)OnRegister(username,password string)error{
+func (k *ECKeys)OnRegister(username,password string,errchan chan error){
 	privECDSA,err:=ecdsa.GenerateKey(elliptic.P256(),rand.Reader);if err!=nil{
-		return err
+		errchan<- err
+		return
 	}
 	k.Private,err=privECDSA.ECDH();if err!=nil{
-		return err
+		errchan<- err
+		return
 	}
 	k.Public=k.Private.PublicKey()
 	pemPrivateKey,err:=k.MarshalECDHPrivateKey();if err!=nil{
-		return err
+		errchan<- err
+		return
 	}
-	EncryptPrivateKeyFile(pemPrivateKey,username,password)
-	return nil
+	_,err=EncryptPrivateKeyFile(pemPrivateKey,username,password)
+	if err!=nil{
+		errchan<- err
+		return
+	}
+	errchan<-nil
 }
 
 func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
@@ -79,7 +88,7 @@ func(k * ECKeys)MarshalECDHPublicKey()(string,error){
 					Bytes: ecdhSKBytes,
 			},
 	)
-	fmt.Println(string(ecdhSKPEMBlock))
+	fmt.Println("privateKey: ",string(ecdhSKPEMBlock))
 	return string(ecdhSKPEMBlock), nil
 }
 

@@ -208,3 +208,6 @@ dist
 
 #todo
 .todo
+
+keystore
+keys/*

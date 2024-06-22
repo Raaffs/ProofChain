@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/Suy56/ProofChain/blockchain"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/Suy56/ProofChain/wallet"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // App struct
@@ -14,6 +16,7 @@ type App struct {
 	ctx      		context.Context
 	conn		  	*blockchain.ClientConnection
 	instance 		*blockchain.ContractVerifyOperations
+	keys			*keyUtils.ECKeys
 }
 
 // NewApp creates a new App application struct
@@ -21,6 +24,7 @@ func NewApp() *App {
 	return &App{
 		conn: 		&blockchain.ClientConnection{},
 		instance: 	&blockchain.ContractVerifyOperations{},
+		keys: 		&keyUtils.ECKeys{},
 	}
 }
 
@@ -63,29 +67,49 @@ func (app *App) LoginVerifierTest() bool {
 // Concurrent go routines needs to be fixed
 // Also add proper error handling
 func (app *App) Register(privateKeyString, username, password string) error {
-	go func() error {
-		err := wallet.NewWallet(privateKeyString, username, password)
-			if err != nil {
+	var wg sync.WaitGroup
+	errchan:=make(chan error)
+	wg.Add(2)
+	fmt.Println(username,password)
+	go func() {
+		defer wg.Done()
+		app.keys.OnRegister(username,password,errchan)
+		
+	}()
+	go func(){
+		defer wg.Done()
+		wallet.NewWallet(privateKeyString,username,password,errchan)
+	}()
+
+	go func(){
+		wg.Wait()
+		defer close(errchan)
+	}()
+
+	for err:=range errchan{
+		if err!=nil{
 			return err
 		}
-		return nil
-	}()
-	if err:=app.conn.New(privateKeyString);err!=nil{
-		return err
-	}
-	// Note: The current approach for setting the Client instance is not be optimal.
-	// I tried  to use a method returning *ethclient.Client,
-	// but it resulted in a nil pointer error.
-	// Future improvements may involve revisiting the method approach.
-	app.instance.Client = app.conn.Client
-
-	if err:=app.conn.New(privateKeyString);err!=nil{
-		return err
 	}
 
-	if err:=app.instance.RegisterUser(app.conn.TxOpts,username,password);err!=nil{
-		return err
-	}
+	
+	// if err:=app.conn.New(privateKeyString);err!=nil{
+	// 	return err
+	// }
+
+	// // Note: The current approach for setting the Client instance is not be optimal.
+	// // I tried  to use a method returning *ethclient.Client,
+	// // but it resulted in a nil pointer error.
+	// // Future improvements may involve revisiting the method approach.
+	// app.instance.Client = app.conn.Client
+
+	// if err:=app.conn.New(privateKeyString);err!=nil{
+	// 	return err
+	// }
+
+	// if err:=app.instance.RegisterUser(app.conn.TxOpts,username,password);err!=nil{
+	// 	return err
+	// }
 	return nil
 }
 
