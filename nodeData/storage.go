@@ -7,13 +7,22 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
-func Upload(filePath string)(string,error){
-	sh:=shell.NewShell("localhost:5001")
+type IPFSManager struct{
+	shell 		*shell.Shell
+	hostPort 	string
+}
+
+func(i *IPFSManager)New(hostPort string){
+	i.hostPort=fmt.Sprintf("localhost:%s",hostPort)
+	i.shell=shell.NewShell(i.hostPort)
+}
+
+func(i *IPFSManager) Upload(filePath string)(string,error){
 	file, err := os.Open(filePath);if err != nil {
 		return "",err
 	}
     defer file.Close()
-	cid,err:=sh.Add(file); if err!=nil{
+	cid,err:=i.shell.Add(file); if err!=nil{
 		return "",err
 	}
 	return cid,nil

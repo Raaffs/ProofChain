@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"os"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/joho/godotenv"
 )
 
 type ClientConnection struct {
@@ -24,35 +22,18 @@ type ClientConnection struct {
 	ctx       context.Context
 }
 
+func (conn *ClientConnection)SetClient(c *ethclient.Client) {
+	conn.Client=c
+}
+
 func (conn *ClientConnection)New(privateKey string) error {
-	err:=godotenv.Load()
-	if err!=nil{
-		panic("Error loading env")
-	}
-
-	client_url:=os.Getenv("CLIENT_URL")
-	if client_url==""{
-		panic("INVALID CLIENT URL")
-	}
-
-	conn.ClientURL=client_url
-
-	client, err := ethclient.Dial(conn.ClientURL)
-	if err != nil {
-		log.Fatal("Error connecting to the client : ", err)
-	}
-	
-	conn.Client=client
 	conn.ctx=context.Background()
-	
-	conn.ChainId,err=client.ChainID(conn.ctx)
-	if err!=nil{
+	chainID,err:=conn.Client.ChainID(conn.ctx);if err!=nil{
 		log.Fatal("Error getting chainID : ",err)
 	}
+	conn.ChainId=chainID
 
-	err=conn.setTxOpts(privateKey[2:])
-
-	if err!=nil{
+	err=conn.setTxOpts(privateKey);if err!=nil{
 		return err
 	}
 

@@ -2,12 +2,14 @@ package main_test
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/Suy56/ProofChain/nodeData"
+	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
 )
 
@@ -15,54 +17,146 @@ type app struct{
 	conn	*blockchain.ClientConnection
 	in		*blockchain.ContractVerifyOperations
 	keys	*keyUtils.ECKeys
+	dataNode 	*nodeData.IPFSManager
 }
 
 var App_test=&app{
 	conn: &blockchain.ClientConnection{},
 	in: &blockchain.ContractVerifyOperations{},
 	keys: &keyUtils.ECKeys{},
+	dataNode: &nodeData.IPFSManager{},
 }
 
-	func TestRegisterUser(t *testing.T){
-		err:=godotenv.Load()
-		if err!=nil{
-			t.Fatal(err)
-		}
-		contractAddr:=os.Getenv("CONTRACT_ADDR")
-		if err:=App_test.conn.New("0x8789157eb94a5dfdc45dc8ae6bf4a39f40bd304a6d0139b81bb79329a2c7cfd9");err!=nil{
-			t.Fatal(err)
-		}
-		App_test.in.Client=App_test.conn.Client
-		if err:=App_test.in.New(contractAddr);err!=nil{
-			t.Fatal(err)
-		}
-		err=App_test.in.RegisterUser(App_test.conn.TxOpts,"name","string@gmail.com")
-		if err!=nil{
-			log.Fatal(err)
-		}
+func TestRegisterUser(t *testing.T) {
+	username:=""
+	privateKey:=""
+	if err := godotenv.Load(".env", "accounts/accounts", "keys/keyMap"); err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	errchan := make(chan error, 1)
+	publicKeychan := make(chan string, 1)
+	contractAddr := os.Getenv("CONTRACT_ADDR")
+	if err := blockchain.Init(App_test.conn, App_test.in, privateKey[2:], contractAddr); err != nil {
+		t.Fatal("error connecting to contract: ", err)
 	}
 
-func TestRegisterVerifier(t *testing.T){
-	err:=godotenv.Load()
-	if err!=nil{
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		App_test.keys.OnRegister(username, username, publicKeychan, errchan)
+	}()
+	go func() {
+		defer wg.Done()
+		wallet.NewWallet(privateKey[2:], username, username, errchan)
+	}()
+	go func() {
+		wg.Wait()
+		close(errchan)
+		close(publicKeychan)	
+	}()
+	for{
+		select {
+		case val, ok := <-publicKeychan:
+			if !ok{
+				continue
+			}else{
+				if err:=App_test.in.RegisterUser(App_test.conn.TxOpts,val,"","");err!=nil{
+					t.Fatal("Error registering user : ",err)
+				}
+			}
+		case err,ok:= <-errchan:
+			if !ok{
+				return
+			}
+			if err!=nil{
+				fmt.Println("Error : ",err)
+				t.Fatal(err)
+			}
+
+		}
+	}
+}
+
+func TestLoginUser(t *testing.T){
+	var wg sync.WaitGroup
+	errchan:=make(chan error)
+	if err:=godotenv.Load(".env","accounts/accounts","keys/keyMap");err!=nil{
 		t.Fatal(err)
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		App_test.keys.OnLogin("Maria","Maria",errchan)
+	}()
+	go func(){
+		wg.Wait()
+		defer close(errchan)
+	}()
 
-	if err:=App_test.conn.New("0xb4b1cd087d860bb9c9d286ee2b5fd50ffe2a1ffaefcc0a9b8657eefaa69289d8");err!=nil{
+	for err:=range errchan{
+		if err!=nil{
+			t.Fatal("error logging in : ",err)
+		}
+	}
+	pk,err:=wallet.RetriveAccount("",""); if err!=nil{
 		t.Fatal(err)
 	}
-	App_test.in.Client=App_test.conn.Client
-	if err:=App_test.in.New(contractAddr);err!=nil{
+	if err:=blockchain.Init(App_test.conn,App_test.in,pk,contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	err=App_test.in.RegiserVerifier(App_test.conn.TxOpts,"123","kj")
-	if err!=nil{
-		log.Fatal(err)
-	}
-	c:=App_test.conn.TxOpts.From
-	fmt.Println(c.Hex())
+}
 
+
+func TestRegisterVerifier(t *testing.T){
+	institute:=""
+	privateKey:=""
+	if err := godotenv.Load(".env", "accounts/accounts", "keys/keyMap"); err != nil {
+		t.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	errchan := make(chan error, 1)
+	publicKeychan := make(chan string, 1)
+	contractAddr := os.Getenv("CONTRACT_ADDR")
+	if err := blockchain.Init(App_test.conn, App_test.in, privateKey[2:], contractAddr); err != nil {
+		t.Fatal("error connecting to contract: ", err)
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		App_test.keys.OnRegister(institute, institute, publicKeychan, errchan)
+	}()
+	go func() {
+		defer wg.Done()
+		wallet.NewWallet(privateKey[2:], institute, institute, errchan)
+	}()
+	go func ()  {
+		wg.Wait()
+		close(errchan)
+		close(publicKeychan)	
+	}()
+	for{
+		select {
+		case val, ok := <-publicKeychan:
+			if !ok {
+				continue
+			} else {
+				fmt.Println(val)
+				if err := App_test.in.RegisterInstitution(App_test.conn.TxOpts, val, ""); err != nil {
+					t.Fatal(err)
+				}
+			}
+		case err,ok:= <-errchan:
+			if !ok{
+				return
+			}
+			if err!=nil{
+				t.Fatal(err)
+			}
+		}
+	}
 
 }
 
@@ -73,15 +167,10 @@ func TestApproveVerifier(t *testing.T){
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
 	privateKey:=os.Getenv("PRIVATE_KEY")
-	if err:=App_test.conn.New(privateKey);err!=nil{
+	if err:=blockchain.Init(App_test.conn,App_test.in,privateKey[2:],contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	App_test.in.Client=App_test.conn.Client
-	if err:=App_test.in.New(contractAddr);err!=nil{
-		t.Fatal(err)
-	}
-	err=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"kj")
-	if err!=nil{
+	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,""); err!=nil{
 		t.Fatal(err)
 	}
 }

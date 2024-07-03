@@ -13,8 +13,19 @@ import (
 )
 
 func NewWallet(privateKeyString string, username string, password string, errchan chan error) {
+	accountMap,err:=godotenv.Read("accounts/accounts"); if err!=nil{
+		errchan<-err
+		return
+	}
+	accountPath:=accountMap[username]
+	if accountPath!=""{
+		fmt.Println(accountMap)
+		errchan<-fmt.Errorf("account already exist")
+		return
+	}
+
 	var relativePath string
-	privateKey, err := crypto.HexToECDSA(privateKeyString[2:])
+	privateKey, err := crypto.HexToECDSA(privateKeyString)
 	if err != nil {
 		errchan<-err
 		return
@@ -22,10 +33,13 @@ func NewWallet(privateKeyString string, username string, password string, errcha
 	ks := keystore.NewKeyStore("accounts", keystore.StandardScryptN, keystore.StandardScryptP)
 	account, err := ks.ImportECDSA(privateKey, password)
 	if err != nil {
+		fmt.Println(accountMap)
+
 		errchan<-err
 		return
 	}
 	path := account.URL.Path
+	fmt.Println("Path : ",path)
 	index := strings.Index(path, "accounts")
 	// If "accounts" is found
 	if index != -1 {
@@ -35,7 +49,8 @@ func NewWallet(privateKeyString string, username string, password string, errcha
 		errchan <- errors.New("path not found")
 	}
 	writeAccountToFile(username, relativePath)
-	fmt.Println(relativePath)
+
+	fmt.Println("Relative path : ",relativePath)
 	errchan<-nil
 }
 
@@ -57,16 +72,20 @@ func writeAccountToFile(username string, fileName string) error {
 }
 
 func RetriveAccount(username string, password string) (string, error) {
-	filePath := "accounts/accounts"
-	err := godotenv.Load(filePath)
+	// filePath := "accounts/accounts"
+	accountMap,err := godotenv.Read("accounts/accounts")
 	if err != nil {
 		return "", err
 	}
-	accountPath := os.Getenv(username)
+	accountPath := accountMap[username]
+	if accountPath==""{
+		return "",fmt.Errorf("account not found")
+	}
 	accountFile, err := os.ReadFile(accountPath)
 	if err != nil {
 		return "", err
 	}
+
 	privateKey, err := keystore.DecryptKey(accountFile, password)
 	if err != nil {
 		fmt.Println("Error in retriving Account")
@@ -74,5 +93,5 @@ func RetriveAccount(username string, password string) (string, error) {
 	}
 	privateKeyBytes := privateKey.PrivateKey.D.Bytes()
 	privateKeyHex := hex.EncodeToString(privateKeyBytes)
-	return privateKeyHex, nil
+	return privateKeyHex,nil
 }

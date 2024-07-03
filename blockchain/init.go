@@ -1,7 +1,8 @@
 package blockchain
 
-//Will implement this in future 
+//Will implement this in future
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -15,15 +16,18 @@ type Connect interface{
 }
 
 func Init(c Connect, i Connect, privateKey string, contractAddr string)error{
-
-	c.SetClient(Client())
-	i.SetClient(Client())
+	client:=Client()
+	c.SetClient(client)
+	i.SetClient(client)
 
 	if err:=c.New(privateKey);err!=nil{
+		fmt.Println(privateKey)
+		fmt.Println("Error connecting to blockchain : ", err)
 		return err
 	}
 
 	if err:=i.New(contractAddr);err!=nil{
+		fmt.Println("Error creating an instance : ", err)
 		return err
 	}
 	return nil

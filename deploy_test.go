@@ -20,10 +20,11 @@ func TestDeploy(t *testing.T){
 		t.Fatal("Error loading env")
 	}
 	privateKey:=os.Getenv("PRIVATE_KEY")
-
-	err=app.conn.New(privateKey)
+	blockchain.Init(app.conn,app.in,privateKey[2:],"")
 	if err!=nil{
 		t.Fatal("Error connecting to chain")
 	}
-	blockchain.Deploy(app.conn.TxOpts,app.conn.Client)
+	_,_,err=blockchain.Deploy(app.conn.TxOpts,app.conn.Client);if err!=nil{
+		t.Fatal(err)
+	}
 }

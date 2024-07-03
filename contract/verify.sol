@@ -13,13 +13,12 @@ contract Verification{
             pending
         }
         struct User{
-            string  name;
-            string  email;
+            string publicKey;
         }
 
         struct Institution{
             address publicAddr;
-            string publicKey;
+            string  publicKey;
             string  name;
             bool    approved;
         }
@@ -51,13 +50,13 @@ contract Verification{
 
         uint docIndexCounter=0;
 
-        function registerAsUser(string calldata _name, string calldata _email) public{
+        function registerAsUser(string calldata _publicKey) public{
             users[msg.sender]=User({
-                name:       _name,
-                email:      _email
+                publicKey:  _publicKey
             });
             userList[msg.sender]=true;
         }
+        
         function registerInstitution(string memory _publicKey, string memory _name) public{
             institutions[_name]=Institution({
                 publicAddr: msg.sender,
@@ -72,6 +71,10 @@ contract Verification{
             return institutions[_name].publicKey;
         }
 
+        function getUserPublicKey(address userAddr)public view returns (string memory){
+            return users[userAddr].publicKey;        
+        }
+
         function approveVerifier(string memory _name)public{
             require(msg.sender==owner,"Only admin can perfom this action");
             institutions[_name].approved=true;
@@ -80,17 +83,6 @@ contract Verification{
         function addDocument(string memory _EncryptedIPFSHash, string memory _institute,string memory _name ,string memory _description) public{
             bool isUser=userList[msg.sender];
             require(isUser==true,"register first to verify");
-            // Document memory docs=Document({
-            //     requester:          msg.sender,
-            //     verifiedBy:         address(0),
-            //     institution:        _institute,
-            //     name:               _name,
-            //     description:        _description,
-            //     encrpytedIPFSHash:  _EncryptedIPFSHash,
-            //     status:             DocStatus.pending,
-            //     index:              docIndexCounter
-            // });
-
             documentList[_EncryptedIPFSHash]=docIndexCounter;
 
             requesters.push(msg.sender);
@@ -107,14 +99,9 @@ contract Verification{
             return (requesters,verifiedBy,institution,encrpytedIPFSHashes,names,descriptions,status);
         }
 
-        // function getDocumentsStruct()public view returns(Document[] memory docs){
-        //     return allDocuments;
-        // }
         
         function verifyDocument(string memory _institute, string memory _ipfs, DocStatus _status)public payable {
             require(institutions[_institute].approved==true && institutions[_institute].publicAddr==msg.sender);
-            // documentList[_ipfs].status=_status;
-            // documentList[_ipfs].verifiedBy=msg.sender;
             uint index=documentList[_ipfs];
             status[index]=_status;
             verifiedBy[index]=msg.sender;

@@ -31,11 +31,12 @@ func(k *ECKeys)OnLogin(user string,passphrase string, errchan chan error,){
 		return
 	}
 	k.Public=k.Private.PublicKey()
+	fmt.Println("done on login")
 	errchan<-nil
 }
 
 
-func (k *ECKeys)OnRegister(username,password string,errchan chan error){
+func (k *ECKeys)OnRegister(username,password string,publicKey chan string,errchan chan error){
 	privECDSA,err:=ecdsa.GenerateKey(elliptic.P256(),rand.Reader);if err!=nil{
 		errchan<- err
 		return
@@ -49,16 +50,20 @@ func (k *ECKeys)OnRegister(username,password string,errchan chan error){
 		errchan<- err
 		return
 	}
+	pemPublicKey,err:=k.MarshalECDHPublicKey();if err!=nil{
+		errchan<-err
+	}
 	_,err=EncryptPrivateKeyFile(pemPrivateKey,username,password)
 	if err!=nil{
 		errchan<- err
 		return
 	}
-	errchan<-nil
+	publicKey<-pemPublicKey
 }
 
 func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 	var err error
+	fmt.Println(k.Private,k.Public)
 	k.MultiSig,err=GetECDSAPublicKeyFromPEM(multiSigKey); if err!=nil{
 		return err
 	}
@@ -68,7 +73,7 @@ func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 
 //Shared Secret is used for AES encrytion/decryption 
 func(k *ECKeys)GenerateSecret()([]byte,error){
-	if k.MultiSig==nil{
+	if k.MultiSig==nil || k.Private==nil{
 		return nil,fmt.Errorf("Multi-Sig-Public-Key not provided")
 	}
 	secret,err:=k.Private.ECDH(k.MultiSig); if err!=nil{

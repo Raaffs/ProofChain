@@ -2,9 +2,12 @@ package main
 
 import (
 	"embed"
+	"os"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/Suy56/ProofChain/nodeData"
+	"github.com/joho/godotenv"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -16,9 +19,12 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := &App{
-		conn:     &blockchain.ClientConnection{},
-		instance: &blockchain.ContractVerifyOperations{},
-		keys: 	  &keyUtils.ECKeys{},
+		conn:     		&blockchain.ClientConnection{},
+		instance: 		&blockchain.ContractVerifyOperations{},
+		keys: 	  		&keyUtils.ECKeys{},
+		ipfs: 	  		&nodeData.IPFSManager{},
+		user:	  		"",
+		contractAddr: 	os.Getenv("CONTRACT_ADDR"),
 	}
 	
 	err := wails.Run(&options.App{
@@ -34,8 +40,10 @@ func main() {
 			app,
 		},
 	})
-
 	if err != nil {
 		println("Error:", err.Error())
+	}
+	if err:=godotenv.Load(".env","keys/keyMap","accounts/accounts");err!=nil{
+		println("Error : ",err.Error())
 	}
 }

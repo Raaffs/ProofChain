@@ -88,49 +88,51 @@ func EncryptPrivateKeyFile(data, account, passphrase string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to encrypt data: %v", err)
 	}
 	encryptedDataWithSalt := append(salt, encryptedData...)
-	WKey(account, string(encryptedDataWithSalt))
+	err=WKey(account, string(encryptedDataWithSalt))
+	if err!=nil{
+		return nil,err
+	}
 	return encryptedDataWithSalt, nil
 }
 
 func DecryptPrivateKeyFile(user,passphrase string) ([]byte, error) {
+
 	encryptedDataWithSalt,err:=ReadKeyMap(user); if err!=nil{
 		return nil,err
 	}
 	salt := encryptedDataWithSalt[:10]
 	encryptedData := encryptedDataWithSalt[10:]
-	key, err := generateKeyFromPassphrase(passphrase, []byte(salt))
+	key, err := generateKeyFromPassphrase(passphrase, salt)
 	if err != nil {
 		return nil, err
 	}
 	decryptedData, err := cryptopasta.Decrypt([]byte(encryptedData), key)
     if err != nil {
+		fmt.Println("Error decrypting file ",err)
         return nil, err
     }
-	fmt.Println(decryptedData)
     return decryptedData, nil
 }
 
 
 //Just a helper function to read files 
-func RKey(filepath string)(string,error){
+func RKey(filepath string)([]byte,error){
 	keyBytes,err:=os.ReadFile(filepath)
 	if err!=nil{
-		return "",err
+		return nil,err
 	}
-	return string(keyBytes),nil
+	return (keyBytes),nil
 }
 
 
 //helper function to write encrypted private key to file
 //file name is generated based on time
 func WKey(user,encryptedData string)(error){
-	fmt.Print("in keys")
 	filePath:=fmt.Sprintf("keys/%d",time.Now().UnixNano()) 
 	err:=WriteKeyMap(user,filePath)
 	if err!=nil{
 		return err
 	}
-	fmt.Println("write map")
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 			return err
@@ -139,33 +141,33 @@ func WKey(user,encryptedData string)(error){
 	_,err=f.Write([]byte(encryptedData)); if err!=nil{
 		return err
 	}
-	fmt.Println("end")
 	return nil
 }
 
 //Used to keep track of username and corresponding file in which private key is 
 //stored in encrypted format
-func ReadKeyMap(user string)(string,error){
-	keyMapPath:="keys"
-	if err:=godotenv.Load(keyMapPath);err!=nil{
-		return "",err
+func ReadKeyMap(user string)([]byte,error){
+	keyMapPath:="keys/keyMap"
+	keyMap, err:=godotenv.Read(keyMapPath); if err!=nil{
+		return nil,err
 	}
-	KeyFile:=os.Getenv(user)
-	encryptedKey,err:=RKey(KeyFile)
+	userKeyFile:=keyMap[user]
+	encryptedKey,err:=RKey(userKeyFile)
 	if err!=nil{
-		return "",err
+		return nil,err
 	}
 	return encryptedKey,nil
 }
 
-func WriteKeyMap(user,keyFile string)error{
+func WriteKeyMap(user,keyFilePath string)error{
 	keyFileMap:="keys/keyMap"
-	err:=godotenv.Load(keyFileMap)
-	if err!=nil{
+	keyMap,err:=godotenv.Read("keys/keyMap"); if err!=nil{
+		fmt.Println("Error loading key map")
 		return err
 	}
-	value:=os.Getenv(user)
-	if value!=""{
+	userFilePath:=keyMap[user]
+	fmt.Println(user,":",userFilePath)
+	if userFilePath!=""{
 		return errors.New("user already exist")
 	}
 	f, err := os.OpenFile(keyFileMap, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
@@ -173,7 +175,7 @@ func WriteKeyMap(user,keyFile string)error{
 			return err
 	}
 	defer f.Close()
-	_, err = fmt.Fprintf(f, "%s=%s\n", user, keyFile)
+	_, err = fmt.Fprintf(f, "%s=%s\n", user, keyFilePath)
 	if err != nil {
 			return err
 	}
