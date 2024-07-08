@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
+	"log"
 	"sync"
 
 	"github.com/Suy56/ProofChain/blockchain"
@@ -29,6 +29,8 @@ type Login interface{
 	OnRegister()
 }
 
+
+
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{
@@ -48,14 +50,37 @@ func (app *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
+func(app *App)tryDecrypt(encryptedIPFS string)string{
+		pub,err:=app.instance.Instance.GetUserPublicKey(app.conn.CallOpts,app.conn.TxOpts.From);if err!=nil{
+			fmt.Println("error : ",err)
+			return ""
+		}
+		fmt.Println("user pub : ",pub)
+		if err:=app.keys.SetMultiSigKey(pub);err!=nil{
+			fmt.Println("error : ",err)
+			return ""
+		}
+		sec,err:=app.keys.GenerateSecret();if err!=nil{
+			fmt.Println("error : ",err)
+			return ""
+		}
+		ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
+			fmt.Println("error : ",err,ipfs)
+			return ""
+		}
+		return ipfs
+}
+
 func (app *App) Login(username string, password string) (error) {
+	envMap,err:=godotenv.Read(".env");if err!=nil{
+		log.Println("Error loading .env while loggin in : ",err)
+		return err
+	}
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	if err:=godotenv.Load(); err!=nil{
 		return err
 	}
-	contractAddr:=os.Getenv("CONTRACT_ADDR")
-
 	wg.Add(1)
 	go func(){
 		defer wg.Done()
@@ -75,7 +100,7 @@ func (app *App) Login(username string, password string) (error) {
 		return err
 	}
 
-	if err:=blockchain.Init(app.conn,app.instance,privateKey,contractAddr);err!=nil{
+	if err:=blockchain.Init(app.conn,app.instance,privateKey,envMap["CONTRACT_ADDR"]);err!=nil{
 		return err
 	}
 
@@ -91,7 +116,13 @@ func (app *App) LoginVerifierTest() bool {
 }
 
 func (app *App) Register(privateKeyString, username, password string) error {
-	if err:=blockchain.Init(app.conn,app.instance,privateKeyString,app.contractAddr);err!=nil{
+	envMap,err:=godotenv.Read(".env");if err!=nil{
+		log.Println("Error reading .env for contractAddr ",err)
+		return err
+	}
+	log.Println(envMap,"app : ",app.contractAddr)
+	fmt.Println("auth : ",username,password,privateKeyString)
+	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],envMap["CONTRACT_ADDR"]);err!=nil{
 		return err
 	}
 
@@ -100,7 +131,6 @@ func (app *App) Register(privateKeyString, username, password string) error {
 	publicKeychan:=make(chan string)	
 
 	wg.Add(2)
-	fmt.Println(username,password)
 	go func() {
 		defer wg.Done()
 		app.keys.OnRegister(username,password,publicKeychan,errchan)
@@ -108,7 +138,7 @@ func (app *App) Register(privateKeyString, username, password string) error {
 	}()
 	go func(){
 		defer wg.Done()
-		wallet.NewWallet(privateKeyString,username,password,errchan)
+		wallet.NewWallet(privateKeyString[2:],username,password,errchan)
 	}()
 	go func(){
 		wg.Wait()
@@ -127,11 +157,11 @@ func (app *App) Register(privateKeyString, username, password string) error {
 				}
 			}
 		case err,ok:=<-errchan:
-			if !ok{
-				return nil
-			}
 			if err!=nil{
 				return err
+			}
+			if !ok{
+				return nil
 			}
 		}
 	}
@@ -154,28 +184,8 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 	if err != nil {
 		return nil, err
 	}
-	a:=func(encryptedIPFS string)string{
-		pub,err:=app.instance.Instance.GetUserPublicKey(app.conn.CallOpts,app.conn.TxOpts.From);if err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		fmt.Println("user pub : ",pub)
-		if err:=app.keys.SetMultiSigKey(pub);err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		sec,err:=app.keys.GenerateSecret();if err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
-			fmt.Println("error : ",err,ipfs)
-			return ""
-		}
-		return "ipfs"
-	}
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=a(docs[i].IpfsAddress)
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress)
 	}
 	verifiedDocs := blockchain.FilterDocument(docs, func(doc blockchain.VerificationDocument, requester common.Address) bool {
 		return doc.Requester == requester && doc.Stats == 1

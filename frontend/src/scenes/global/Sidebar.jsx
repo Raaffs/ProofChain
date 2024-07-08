@@ -14,7 +14,8 @@ import ReceiptOutlinedIcon from '@mui/icons-material/ReceiptOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-
+import sidebarlogo from '../../assets/images/sidebar-3.jpg'
+import zIndex from '@mui/material/styles/zIndex'
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -52,31 +53,42 @@ const Sidebar = () => {
   return (
     <Box
       sx={{
+        position: "sticky",
+        display: "flex",
+        height: "100vh",
+        top: 0,
+        bottom: 0,
+        zIndex: 10000,
+        "& .ps-menu-root":{
+          position:'fixed'
+        },
         "& .pro-sidebar-inner": {
-          background: `${colors.primary[400]} !important`,
+          background: `${theme.palette.mode==="dark" ? 'transparent' : 'transparent'} !important`,
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
         },
         "& .pro-inner-item": {
-          padding: "5px 35px 5px 20px !important",
+          padding: "5px 35px 5px 10px !important",
         },
         "& .pro-inner-item:hover": {
-          color: "#868dfb !important",
+          background: `${colors.blueAccent[700]} !important`,
         },
         "& .pro-menu-item.active": {
-          color: "#6870fa !important",
+          color: `${colors.blueAccent[500]} !important`,
         },
       }}
     >
-      <ProSidebar collapsed={isCollapsed}>
+      <ProSidebar collapsed={isCollapsed}
+        // image={theme.palette.mode=="dark"?'https://user-images.githubusercontent.com/25878302/144499035-2911184c-76d3-4611-86e7-bc4e8ff84ff5.jpg':sidebarlogo}
+      >
         <Menu iconShape="square">
           {/* LOGO AND MENU ICON */}
           <MenuItem
             onClick={() => setIsCollapsed(!isCollapsed)}
             icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
             style={{
-              margin: "10px 5px 20px 5px",
+              margin: "10px 0px 20px 0px",
               color: colors.grey[100],
             }}
           >
@@ -87,7 +99,7 @@ const Sidebar = () => {
                 alignItems="center"
                 ml="15px"
               >
-                <Typography variant="h3" color={colors.grey[100]}>
+                <Typography variant="h3" color={colors.greenAccent[300]}>
                   ProofChain
                 </Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -98,11 +110,17 @@ const Sidebar = () => {
           </MenuItem>
 
           {!isCollapsed && (
-            <Box mb="25px">
+            <Box mb="20px">
             </Box>
           )}
 
-          <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+          <Box paddingLeft={isCollapsed ? undefined : "10%"} paddingRight={isCollapsed?undefined:"10%"}>
+           
+          <Typography
+              variant="h4"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 10px 2px" }}
+            >Dashboard</Typography>
             <Item
               title="Dashboard"
               to="/"
@@ -112,11 +130,11 @@ const Sidebar = () => {
             />
 
             <Typography
-              variant="h6"
+              variant="h4"
               color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
+              sx={{ m: "15px 0 10px 2px" }}
             >
-              Data
+              Documents
             </Typography>
     
             <Item
@@ -141,12 +159,12 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-              <Typography
-              variant="h6"
+            <Typography
+              variant="h4"
               color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
+              sx={{ m: "15px 0 5px 5px" }}
             >
-                Transacts
+              Transacts
             </Typography>
             <Item
               title="All"
@@ -177,12 +195,12 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             <Typography
-              variant="h6"
+              variant="h4"
               color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
+              sx={{ m: "15px 0 5px 15px" }}
             >
                 
-              Pages
+            Verify
             </Typography>
             <Item
               title="Upload"
@@ -194,9 +212,9 @@ const Sidebar = () => {
           
 
             <Typography
-              variant="h6"
+              variant="h4"
               color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
+              sx={{ m: "15px 0 5px 10px" }}
             >
               Accounts
             </Typography>
@@ -209,7 +227,7 @@ const Sidebar = () => {
             />
               <Item
               title="Login"
-              to="/login"
+              to="/"
               icon={<LoginOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
@@ -221,7 +239,6 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            <Button >Deploy</Button>
           </Box>
         </Menu>
       </ProSidebar>

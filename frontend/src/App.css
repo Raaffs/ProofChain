@@ -7,6 +7,8 @@ body,
     height:100%;
     width:100%;
     font-family: 'Source Sans Pro', sans-serif;
+    background-image: url('./assets/images/bg9.jpg');
+
 }
 .app{
     display: flex;

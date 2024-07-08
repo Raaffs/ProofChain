@@ -10,6 +10,7 @@ import Topbar from './scenes/global/Topbar';
 import Sidebar from './scenes/global/Sidebar';
 import Dashboard from './scenes/dashboard';
 import RegisterUser from './scenes/auth/register';
+import LoginUser from './scenes/auth/login';
 // import Documents from './scenes/documents';
 // import Line from './scenes/line';
 // import Pie from './scenes/pie';
@@ -26,7 +27,8 @@ function App() {
                     <main className="content">
                         <Topbar/>
                         <Routes>
-                             <Route path="/" element={<Dashboard/>}/> 
+                             <Route path="/" element={<LoginUser/>}/> 
+                             <Route path="/dashboard" element={<Dashboard/>}/>
                              <Route path="/register" element={<RegisterUser/>}/>
                             {/* 
                             <Route path="/documents/approved" element={<Dashboard/>}/>

@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"os"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
@@ -24,7 +23,6 @@ func main() {
 		keys: 	  		&keyUtils.ECKeys{},
 		ipfs: 	  		&nodeData.IPFSManager{},
 		user:	  		"",
-		contractAddr: 	os.Getenv("CONTRACT_ADDR"),
 	}
 	
 	err := wails.Run(&options.App{

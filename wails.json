@@ -1,13 +1,13 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "ProofChainV2",
-  "outputfilename": "ProofChainV2",
+  "name": "ProofChain",
+  "outputfilename": "ProofChain",
   "frontend:install": "npm install",
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "Suyash",
-    "email": "suyash.saraf@somaiya.edu"
+    "email": "suyashsaraf5@gmail.com"
   }
 }
