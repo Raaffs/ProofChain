@@ -8,6 +8,7 @@ import (
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
 
@@ -85,7 +86,7 @@ func TestDoc(t *testing.T){
 		close(errchan)
 	}()
 	for _,doc :=range docs{
-		pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,doc.Requester);if err!=nil{
+		pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress(doc.Requester));if err!=nil{
 			fmt.Println("error : ",err)
 			continue
 		}

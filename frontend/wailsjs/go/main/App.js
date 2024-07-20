@@ -6,6 +6,10 @@ export function GetAcceptedDocs() {
   return window['go']['main']['App']['GetAcceptedDocs']();
 }
 
+export function GetAllDocs() {
+  return window['go']['main']['App']['GetAllDocs']();
+}
+
 export function GetPendingDocuments() {
   return window['go']['main']['App']['GetPendingDocuments']();
 }
@@ -14,22 +18,14 @@ export function GetRejectedDocuments() {
   return window['go']['main']['App']['GetRejectedDocuments']();
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
-}
-
 export function Login(arg1, arg2) {
   return window['go']['main']['App']['Login'](arg1, arg2);
 }
 
-export function LoginUserTest() {
-  return window['go']['main']['App']['LoginUserTest']();
-}
-
-export function LoginVerifierTest() {
-  return window['go']['main']['App']['LoginVerifierTest']();
-}
-
 export function Register(arg1, arg2, arg3) {
   return window['go']['main']['App']['Register'](arg1, arg2, arg3);
+}
+
+export function RegisterVerifier(arg1, arg2, arg3) {
+  return window['go']['main']['App']['RegisterVerifier'](arg1, arg2, arg3);
 }

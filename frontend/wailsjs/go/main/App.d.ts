@@ -4,16 +4,14 @@ import {blockchain} from '../models';
 
 export function GetAcceptedDocs():Promise<Array<blockchain.VerificationDocument>>;
 
+export function GetAllDocs():Promise<Array<blockchain.VerificationDocument>>;
+
 export function GetPendingDocuments():Promise<Array<blockchain.VerificationDocument>>;
 
 export function GetRejectedDocuments():Promise<Array<blockchain.VerificationDocument>>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function Login(arg1:string,arg2:string):Promise<void>;
 
-export function LoginUserTest():Promise<boolean>;
-
-export function LoginVerifierTest():Promise<boolean>;
-
 export function Register(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function RegisterVerifier(arg1:string,arg2:string,arg3:string):Promise<void>;

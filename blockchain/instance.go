@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"fmt"
 
 	verify "github.com/Suy56/ProofChain/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -8,11 +9,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-//GetDocument method in Verify.go returns an anonymous struct with corresponding 
-//fields. 
+//GetDocument method in Verify.go returns an anonymous struct with corresponding
+//fields.
 type VerificationDocument struct{
-	Requester   common.Address
-	Verifer     common.Address
+	Requester   string
+	Verifer     string
 	Name        string
 	Desc        string
 	IpfsAddress string
@@ -27,7 +28,7 @@ type ContractVerifyOperations struct {
 func (cv *ContractVerifyOperations)SetClient(c *ethclient.Client){
 	cv.Client=c
 }
-func (cv *ContractVerifyOperations) New(contractAddr string) error {
+func (cv *ContractVerifyOperations)New(contractAddr string) error {
 	cv.Address = common.HexToAddress(contractAddr)
 	instance, err := verify.NewVerify(cv.Address, cv.Client)
 	if err != nil {
@@ -81,20 +82,22 @@ func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts,instit
 
 func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]VerificationDocument,error){
 	var userDocs []VerificationDocument
+
 	docs,err:=cv.Instance.GetDocuments(opts)
+	fmt.Println("documents instance : ",docs)
 	if err!=nil{
 		return nil,err
 	}
 	for i:=0;i<len(docs.Requester);i++{
 		userDoc:=VerificationDocument{
-			Requester: docs.Requester[i],
-			Verifer: docs.Verifer[i],
-			Name: docs.Name[i],
-			Desc: docs.Desc[i],
-			IpfsAddress: docs.Ipfs[i],
-			Stats: docs.Stats[i],
+			Requester: 		docs.Requester[i].Hex(),
+			Verifer: 		docs.Verifer[i].Hex(),
+			Name: 			docs.Name[i],
+			Desc: 			docs.Desc[i],
+			IpfsAddress:	docs.Ipfs[i],
+			Stats: 			docs.Stats[i],
 		}
-		userDocs = append(userDocs,userDoc )
+		userDocs = append(userDocs,userDoc)
 	}
 	return userDocs,nil
 }

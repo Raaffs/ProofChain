@@ -1,5 +1,5 @@
 import { ChangeEvent,useEffect,useState } from "react";
-import { Grid,Box,Paper,TextField,Typography, Button,Avatar, Link,Card,CardContent,CardActions, CardMedia} from "@mui/material";
+import { Grid,Box,Paper,TextField,Typography, Button,Avatar, Link,Card,CardContent,CardActions, CardMedia, Select, InputLabel} from "@mui/material";
 import {FormControlLabel} from "@mui/material";
 import Header from "../../components/Header"
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -8,29 +8,30 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { tokens } from "../../themes";
 import {Formik, Form} from 'formik'
 import * as yup from "yup"
+import {useNavigate} from "react-router-dom"
 import { useTheme } from "@emotion/react";
 import logo from '../../assets/images/bg7.jpg'
 import bg from '../../assets/images/Untitled.png'
+import { MenuItem } from "react-pro-sidebar";
 function RegisterUser() {
     const theme=useTheme()
-    const colored = tokens(theme.palette.mode);
     const btnstyle={margin:'50px 0',width:'200px'}
-    const isNonMobile = useMediaQuery("(min-width:600px)")
-
+    const [registerAsVerifier,setRegisterAsVerifier]=useState(false)
+    const navigate =useNavigate()
     const [input, setInput] = useState({
         privateKey: "",
         username: "",
         password: ""
     });
-
+    const [error, setError] = useState(null);
     const handleClick = () => {
         Register(input.privateKey, input.username, input.password)
             .then(() => {
-                // Registration successful, do something if needed
+                navigate('/dashboard')
             })
             .catch((err) => {
+                setError(err)
                 console.log(err);
-                // Handle error if needed
             });
     };
 
@@ -39,7 +40,7 @@ function RegisterUser() {
             ...input,
             [event.target.name]: event.target.value
         });
-        console.log("data : ", input.privateKey,input.username,input.password)
+        setRegisterAsVerifier(event.target.value==='verifier')
     };
     return (
         <Box 
@@ -58,6 +59,11 @@ function RegisterUser() {
             </Grid>
         <CardActions sx={{backgroundColor:'transparent', }}>
             <Box display="flex"flexDirection="column" width="100%"  >
+                {error && (
+                  <Typography color="error" align="center" style={{ marginBottom: '16px' }}>
+                    {error}
+                  </Typography>
+                )}
                 <TextField 
                     label='Private Key' 
                     placeholder='Enter private key' 
@@ -113,6 +119,16 @@ function RegisterUser() {
                     }}
 
                 />
+              <InputLabel >Register As</InputLabel>    
+                <Select
+                    value={registerAsVerifier?'verifier':'user'}
+                    onChange={handleChange}
+                    label='Register'    
+                >
+                    <MenuItem value='user'>User</MenuItem>
+                    <MenuItem  value='verifier'>Verifier</MenuItem>
+                </Select>
+
                     <Box display="flex" justifyContent="center" alignItems="center">
                         <Button 
                             type='submit' 

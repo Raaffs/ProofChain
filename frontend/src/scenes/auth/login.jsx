@@ -9,6 +9,7 @@ import { tokens } from "../../themes";
 import {Formik, Form} from 'formik'
 import * as yup from "yup"
 import { useTheme } from "@emotion/react";
+import {useNavigate} from "react-router-dom"
 import logo from '../../assets/images/bg8.jpg'
 import bg from '../../assets/images/Untitled.png'
 const Redirect=({to})=>{
@@ -18,23 +19,22 @@ const Redirect=({to})=>{
 }
 function LoginUser() {
     const theme=useTheme()
-    const colored = tokens(theme.palette.mode);
     const btnstyle={margin:'50px 0',width:'200px'}
-    const isNonMobile = useMediaQuery("(min-width:600px)")
-
+    const navigate =useNavigate()
     const [input, setInput] = useState({
         username: "",
         password: ""
     });
+    const [error, setError] = useState(null);
 
     const handleClick = () => {
         Login(input.username, input.password)
             .then(() => {
-                // Registration successful, do something if needed
+                navigate('/dashboard')
             })
             .catch((err) => {
+                setError(err)
                 console.log(err);
-                // Handle error if needed
             });
     };
 
@@ -50,9 +50,9 @@ function LoginUser() {
             padding={2}
             justifyContent="center" 
             alignItems="center"
-            sx={{ backgroundColor: 'transparent', backgroundSize: '100% 100%', backgroundImage:`url(${bg})`, backgroundRepeat:'no-repeat',width:"85vw",height:"86vh", borderRadius:"20px", margin:'5px'}}
+            sx={{ backgroundColor: 'transparent', backgroundSize: '100% 100%', backgroundImage:`url(${bg})`, backgroundRepeat:'no-repeat',width:"dynamic",height:"86vh", borderRadius:"20px", margin:'5px'}}
         > 
-        <Card sx={{width:"50%", height:"60%", borderRadius:"16px",backgroundImage:`url(${bg})`,backgroundColor:'transparent'}} elevation="20">
+        <Card sx={{width:"50%", height:"dynamic", minHeight:'60%', borderRadius:"16px",backgroundImage:`url(${bg})`,backgroundColor:'transparent'}} elevation="20">
             <Grid align='center' >
                 <Avatar sx={{ m: 1, bgcolor: 'secondary.main',top:'0px' }}>
                     <LockOutlinedIcon />
@@ -61,7 +61,11 @@ function LoginUser() {
             </Grid>
         <CardActions sx={{backgroundColor:'transparent', }}>
             <Box display="flex"flexDirection="column" width="100%"  >
-    
+                {error && (
+                  <Typography color="error" align="center" style={{ marginBottom: '10px' }}>
+                    {error}
+                  </Typography>
+                )}
                 <TextField 
 
                     label='Username' 
@@ -72,10 +76,7 @@ function LoginUser() {
                     onChange={handleChange}
                     fullWidth 
                     required 
-                    style={{ marginBottom: '16px',padding:"10px" }}
-                    InputProps={{
-                        style: { fontWeight: 'bold' } // Make input text bold
-                    }}
+                    style={{ padding:"5px" }}
                 />
                 <TextField 
                     label='Password' 
@@ -87,7 +88,7 @@ function LoginUser() {
                     variant="outlined" 
                     fullWidth 
                     required 
-                    style={{ marginBottom: '1px',padding:"10px" }}
+                    style={{ padding:"5px" }}
 
                 />
                     <Box display="flex" justifyContent="center" alignItems="center">
@@ -115,7 +116,7 @@ function LoginUser() {
             
         </CardActions>    
     </Card>
-    <Card sx={{padding:"10px" ,width:"100%", height:"60%", backgroundImage:`url(${bg})`, borderRadius:"16px",marginLeft:"20px", backgroundRepeat:'no-repeat',backgroundColor:'transparent'}} 
+    <Card sx={{padding:"10px" ,width:"100%", height:"dynamic",minHeight:"60%", backgroundImage:`url(${bg})`, borderRadius:"16px",marginLeft:"20px", backgroundRepeat:'no-repeat',backgroundColor:'transparent'}} 
         elevation="20" 
     
         justifyContent="right"
