@@ -38,7 +38,7 @@ func (cv *ContractVerifyOperations)New(contractAddr string) error {
 	return nil
 }
 
-func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts,publicKey string, name string, email string) error {
+func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts,publicKey string) error {
 	_, err := cv.Instance.RegisterAsUser(opts,publicKey)
 
 	if err != nil {

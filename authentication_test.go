@@ -61,7 +61,7 @@ func TestRegisterUser(t *testing.T) {
 			if !ok{
 				continue
 			}else{
-				if err:=App_test.in.RegisterUser(App_test.conn.TxOpts,val,"","");err!=nil{
+				if err:=App_test.in.RegisterUser(App_test.conn.TxOpts,val);err!=nil{
 					t.Fatal("Error registering user : ",err)
 				}
 			}
@@ -170,7 +170,7 @@ func TestApproveVerifier(t *testing.T){
 	if err:=blockchain.Init(App_test.conn,App_test.in,privateKey[2:],contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,""); err!=nil{
+	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"vj"); err!=nil{
 		t.Fatal(err)
 	}
 }

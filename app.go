@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/Suy56/ProofChain/blockchain"
@@ -23,6 +24,7 @@ type App struct {
 	keys			*keyUtils.ECKeys
 	ipfs 			*nodeData.IPFSManager
 	user			string
+	envMap			map[string]any
 }
 
 // NewApp creates a new App application struct
@@ -38,6 +40,7 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
 	app.ctx = ctx
+	app.envMap["CONTRACT_ADDR"]=os.Getenv("CONTRACT_ADDR")
 }
 
 func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
@@ -62,10 +65,6 @@ func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
 }
 
 func (app *App) Login(username string, password string) (error) {
-	envMap,err:=godotenv.Read(".env");if err!=nil{
-		log.Println("Error loading .env while loggin in : ",err)
-		return fmt.Errorf("error loading configuration environment; files may've been corrupted.\n Please report the issue to the admin")
-	}
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	if err:=godotenv.Load(); err!=nil{
@@ -93,28 +92,29 @@ func (app *App) Login(username string, password string) (error) {
 
 	}
 
-	if err:=blockchain.Init(app.conn,app.instance,privateKey,envMap["CONTRACT_ADDR"]);err!=nil{
+	if err:=blockchain.Init(app.conn,app.instance,privateKey,app.envMap["CONTRACT_MAP"].(string));err!=nil{
 		log.Println("Error connecting to the blockchain : ",err)
 		return fmt.Errorf("error connecting to the smart contract")
 	}
+
+	app.envMap["isApprovedInstitute"],err=app.instance.Instance.IsApprovedInstitute(app.conn.CallOpts,username);if err!=nil{
+		log.Println("Error getting the account verification status : ",err)
+		return fmt.Errorf("error getting the account verification status")
+	}
+
 	return nil
 }
 
 
-func (app *App)Register(privateKeyString, institute, password string) error {
-	envMap,err:=godotenv.Read(".env");if err!=nil{
-		log.Println("Error reading .env for contractAddr ",err)
-		return err
-	}
-	fmt.Println("Private key length : ",len(privateKeyString))
+func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
 	if len(privateKeyString)<64{
 		fmt.Println("private key error")
 		return fmt.Errorf("invalid private key")
 	}
-	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],envMap["CONTRACT_ADDR"]);err!=nil{
+	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],app.envMap["CONTRACT_ADDR"].(string));err!=nil{
 		return err
 	}
-
+	app.envMap["isApprovedInstitute"]=isInstitute
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	publicKeychan:=make(chan string)	
@@ -122,12 +122,12 @@ func (app *App)Register(privateKeyString, institute, password string) error {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		app.keys.OnRegister(institute,password,publicKeychan,errchan)
+		app.keys.OnRegister(name,password,publicKeychan,errchan)
 		
 	}()
 	go func(){
 		defer wg.Done()
-		wallet.NewWallet(privateKeyString[2:],institute,password,errchan)
+		wallet.NewWallet(privateKeyString[2:],name,password,errchan)
 	}()
 	go func(){
 		wg.Wait()
@@ -141,8 +141,20 @@ func (app *App)Register(privateKeyString, institute, password string) error {
 			if !ok{
 				continue
 			}else{
-				if err:=app.instance.RegisterInstitution(app.conn.TxOpts,pub,institute);err!=nil{
-					return err
+				if isInstitute{
+					log.Println("Registering institution....")
+					if err:=app.instance.RegisterInstitution(app.conn.TxOpts,pub,name);err!=nil{
+						log.Println("error registering institution")
+						return fmt.Errorf("error registering institution")
+					}
+					log.Println("Registeration successful")
+				}else{
+					log.Println("Registering....")
+					if err:=app.instance.RegisterUser(app.conn.TxOpts,pub);err!=nil{
+						log.Println("error registering institution")
+						return fmt.Errorf("error registering institution")
+					}
+					log.Println("Registeration successful")
 				}
 			}
 		case err,ok:=<-errchan:
@@ -156,60 +168,6 @@ func (app *App)Register(privateKeyString, institute, password string) error {
 	}
 }
 
-func (app *App)RegisterVerifier(privateKeyString, username, password string) error {
-	envMap,err:=godotenv.Read(".env");if err!=nil{
-		log.Println("Error reading .env for contractAddr ",err)
-		return err
-	}
-	fmt.Println("Private key length : ",len(privateKeyString))
-	if len(privateKeyString)<64{
-		fmt.Println("private key error")
-		return fmt.Errorf("invalid private key")
-	}
-	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],envMap["CONTRACT_ADDR"]);err!=nil{
-		return err
-	}
-
-	var wg sync.WaitGroup
-	errchan:=make(chan error)
-	publicKeychan:=make(chan string)	
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		app.keys.OnRegister(username,password,publicKeychan,errchan)
-		
-	}()
-	go func(){
-		defer wg.Done()
-		wallet.NewWallet(privateKeyString[2:],username,password,errchan)
-	}()
-	go func(){
-		wg.Wait()
-		close(publicKeychan)
-		close(errchan)
-	}()
-
-	for{
-		select{
-		case pub,ok:=<-publicKeychan:
-			if !ok{
-				continue
-			}else{
-				if err:=app.instance.RegisterUser(app.conn.TxOpts,pub,username,password);err!=nil{
-					return err
-				}
-			}
-		case err,ok:=<-errchan:
-			if err!=nil{
-				return err
-			}
-			if !ok{
-				return nil
-			}
-		}
-	}
-}
 
 
 func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
@@ -263,6 +221,8 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 		return doc.Requester == requester && doc.Stats == 3
 	}, app.conn.CallOpts.From.Hex())
 	fmt.Println("Verified docs : ", verifiedDocs)
-		return verifiedDocs, nil
+	
+	return verifiedDocs, nil
+
 }
 

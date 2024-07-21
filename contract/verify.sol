@@ -94,17 +94,20 @@ contract Verification{
             encrpytedIPFSHashes.push(_EncryptedIPFSHash);
             docIndexCounter++;
         }
-
+        //returns all the documents
         function getDocuments()public view returns(address[] memory requester ,address[] memory verifer ,string[] memory institute,string[] memory ipfs,string[] memory name,string[] memory desc,DocStatus[] memory stats){
             return (requesters,verifiedBy,institution,encrpytedIPFSHashes,names,descriptions,status);
         }
-
         
         function verifyDocument(string memory _institute, string memory _ipfs, DocStatus _status)public payable {
             require(institutions[_institute].approved==true && institutions[_institute].publicAddr==msg.sender);
             uint index=documentList[_ipfs];
             status[index]=_status;
             verifiedBy[index]=msg.sender;
+        }
+
+        function isApprovedInstitute(string memory name)public view returns (bool){
+            return institutions[name].approved==true;
         }
 
 }        

@@ -12,6 +12,4 @@ export function GetRejectedDocuments():Promise<Array<blockchain.VerificationDocu
 
 export function Login(arg1:string,arg2:string):Promise<void>;
 
-export function Register(arg1:string,arg2:string,arg3:string):Promise<void>;
-
-export function RegisterVerifier(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function Register(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<void>;

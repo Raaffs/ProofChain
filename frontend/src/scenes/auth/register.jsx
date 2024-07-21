@@ -1,22 +1,22 @@
 import { ChangeEvent,useEffect,useState } from "react";
-import { Grid,Box,Paper,TextField,Typography, Button,Avatar, Link,Card,CardContent,CardActions, CardMedia, Select, InputLabel} from "@mui/material";
-import {FormControlLabel} from "@mui/material";
-import Header from "../../components/Header"
+import { 
+    Grid,Box,TextField,
+    Typography, Button,
+    Avatar, Link,
+    Card,CardActions, 
+    InputLabel,Select,
+    MenuItem
+} from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Login,Register } from "../../../wailsjs/go/main/App";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { tokens } from "../../themes";
-import {Formik, Form} from 'formik'
-import * as yup from "yup"
+import { Login,Register, RegisterVerifier } from "../../../wailsjs/go/main/App";
 import {useNavigate} from "react-router-dom"
 import { useTheme } from "@emotion/react";
 import logo from '../../assets/images/bg7.jpg'
 import bg from '../../assets/images/Untitled.png'
-import { MenuItem } from "react-pro-sidebar";
 function RegisterUser() {
     const theme=useTheme()
     const btnstyle={margin:'50px 0',width:'200px'}
-    const [registerAsVerifier,setRegisterAsVerifier]=useState(false)
+    let registerAsVerifier=false
     const navigate =useNavigate()
     const [input, setInput] = useState({
         privateKey: "",
@@ -25,14 +25,14 @@ function RegisterUser() {
     });
     const [error, setError] = useState(null);
     const handleClick = () => {
-        Register(input.privateKey, input.username, input.password)
-            .then(() => {
-                navigate('/dashboard')
-            })
-            .catch((err) => {
-                setError(err)
-                console.log(err);
-            });
+        Register(input.privateKey, input.username, input.password,registerAsVerifier)
+        .then(() => {
+            navigate('/dashboard')
+        })
+        .catch((err) => {
+            setError(err)
+            console.log(err);
+        });
     };
 
     const handleChange = (event) => {
@@ -40,8 +40,11 @@ function RegisterUser() {
             ...input,
             [event.target.name]: event.target.value
         });
-        setRegisterAsVerifier(event.target.value==='verifier')
     };
+    const setUserType=(Event)=>{
+        Event.target.value==='verifier'?registerAsVerifier=true:registerAsVerifier=false
+        console.log(registerAsVerifier)
+    }
     return (
         <Box 
             display="flex" 
@@ -121,15 +124,12 @@ function RegisterUser() {
                 />
               <InputLabel >Register As</InputLabel>    
                 <Select
-                    value={registerAsVerifier?'verifier':'user'}
-                    onChange={handleChange}
-                    label='Register'    
+                    onChange={setUserType}
                 >
                     <MenuItem value='user'>User</MenuItem>
-                    <MenuItem  value='verifier'>Verifier</MenuItem>
+                    <MenuItem value='verifier'>Verifier</MenuItem>
                 </Select>
-
-                    <Box display="flex" justifyContent="center" alignItems="center">
+                <Box display="flex" justifyContent="center" alignItems="center">
                         <Button 
                             type='submit' 
                             size="medium" 

@@ -23,6 +23,7 @@ func main() {
 		keys: 	  		&keyUtils.ECKeys{},
 		ipfs: 	  		&nodeData.IPFSManager{},
 		user:	  		"",
+		envMap: 		make(map[string]any),
 	}
 	
 	err := wails.Run(&options.App{

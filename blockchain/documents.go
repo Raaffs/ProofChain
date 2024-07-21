@@ -17,4 +17,3 @@ func FilterDocument[T Address](docs []VerificationDocument, condition func(Verif
 	}
 	return userDocs
 }
-

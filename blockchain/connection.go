@@ -31,12 +31,12 @@ func (conn *ClientConnection)New(privateKey string) error {
 	chainID,err:=conn.Client.ChainID(conn.ctx);if err!=nil{
 		log.Fatal("Error getting chainID : ",err)
 	}
+	
 	conn.ChainId=chainID
 
-	err=conn.setTxOpts(privateKey);if err!=nil{
+	if err:=conn.setTxOpts(privateKey); err!=nil{
 		return err
 	}
-
 
 	return nil
 }
