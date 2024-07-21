@@ -8,7 +8,7 @@ import {
     MenuItem
 } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Login,Register, RegisterVerifier } from "../../../wailsjs/go/main/App";
+import { Login,Register } from "../../../wailsjs/go/main/App";
 import {useNavigate} from "react-router-dom"
 import { useTheme } from "@emotion/react";
 import logo from '../../assets/images/bg7.jpg'

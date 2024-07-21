@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"sync"
+		"sync"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
@@ -21,7 +20,7 @@ type App struct {
 	ctx      		context.Context
 	conn		  	*blockchain.ClientConnection
 	instance 		*blockchain.ContractVerifyOperations
-	keys			*keyUtils.ECKeys
+							keys			*keyUtils.ECKeys
 	ipfs 			*nodeData.IPFSManager
 	user			string
 	envMap			map[string]any
@@ -40,7 +39,13 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
 	app.ctx = ctx
-	app.envMap["CONTRACT_ADDR"]=os.Getenv("CONTRACT_ADDR")
+	keyMap,err:=godotenv.Read(".env");if err!=nil{
+		log.Println("Error loading .env : " ,err)
+		return
+	}
+	for key,val:=range keyMap{
+		app.envMap[key]=val
+	}	
 }
 
 func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
@@ -92,7 +97,7 @@ func (app *App) Login(username string, password string) (error) {
 
 	}
 
-	if err:=blockchain.Init(app.conn,app.instance,privateKey,app.envMap["CONTRACT_MAP"].(string));err!=nil{
+	if err:=blockchain.Init(app.conn,app.instance,privateKey,app.envMap["CONTRACT_ADDR"].(string));err!=nil{
 		log.Println("Error connecting to the blockchain : ",err)
 		return fmt.Errorf("error connecting to the smart contract")
 	}
@@ -101,12 +106,14 @@ func (app *App) Login(username string, password string) (error) {
 		log.Println("Error getting the account verification status : ",err)
 		return fmt.Errorf("error getting the account verification status")
 	}
+	app.envMap["name"]=username
 
 	return nil
 }
 
 
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
+
 	if len(privateKeyString)<64{
 		fmt.Println("private key error")
 		return fmt.Errorf("invalid private key")
@@ -115,6 +122,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 		return err
 	}
 	app.envMap["isApprovedInstitute"]=isInstitute
+	app.envMap["name"]=name
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	publicKeychan:=make(chan string)	
@@ -166,6 +174,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 			}
 		}
 	}
+	
 }
 
 
@@ -223,6 +232,5 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	fmt.Println("Verified docs : ", verifiedDocs)
 	
 	return verifiedDocs, nil
-
 }
 

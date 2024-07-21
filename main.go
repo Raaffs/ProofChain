@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/Suy56/ProofChain/nodeData"

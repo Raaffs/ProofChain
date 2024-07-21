@@ -204,7 +204,7 @@ const Sidebar = () => {
             </Typography>
             <Item
               title="Upload"
-              to="/upload"
+              to="/documents/upload"
               icon={<UploadFileOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
