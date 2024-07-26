@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-		"sync"
+	"strings"
+	"sync"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
@@ -13,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -20,36 +22,40 @@ type App struct {
 	ctx      		context.Context
 	conn		  	*blockchain.ClientConnection
 	instance 		*blockchain.ContractVerifyOperations
-							keys			*keyUtils.ECKeys
+	keys			*keyUtils.ECKeys
 	ipfs 			*nodeData.IPFSManager
 	user			string
 	envMap			map[string]any
 }
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{
-		conn: 		&blockchain.ClientConnection{},
-		instance: 	&blockchain.ContractVerifyOperations{},
-		keys: 		&keyUtils.ECKeys{},
-	}
-}
+// func NewApp() *App {
+// 	return &App{
+// 		conn: 		&blockchain.ClientConnection{},
+// 		instance: 	&blockchain.ContractVerifyOperations{},
+// 		keys: 		&keyUtils.ECKeys{},
+// 	}
+// }
 
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
-	app.ctx = ctx
+	app.ctx=ctx
+	if ctx==nil{
+		panic("no context")
+	}
 	keyMap,err:=godotenv.Read(".env");if err!=nil{
 		log.Println("Error loading .env : " ,err)
 		return
 	}
 	for key,val:=range keyMap{
 		app.envMap[key]=val
-	}	
+	}
+	app.ipfs.New("5001")	
 }
 
 func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
-		pub,err:=app.instance.Instance.GetUserPublicKey(app.conn.CallOpts,publicAddr);if err!=nil{
+		pub,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,"kj");if err!=nil{
 			fmt.Println("error : ",err)
 			return ""
 		}
@@ -69,7 +75,7 @@ func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
 		return ipfs
 }
 
-func (app *App) Login(username string, password string) (error) {
+func (app *App)Login(username string, password string) (error) {
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	if err:=godotenv.Load(); err!=nil{
@@ -177,7 +183,56 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 	
 }
 
+func (app *App)GetFilePath(next func(string)error)(string,error){
+	filePath,err:=runtime.OpenFileDialog(app.ctx,runtime.OpenDialogOptions{
+		Title: "Select Document",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Documents (*.pdf; *.jpg; *.png)",
+				Pattern: "*.pdf;*.jpg;*.png",
+			},
+		},
+	})
+	if err!=nil{
+		return "",err
+	}
+	if err:=next(filePath);err!=nil{
+		return "",err
+	}
+	return filePath,nil
+}
 
+func (app *App)UploadDocument(institute,name,description string)error{
+	app.GetFilePath(
+		func(file string) error {
+			pubKey,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,strings.TrimSpace(institute));if err!=nil{
+				return err
+			}
+			if pubKey==""{
+				fmt.Println("Error pub key : ",pubKey)
+				log.Println("error retrieving the name of institute")
+				return fmt.Errorf("invalid institution")
+			}
+			cid,err:=app.ipfs.Upload(file);if err!=nil{
+				return err					
+			}
+			if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
+				return err
+			}
+			secretKey,err:=app.keys.GenerateSecret();if err!=nil{
+				return err
+			}
+			encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,[]byte(cid));if err!=nil{
+				return err
+			}
+			if err:=app.instance.AddDocument(app.conn.TxOpts,encryptedDocument,institute,name,description); err!=nil{
+				return err
+			}		
+			return nil
+		},
+	)
+	return nil
+}
 
 func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 	docs, err := app.instance.GetDocuments(&bind.CallOpts{})
@@ -226,8 +281,11 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	if err != nil {
 		return nil, err
 	}
+	for i:=0;i<len(docs);i++{
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester))
+	}
 	verifiedDocs := blockchain.FilterDocument(docs, func(doc blockchain.VerificationDocument, requester string) bool {
-		return doc.Requester == requester && doc.Stats == 3
+		return doc.Requester == requester && doc.Stats == 2
 	}, app.conn.CallOpts.From.Hex())
 	fmt.Println("Verified docs : ", verifiedDocs)
 	

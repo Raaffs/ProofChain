@@ -2,19 +2,40 @@ import { Box, Button, TextField } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
+import { ClassNames } from "@emotion/react";
+import { useEffect, useState } from "react";
+import { GetFilePath, UploadDocument } from "../../../wailsjs/go/main/App";
 
-const UploadDocument = () => {
+const UploadDocs = () => {
 
   const handleFormSubmit = (values) => {
     console.log(values);
   };
-
+  // useEffect(()=>{
+  //   const getFile=()=>{
+  //     GetFilePath()
+  //     .catch((err)=>{
+  //       console.log(err)
+  //     })
+  //   }
+  //   getFile()
+  // })
+  const uploadFile=(values)=>{
+    
+    UploadDocument(values.institute,values.name,values.description)
+    .then(()=>{
+      console.log("Uploaded document")
+    })
+    .catch((err)=>{
+      console.log(err)
+    })
+  }
   return (
         <Box m="20px">
         <Header title="CREATE USER" subtitle="Create a New User Profile" />
-
+        
         <Formik
-            onSubmit={handleFormSubmit}
+            onSubmit={uploadFile}
             initialValues={initialValues}
             validationSchema={checkoutSchema}
         >
@@ -74,8 +95,9 @@ const UploadDocument = () => {
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-                Create New User
+                upload document
               </Button>
+
             </Box>
           </form>
         )}
@@ -105,4 +127,4 @@ const initialValues = {
   description: "",
 };
 
-export default UploadDocument;
+export default UploadDocs;

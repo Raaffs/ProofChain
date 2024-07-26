@@ -20,13 +20,13 @@ func TestAddDocument(t *testing.T){
 	errchan:=make(chan error)
 	var wg sync.WaitGroup
 
-	if err:=blockchain.Init(App_test.conn,App_test.in,"",contractAddr);err!=nil{
+	if err:=blockchain.Init(App_test.conn,App_test.in,"ebb95f162cba66bc4406bcdb7f461fda0d859068fd2387a7899bd0e39418cead",contractAddr);err!=nil{
 		t.Fatal(err)
 	}
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
-		App_test.keys.OnLogin("","",errchan)		
+		App_test.keys.OnLogin("Maria","Maria",errchan)		
 	}()
 	go func() {
 		wg.Wait()
@@ -36,7 +36,7 @@ func TestAddDocument(t *testing.T){
 	cid,err:=App_test.dataNode.Upload("testFiles/test1.txt");if err!=nil{
 		t.Fatal("Error uploading file on ipfs : ",err)
 	}
-	pub,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"");if err!=nil{
+	pub,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"kj");if err!=nil{
 		t.Fatal(err)
 	}
 	fmt.Println("institute public key : ",pub)
@@ -59,6 +59,7 @@ func TestAddDocument(t *testing.T){
 		t.Fatal(err)
 	}
 }
+
 
 func TestDoc(t *testing.T){
 	err:=godotenv.Load()

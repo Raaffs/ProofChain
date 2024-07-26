@@ -6,6 +6,8 @@ export function GetAcceptedDocs():Promise<Array<blockchain.VerificationDocument>
 
 export function GetAllDocs():Promise<Array<blockchain.VerificationDocument>>;
 
+export function GetFilePath(arg1:any):Promise<string>;
+
 export function GetPendingDocuments():Promise<Array<blockchain.VerificationDocument>>;
 
 export function GetRejectedDocuments():Promise<Array<blockchain.VerificationDocument>>;
@@ -13,3 +15,5 @@ export function GetRejectedDocuments():Promise<Array<blockchain.VerificationDocu
 export function Login(arg1:string,arg2:string):Promise<void>;
 
 export function Register(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<void>;
+
+export function UploadDocument(arg1:string,arg2:string,arg3:string):Promise<void>;

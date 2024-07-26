@@ -22,6 +22,7 @@ func(i *IPFSManager) Upload(filePath string)(string,error){
 		return "",err
 	}
     defer file.Close()
+	
 	cid,err:=i.shell.Add(file); if err!=nil{
 		return "",err
 	}

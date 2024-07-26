@@ -10,6 +10,10 @@ export function GetAllDocs() {
   return window['go']['main']['App']['GetAllDocs']();
 }
 
+export function GetFilePath(arg1) {
+  return window['go']['main']['App']['GetFilePath'](arg1);
+}
+
 export function GetPendingDocuments() {
   return window['go']['main']['App']['GetPendingDocuments']();
 }
@@ -24,4 +28,8 @@ export function Login(arg1, arg2) {
 
 export function Register(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Register'](arg1, arg2, arg3, arg4);
+}
+
+export function UploadDocument(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UploadDocument'](arg1, arg2, arg3);
 }

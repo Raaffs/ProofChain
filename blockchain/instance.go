@@ -78,8 +78,6 @@ func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts,instit
 	return nil
 }
 
-
-
 func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]VerificationDocument,error){
 	var userDocs []VerificationDocument
 

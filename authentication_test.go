@@ -167,12 +167,27 @@ func TestApproveVerifier(t *testing.T){
 	}
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
 	privateKey:=os.Getenv("PRIVATE_KEY")
+	fmt.Println(privateKey,contractAddr)
 	if err:=blockchain.Init(App_test.conn,App_test.in,privateKey[2:],contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"vj"); err!=nil{
+	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"kj"); err!=nil{
 		t.Fatal(err)
 	}
 }
 
+func TestGetInstitute(t *testing.T) {
+	err:=godotenv.Load()
+	if err!=nil{
+		t.Fatal(err)
+	}
+	contractAddr:=os.Getenv("CONTRACT_ADDR")
+	privateKey:=os.Getenv("PRIVATE_KEY")
 
+	if err:=blockchain.Init(App_test.conn,App_test.in,privateKey[2:],contractAddr);err!=nil{
+		t.Fatal(err)
+	}
+
+	key,_:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"kj")
+	fmt.Println(key)
+}

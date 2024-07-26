@@ -21,7 +21,7 @@ const PendingDocuments=()=>{
                 "Desc":"",
                 "IpfsAddress":""
               }])
-              setError("No Rejected Documents")
+              setError("No Pending Documents")
               }else{
               const updatedDocs = result.map((doc) => {
                  if (doc.IpfsAddress === '') {

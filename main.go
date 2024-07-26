@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/Suy56/ProofChain/nodeData"
@@ -17,6 +18,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := &App{
+		// ctx:			context.Background(),
 		conn:     		&blockchain.ClientConnection{},
 		instance: 		&blockchain.ContractVerifyOperations{},
 		keys: 	  		&keyUtils.ECKeys{},
