@@ -25,25 +25,13 @@ type App struct {
 	keys			*keyUtils.ECKeys
 	ipfs 			*nodeData.IPFSManager
 	user			string
+	isApproved		bool
 	envMap			map[string]any
 }
-
-// NewApp creates a new App application struct
-// func NewApp() *App {
-// 	return &App{
-// 		conn: 		&blockchain.ClientConnection{},
-// 		instance: 	&blockchain.ContractVerifyOperations{},
-// 		keys: 		&keyUtils.ECKeys{},
-// 	}
-// }
-
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
 	app.ctx=ctx
-	if ctx==nil{
-		panic("no context")
-	}
 	keyMap,err:=godotenv.Read(".env");if err!=nil{
 		log.Println("Error loading .env : " ,err)
 		return
@@ -54,26 +42,6 @@ func (app *App) startup(ctx context.Context) {
 	app.ipfs.New("5001")	
 }
 
-func(app *App)tryDecrypt(encryptedIPFS string, publicAddr common.Address)string{
-		pub,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,"kj");if err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		fmt.Println("user pub : ",pub)
-		if err:=app.keys.SetMultiSigKey(pub);err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		sec,err:=app.keys.GenerateSecret();if err!=nil{
-			fmt.Println("error : ",err)
-			return ""
-		}
-		ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
-			fmt.Println("error : ",err,ipfs)
-			return ""
-		}
-		return ipfs
-}
 
 func (app *App)Login(username string, password string) (error) {
 	var wg sync.WaitGroup
@@ -108,27 +76,27 @@ func (app *App)Login(username string, password string) (error) {
 		return fmt.Errorf("error connecting to the smart contract")
 	}
 
-	app.envMap["isApprovedInstitute"],err=app.instance.Instance.IsApprovedInstitute(app.conn.CallOpts,username);if err!=nil{
+	app.isApproved,err=app.instance.Instance.IsApprovedInstitute(app.conn.CallOpts,username);if err!=nil{
 		log.Println("Error getting the account verification status : ",err)
 		return fmt.Errorf("error getting the account verification status")
 	}
-	app.envMap["name"]=username
-
+	app.user=username
 	return nil
 }
 
+func (app *App)Logout(){
+	app=&App{}
+}
 
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
 
 	if len(privateKeyString)<64{
-		fmt.Println("private key error")
+		log.Println("private key error")
 		return fmt.Errorf("invalid private key")
 	}
 	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],app.envMap["CONTRACT_ADDR"].(string));err!=nil{
 		return err
 	}
-	app.envMap["isApprovedInstitute"]=isInstitute
-	app.envMap["name"]=name
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	publicKeychan:=make(chan string)	
@@ -156,19 +124,16 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 				continue
 			}else{
 				if isInstitute{
-					log.Println("Registering institution....")
 					if err:=app.instance.RegisterInstitution(app.conn.TxOpts,pub,name);err!=nil{
-						log.Println("error registering institution")
+						log.Println("error registering institution : ",err)
 						return fmt.Errorf("error registering institution")
 					}
 					log.Println("Registeration successful")
 				}else{
-					log.Println("Registering....")
 					if err:=app.instance.RegisterUser(app.conn.TxOpts,pub);err!=nil{
-						log.Println("error registering institution")
+						log.Println("error registering user : ",err)
 						return fmt.Errorf("error registering institution")
 					}
-					log.Println("Registeration successful")
 				}
 			}
 		case err,ok:=<-errchan:
@@ -186,7 +151,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 func (app *App)GetFilePath(next func(string)error)(string,error){
 	filePath,err:=runtime.OpenFileDialog(app.ctx,runtime.OpenDialogOptions{
 		Title: "Select Document",
-		Filters: []runtime.FileFilter{
+		Filters: []runtime.FileFilter{	
 			{
 				DisplayName: "Documents (*.pdf; *.jpg; *.png)",
 				Pattern: "*.pdf;*.jpg;*.png",
@@ -209,7 +174,6 @@ func (app *App)UploadDocument(institute,name,description string)error{
 				return err
 			}
 			if pubKey==""{
-				fmt.Println("Error pub key : ",pubKey)
 				log.Println("error retrieving the name of institute")
 				return fmt.Errorf("invalid institution")
 			}
@@ -240,7 +204,7 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester))
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
 	return docs,nil
 }
@@ -250,13 +214,11 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	if err != nil {
 		return nil, err
 	}
+	accepted:=app.rt(0)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester))
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	verifiedDocs := blockchain.FilterDocument(docs, func(doc blockchain.VerificationDocument, requester string) bool {
-		return doc.Requester == requester && doc.Stats == 0
-	}, app.conn.CallOpts.From.Hex())
-	fmt.Println("Verified docs : ", verifiedDocs)
+	verifiedDocs := blockchain.FilterDocument(docs,accepted,app.conn.CallOpts.From.Hex())
 	return verifiedDocs, nil
 }
 
@@ -265,30 +227,69 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 	if err != nil {
 		return nil, err
 	}
+	rejected:=app.rt(1)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester))
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	verifiedDocs := blockchain.FilterDocument(docs, func(doc blockchain.VerificationDocument, requester string) bool {
-		return doc.Requester == requester && doc.Stats == 1
-	}, app.conn.CallOpts.From.Hex())
-	fmt.Println("Verified docs : ", verifiedDocs)
-	return verifiedDocs, nil
-
+	rejectedDocs := blockchain.FilterDocument(docs,rejected, app.conn.CallOpts.From.Hex())
+	return rejectedDocs, nil
 }
 
-func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error) {
+func (app *App) GetPendingDocuments()([]blockchain.VerificationDocument, error) {
 	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
 	if err != nil {
 		return nil, err
 	}
+	pending:=app.rt(2)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester))
+		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	verifiedDocs := blockchain.FilterDocument(docs, func(doc blockchain.VerificationDocument, requester string) bool {
-		return doc.Requester == requester && doc.Stats == 2
-	}, app.conn.CallOpts.From.Hex())
-	fmt.Println("Verified docs : ", verifiedDocs)
-	
-	return verifiedDocs, nil
+	pendingDocs := blockchain.FilterDocument(docs,pending,app.conn.CallOpts.From.Hex())
+	return pendingDocs, nil
+}
+
+func (app *App)rt(status int)func(blockchain.VerificationDocument, string)bool{
+	return func(doc blockchain.VerificationDocument,req string)bool{
+		if app.isApproved{
+			return doc.Institute==req && int(doc.Stats)==status
+		}
+		return doc.Requester==req && int(doc.Stats)==status
+	}
+}
+
+
+func(app *App)tryDecrypt(encryptedIPFS string,user common.Address,institute string )string{
+	pub,err:=app.GetPublicKeys(user,institute);if err!=nil{
+		log.Println("error getting public key: ",err)
+		return ""
+	}
+	if err:=app.keys.SetMultiSigKey(pub);err!=nil{
+		log.Println("error setting multisigkey: ",err)
+		return ""
+	}
+	sec,err:=app.keys.GenerateSecret();if err!=nil{
+		log.Println("error generating secret: ",err)
+		return ""
+	}
+	ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
+		log.Println("error decrypting ipfs hash: ",err,ipfs)
+		return ""
+	}
+	return ipfs
+}
+
+func(app *App)GetPublicKeys(user common.Address,institute string)(string,error){
+	if app.isApproved{
+		pub,err:=app.instance.Instance.GetUserPublicKey(app.conn.CallOpts,user);if err!=nil{
+			log.Println("Error getting public key of institute : ",err)
+			return "",err
+		}
+		return pub,nil
+	}
+	pub,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,institute);if err!=nil{
+		log.Println("Error getting public key of user : ",err)
+		return "",err
+	}
+	return pub,nil
 }
 

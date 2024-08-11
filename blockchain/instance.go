@@ -1,7 +1,6 @@
 package blockchain
 
 import (
-	"fmt"
 
 	verify "github.com/Suy56/ProofChain/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -12,8 +11,11 @@ import (
 //GetDocument method in Verify.go returns an anonymous struct with corresponding
 //fields.
 type VerificationDocument struct{
+	//id field is required in frontend for data row element
+	ID			int
 	Requester   string
 	Verifer     string
+	Institute	string
 	Name        string
 	Desc        string
 	IpfsAddress string
@@ -82,14 +84,15 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	var userDocs []VerificationDocument
 
 	docs,err:=cv.Instance.GetDocuments(opts)
-	fmt.Println("documents instance : ",docs)
 	if err!=nil{
 		return nil,err
 	}
 	for i:=0;i<len(docs.Requester);i++{
 		userDoc:=VerificationDocument{
+			ID: 			i,
 			Requester: 		docs.Requester[i].Hex(),
 			Verifer: 		docs.Verifer[i].Hex(),
+			Institute: 		docs.Institute[i],
 			Name: 			docs.Name[i],
 			Desc: 			docs.Desc[i],
 			IpfsAddress:	docs.Ipfs[i],

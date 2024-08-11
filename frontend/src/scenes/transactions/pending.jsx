@@ -10,9 +10,9 @@ const PendingDocuments=()=>{
     const [docs,setDocs]=useState([])
     const [error,setError]=useState(null);
     useEffect(() => {
-      const getDocuments = () => {
         GetPendingDocuments()
         .then((result) => {
+            console.log(" result : ",result)
             if (result===null){
               setDocs([{
                 "Requester":"",
@@ -35,12 +35,10 @@ const PendingDocuments=()=>{
           .catch((err) => {
             setError(err.message  );
           });
-      };
-      getDocuments();
+
     }, []); // Empty dependency array ensures this runs once on mount
     const columns=[
-        {"field":"Requester",headerName:"Requester",flex:1},
-        {"field":"Verifier",headerName:"Verifier",flex:1},
+        {"field":"Institute",headerName:"Institute",flex:1},
         {"field":"Name",headerName:"Name",flex:1},
         {"field":"Desc",headerName:"Description",flex:1},
         {"field":"IpfsAddress",headerName:"Ipfs Address",flex:1},
@@ -84,14 +82,14 @@ const PendingDocuments=()=>{
                     backgroundColor: colors.blueAccent[900],
                   },
                   "& .MuiCheckbox-root": {
-                    color: `${colors.greenAccent[200]} !important`,
+                    color: `${colors.greenAccent[200]} !impor       tant`,
                   },
                 }}
             >
                 <DataGrid 
                 columns={columns}
                 rows={docs}
-                getRowId={(row)=>{return row.Requester}} 
+                getRowId={(row)=>{return row.ID}} 
                 sx={{width:"dynamic", maxWidth:"170vh"}}
                 >
                 </DataGrid>

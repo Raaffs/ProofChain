@@ -54,13 +54,13 @@ func GetECDSAPublicKeyFromPEM(rawPublicKey string) (*ecdh.PublicKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse public key: %v", err)
 	}
-
 	publicKey, ok := parsedKey.(*ecdsa.PublicKey)
 	if !ok {
 		return nil, errors.New("failed to convert to *ecdsa.PublicKey")
 	}
 	ecdhPubKey,err:=publicKey.ECDH()
 	if err!=nil{
+		log.Println("Error getting ecdh public key : ",err)
 		return nil,err
 	}
 	return ecdhPubKey, nil
@@ -108,7 +108,7 @@ func DecryptPrivateKeyFile(user,passphrase string) ([]byte, error) {
 	}
 	decryptedData, err := cryptopasta.Decrypt([]byte(encryptedData), key)
     if err != nil {
-		fmt.Println("Error decrypting file ",err)
+		log.Println("Error decrypting file ",err)
         return nil, err
     }
     return decryptedData, nil
@@ -162,11 +162,10 @@ func ReadKeyMap(user string)([]byte,error){
 func WriteKeyMap(user,keyFilePath string)error{
 	keyFileMap:="keys/keyMap"
 	keyMap,err:=godotenv.Read("keys/keyMap"); if err!=nil{
-		fmt.Println("Error loading key map")
+		log.Println("Error loading key map")
 		return err
 	}
 	userFilePath:=keyMap[user]
-	fmt.Println(user,":",userFilePath)
 	if userFilePath!=""{
 		return errors.New("user already exist")
 	}
@@ -210,12 +209,14 @@ func EncryptIPFSHash(sharedKey []byte, plaintext []byte)(string,error){
 func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) (string, error) {
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
+		log.Println("error decrypting ipfs hash : ",err)
 		return "", err
 	}
 
 	// Generate a new AES-GCM instance
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
+		log.Println("error decrypting ipfs hash : ",err)
 		return "", err
 	}
 
@@ -230,6 +231,7 @@ func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) (string, error) {
 	// Decrypt the data
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
+		log.Println("error decrypting ipfs hash : ",err)
 		return "", err
 	}
 

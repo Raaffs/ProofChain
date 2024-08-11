@@ -11,18 +11,9 @@ const UploadDocs = () => {
   const handleFormSubmit = (values) => {
     console.log(values);
   };
-  // useEffect(()=>{
-  //   const getFile=()=>{
-  //     GetFilePath()
-  //     .catch((err)=>{
-  //       console.log(err)
-  //     })
-  //   }
-  //   getFile()
-  // })
   const uploadFile=(values)=>{
     
-    UploadDocument(values.institute,values.name,values.description)
+    UploadDocument(values.institute,values.documentName,values.description)
     .then(()=>{
       console.log("Uploaded document")
     })

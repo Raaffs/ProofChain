@@ -18,12 +18,20 @@ export function GetPendingDocuments() {
   return window['go']['main']['App']['GetPendingDocuments']();
 }
 
+export function GetPublicKeys(arg1, arg2) {
+  return window['go']['main']['App']['GetPublicKeys'](arg1, arg2);
+}
+
 export function GetRejectedDocuments() {
   return window['go']['main']['App']['GetRejectedDocuments']();
 }
 
 export function Login(arg1, arg2) {
   return window['go']['main']['App']['Login'](arg1, arg2);
+}
+
+export function Logout() {
+  return window['go']['main']['App']['Logout']();
 }
 
 export function Register(arg1, arg2, arg3, arg4) {

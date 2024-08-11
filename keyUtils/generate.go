@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"log"
 )
 type ECKeys struct{
 	Private 	*ecdh.PrivateKey
@@ -31,7 +32,6 @@ func(k *ECKeys)OnLogin(user string,passphrase string, errchan chan error,){
 		return
 	}
 	k.Public=k.Private.PublicKey()
-	fmt.Println("done on login")
 	errchan<-nil
 }
 
@@ -63,7 +63,6 @@ func (k *ECKeys)OnRegister(username,password string,publicKey chan string,errcha
 
 func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 	var err error
-	fmt.Println(k.Private,k.Public)
 	k.MultiSig,err=GetECDSAPublicKeyFromPEM(multiSigKey); if err!=nil{
 		return err
 	}
@@ -74,6 +73,7 @@ func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 //Shared Secret is used for AES encrytion/decryption 
 func(k *ECKeys)GenerateSecret()([]byte,error){
 	if k.MultiSig==nil || k.Private==nil{
+		log.Println("multisig or private key is nil")
 		return nil,fmt.Errorf("Multi-Sig-Public-Key not provided")
 	}
 	secret,err:=k.Private.ECDH(k.MultiSig); if err!=nil{
@@ -93,7 +93,6 @@ func(k * ECKeys)MarshalECDHPublicKey()(string,error){
 					Bytes: ecdhSKBytes,
 			},
 	)
-	fmt.Println("privateKey: ",string(ecdhSKPEMBlock))
 	return string(ecdhSKPEMBlock), nil
 }
 
@@ -109,7 +108,6 @@ func(k *ECKeys)MarshalECDHPrivateKey()(string,error){
             Bytes: ecdhSKBytes,
         },
     )
-	fmt.Println(string(ecdhSKPEMBlock))
     return string(ecdhSKPEMBlock), nil
 }
 
