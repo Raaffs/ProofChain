@@ -3,11 +3,13 @@
 import {blockchain} from '../models';
 import {common} from '../models';
 
+export function FilterStatus(arg1:number):Promise<any>;
+
 export function GetAcceptedDocs():Promise<Array<blockchain.VerificationDocument>>;
 
 export function GetAllDocs():Promise<Array<blockchain.VerificationDocument>>;
 
-export function GetFilePath(arg1:any):Promise<string>;
+export function GetFilePath():Promise<string>;
 
 export function GetPendingDocuments():Promise<Array<blockchain.VerificationDocument>>;
 
@@ -20,5 +22,7 @@ export function Login(arg1:string,arg2:string):Promise<void>;
 export function Logout():Promise<void>;
 
 export function Register(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<void>;
+
+export function TryDecrypt(arg1:string,arg2:common.Address,arg3:string):Promise<string>;
 
 export function UploadDocument(arg1:string,arg2:string,arg3:string):Promise<void>;

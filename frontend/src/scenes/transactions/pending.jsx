@@ -15,6 +15,7 @@ const PendingDocuments=()=>{
             console.log(" result : ",result)
             if (result===null){
               setDocs([{
+                "ID":"",
                 "Requester":"",
                 "Verifier":"",
                 "Name":"",
@@ -33,11 +34,12 @@ const PendingDocuments=()=>{
             }
           })
           .catch((err) => {
-            setError(err.message  );
+            setError(err.message );
           });
 
     }, []); // Empty dependency array ensures this runs once on mount
     const columns=[
+        {"field":"Requester",headerName:"Requester",flex:1},
         {"field":"Institute",headerName:"Institute",flex:1},
         {"field":"Name",headerName:"Name",flex:1},
         {"field":"Desc",headerName:"Description",flex:1},

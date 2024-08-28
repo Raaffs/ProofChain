@@ -14,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -41,7 +40,6 @@ func (app *App) startup(ctx context.Context) {
 	}
 	app.ipfs.New("5001")	
 }
-
 
 func (app *App)Login(username string, password string) (error) {
 	var wg sync.WaitGroup
@@ -80,6 +78,7 @@ func (app *App)Login(username string, password string) (error) {
 		log.Println("Error getting the account verification status : ",err)
 		return fmt.Errorf("error getting the account verification status")
 	}
+	log.Println("is approved : ",app.isApproved)
 	app.user=username
 	return nil
 }
@@ -89,7 +88,6 @@ func (app *App)Logout(){
 }
 
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
-
 	if len(privateKeyString)<64{
 		log.Println("private key error")
 		return fmt.Errorf("invalid private key")
@@ -148,53 +146,36 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 	
 }
 
-func (app *App)GetFilePath(next func(string)error)(string,error){
-	filePath,err:=runtime.OpenFileDialog(app.ctx,runtime.OpenDialogOptions{
-		Title: "Select Document",
-		Filters: []runtime.FileFilter{	
-			{
-				DisplayName: "Documents (*.pdf; *.jpg; *.png)",
-				Pattern: "*.pdf;*.jpg;*.png",
-			},
-		},
-	})
-	if err!=nil{
-		return "",err
-	}
-	if err:=next(filePath);err!=nil{
-		return "",err
-	}
-	return filePath,nil
-}
 
 func (app *App)UploadDocument(institute,name,description string)error{
-	app.GetFilePath(
-		func(file string) error {
-			pubKey,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,strings.TrimSpace(institute));if err!=nil{
-				return err
-			}
-			if pubKey==""{
-				log.Println("error retrieving the name of institute")
-				return fmt.Errorf("invalid institution")
-			}
-			cid,err:=app.ipfs.Upload(file);if err!=nil{
-				return err					
-			}
-			if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
-				return err
-			}
-			secretKey,err:=app.keys.GenerateSecret();if err!=nil{
-				return err
-			}
-			encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,[]byte(cid));if err!=nil{
-				return err
-			}
-			if err:=app.instance.AddDocument(app.conn.TxOpts,encryptedDocument,institute,name,description); err!=nil{
-				return err
-			}		
-			return nil
-		},
-	)
+	log.Println("Here ",institute,name,description)
+	file,err:=app.GetFilePath();if err!=nil{
+		log.Println("Error uploading File:",err)
+		return fmt.Errorf("Error uploading file")
+	}
+	log.Println("here file ",file)
+	pubKey,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,strings.TrimSpace(institute));if err!=nil{
+		return err
+	}
+	if pubKey==""{
+		log.Println("error retrieving the name of institute")
+		return fmt.Errorf("invalid institution")
+	}
+	cid,err:=app.ipfs.Upload(file);if err!=nil{
+		return err					
+	}
+	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
+		return err
+	}
+	secretKey,err:=app.keys.GenerateSecret();if err!=nil{
+		return err
+	}
+	encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,[]byte(cid));if err!=nil{
+		return err
+	}
+	if err:=app.instance.AddDocument(app.conn.TxOpts,encryptedDocument,institute,name,description); err!=nil{
+		return err
+	}		
 	return nil
 }
 
@@ -204,7 +185,7 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
 	return docs,nil
 }
@@ -214,11 +195,14 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	if err != nil {
 		return nil, err
 	}
-	accepted:=app.rt(0)
+	log.Println("doc id : ",docs[0].ID)
+	accepted:=app.FilterStatus(0)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		fmt.Println("docs",docs[i])
 	}
-	verifiedDocs := blockchain.FilterDocument(docs,accepted,app.conn.CallOpts.From.Hex())
+	verifiedDocs := blockchain.FilterDocument(docs,accepted)
+	log.Println("verified : ",verifiedDocs)
 	return verifiedDocs, nil
 }
 
@@ -227,69 +211,36 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 	if err != nil {
 		return nil, err
 	}
-	rejected:=app.rt(1)
+	rejected:=app.FilterStatus(1)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	rejectedDocs := blockchain.FilterDocument(docs,rejected, app.conn.CallOpts.From.Hex())
+	rejectedDocs := blockchain.FilterDocument(docs,rejected,)
+
 	return rejectedDocs, nil
 }
 
-func (app *App) GetPendingDocuments()([]blockchain.VerificationDocument, error) {
-	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
-	if err != nil {
+func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error) {
+	docs, err := app.instance.GetDocuments(app.conn.CallOpts); if err != nil {
 		return nil, err
 	}
-	pending:=app.rt(2)
+	log.Println("doc id : ",docs[0].ID)
+	pending:=app.FilterStatus(2)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.tryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	pendingDocs := blockchain.FilterDocument(docs,pending,app.conn.CallOpts.From.Hex())
+	pendingDocs := blockchain.FilterDocument(docs,pending)
+	log.Println("pending : ",pendingDocs)
 	return pendingDocs, nil
 }
 
-func (app *App)rt(status int)func(blockchain.VerificationDocument, string)bool{
-	return func(doc blockchain.VerificationDocument,req string)bool{
-		if app.isApproved{
-			return doc.Institute==req && int(doc.Stats)==status
-		}
-		return doc.Requester==req && int(doc.Stats)==status
+func (app *App)ApproveDocument(status int)error{
+	if !app.isApproved{
+		return fmt.Errorf("action not approved")
 	}
+	if err:=app.instance.VerifyDocument(app.conn.TxOpts,app.user,"",uint8(status)); err!=nil{
+		log.Println("Error approving document : ",err)
+		return fmt.Errorf("error approving document")
+	}
+	return nil
 }
-
-
-func(app *App)tryDecrypt(encryptedIPFS string,user common.Address,institute string )string{
-	pub,err:=app.GetPublicKeys(user,institute);if err!=nil{
-		log.Println("error getting public key: ",err)
-		return ""
-	}
-	if err:=app.keys.SetMultiSigKey(pub);err!=nil{
-		log.Println("error setting multisigkey: ",err)
-		return ""
-	}
-	sec,err:=app.keys.GenerateSecret();if err!=nil{
-		log.Println("error generating secret: ",err)
-		return ""
-	}
-	ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
-		log.Println("error decrypting ipfs hash: ",err,ipfs)
-		return ""
-	}
-	return ipfs
-}
-
-func(app *App)GetPublicKeys(user common.Address,institute string)(string,error){
-	if app.isApproved{
-		pub,err:=app.instance.Instance.GetUserPublicKey(app.conn.CallOpts,user);if err!=nil{
-			log.Println("Error getting public key of institute : ",err)
-			return "",err
-		}
-		return pub,nil
-	}
-	pub,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,institute);if err!=nil{
-		log.Println("Error getting public key of user : ",err)
-		return "",err
-	}
-	return pub,nil
-}
-

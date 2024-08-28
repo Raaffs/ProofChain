@@ -12,6 +12,7 @@ import { useTheme } from "@emotion/react";
 import {useNavigate} from "react-router-dom"
 import logo from '../../assets/images/bg8.jpg'
 import bg from '../../assets/images/Untitled.png'
+import PopUp from "../../components/PopUp";
 const Redirect=({to})=>{
     return(
         <Link to={to}/>
@@ -109,9 +110,7 @@ function LoginUser() {
             <Redirect 
                 to="/register" 
             />
-
-                    </Box>
-                    
+                </Box>        
             </Box>
             
         </CardActions>    

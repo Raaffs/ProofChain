@@ -19,6 +19,7 @@ const ApprovedDocuments=()=>{
         .then((result) => {
             if (result===null){
               setDocs([{
+                "ID":"",
                 "Requester":"",
                 "Verifier":"",
                 "Name":"",
@@ -37,7 +38,7 @@ const ApprovedDocuments=()=>{
             }
           })
           .catch((err) => {
-            setError(err.message  );
+            setError(err.message);
           });
       };
       getDocuments();

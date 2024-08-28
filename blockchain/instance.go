@@ -14,7 +14,7 @@ type VerificationDocument struct{
 	//id field is required in frontend for data row element
 	ID			int
 	Requester   string
-	Verifer     string
+	Verifier     string
 	Institute	string
 	Name        string
 	Desc        string
@@ -89,9 +89,10 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	}
 	for i:=0;i<len(docs.Requester);i++{
 		userDoc:=VerificationDocument{
-			ID: 			i,
+			//ID field is required in frontend for data row element
+			ID: 			i,				
 			Requester: 		docs.Requester[i].Hex(),
-			Verifer: 		docs.Verifer[i].Hex(),
+			Verifier: 		docs.Verifer[i].Hex(),
 			Institute: 		docs.Institute[i],
 			Name: 			docs.Name[i],
 			Desc: 			docs.Desc[i],

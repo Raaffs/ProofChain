@@ -1,30 +1,34 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, Button, Snackbar, IconButton, TextField } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
 import { ClassNames } from "@emotion/react";
 import { useEffect, useState } from "react";
 import { GetFilePath, UploadDocument } from "../../../wailsjs/go/main/App";
-
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import PopUp from "../../components/PopUp";
 const UploadDocs = () => {
 
   const handleFormSubmit = (values) => {
     console.log(values);
   };
+  const [error,setError]=useState(null)
+  const [message,setMessage]=useState("")
+
   const uploadFile=(values)=>{
-    
     UploadDocument(values.institute,values.documentName,values.description)
     .then(()=>{
-      console.log("Uploaded document")
+      setMessage("Document uploaded successfully")
     })
     .catch((err)=>{
+      setError(err)
       console.log(err)
     })
   }
   return (
         <Box m="20px">
-        <Header title="CREATE USER" subtitle="Create a New User Profile" />
-        
+        <Header title="Verify Document" subtitle="upload document you want to verify" />
+        {error && <PopUp Error={error} Message="" onClose={()=>{setError(null)}} />}
         <Formik
             onSubmit={uploadFile}
             initialValues={initialValues}
@@ -40,13 +44,12 @@ const UploadDocs = () => {
             }) => (
           <form onSubmit={handleSubmit}>
             <Box
-              display="grid"
+              display="flex"
               gap="30px"
-              gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+              justifyContent="center"
             >
               <TextField
-                fullWidth
-                variant="filled"
+                
                 type="text"
                 label="Document Name"
                 onBlur={handleBlur}
@@ -55,11 +58,9 @@ const UploadDocs = () => {
                 name="documentName"
                 error={!!touched.documentName && !!errors.documentName}
                 helperText={touched.documentName && errors.documentName}
-                sx={{ gridColumn: "span 2" }}
+                sx={{ margin:'16px',width:'95%' }}
               />
               <TextField
-                fullWidth
-                variant="filled"
                 type="text"
                 label="Institute Name"
                 onBlur={handleBlur}
@@ -68,11 +69,10 @@ const UploadDocs = () => {
                 name="institute"
                 error={!!touched.institute && !!errors.institute}
                 helperText={touched.institute && errors.institute}
-                sx={{ gridColumn: "span 2" }}
+                sx={{ margin:'16px',width:'95%' }}
               />  
               <TextField
-              fullWidth
-              variant="filled"
+              
               type="text"
               label="Description"
               onBlur={handleBlur}
@@ -81,14 +81,18 @@ const UploadDocs = () => {
               name="description"
               error={!!touched.description && !!errors.description}
               helperText={touched.description && errors.description}
-              sx={{ gridColumn: "span 2" }}
+              sx={{ margin:'16px',width:'95%' }}
             />
             </Box>
-            <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
-                upload document
-              </Button>
-
+            <Box 
+              display="flex" 
+              justifyContent="center" 
+              mt="20px"
+            >
+              <IconButton type='submit' color="secondary" variant="contained">
+                <FileUploadOutlinedIcon sx={{fontSize:30}}/>
+                Upload
+              </IconButton>
             </Box>
           </form>
         )}

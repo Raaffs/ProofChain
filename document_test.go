@@ -73,7 +73,7 @@ func TestDoc(t *testing.T){
 	}	
 	contractAddr:=os.Getenv("CONTRACT_ADDR")
 
-	if err:=blockchain.Init(App_test.conn,App_test.in,"",contractAddr);err!=nil{
+	if err:=blockchain.Init(App_test.conn,App_test.in,"3a688747a7ea218d2db2d17c5ae2d7b04f9e6fd57284a1616b07c4bd87821ec2",contractAddr);err!=nil{
 		t.Fatal(err)
 	}
 	docs,err:=App_test.in.GetDocuments(App_test.conn.CallOpts);if err!=nil{
@@ -85,7 +85,7 @@ func TestDoc(t *testing.T){
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		App_test.keys.OnLogin("","",errchan)
+		App_test.keys.OnLogin("ins","ins",errchan)
 	}()
 	go func() {
 		wg.Wait()
@@ -96,7 +96,6 @@ func TestDoc(t *testing.T){
 			fmt.Println("error : ",err)
 			continue
 		}
-		fmt.Println("user pub : ",pub)
 		if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
 			fmt.Println("error : ",err)
 			continue
@@ -109,8 +108,9 @@ func TestDoc(t *testing.T){
 			fmt.Println("error : ",err,ipfs)
 			continue
 		}
-		fmt.Println("ipfs: ",ipfs)
+		fmt.Println(ipfs)
 	}
+
 }
 
 func TestApproveDoc(t *testing.T) {
@@ -143,13 +143,14 @@ func TestApproveDoc(t *testing.T) {
 	sec,err:=App_test.keys.GenerateSecret();if err!=nil{
 		t.Fatal("err sec: ",err)
 	}
-	enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmTQpEySom7HNb4HJrZPEqTQnC7prd9Z9eiWLrj4moYVD3"));if err!=nil{
+	enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmQVH5s5nk8b4UoC7cNZS6xB1cFMs4jWQJiUbjQvnq8KfF"));if err!=nil{
 		t.Fatal(err)
 	}
 	fmt.Println("enc",enc)
 	if err:=App_test.in.VerifyDocument(App_test.conn.TxOpts,"ins",enc,0);err!=nil{
 		t.Fatal("Error approving document : ",err)
 	}
+
 }		
 
 func TestEncryptionEquality(t *testing.T) {
@@ -205,4 +206,48 @@ func TestEncryptionEquality(t *testing.T) {
 	// 	t.Fatal(err)
 	// }
 	// fmt.Println("enc : ",enc2==enc)
+}
+
+func TestGetUserDocs(t *testing.T){
+	err:=godotenv.Load()
+	if err!=nil{
+		t.Fatal(err)
+	}
+	contractAddr:=os.Getenv("CONTRACT_ADDR")
+	errchan:=make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func ()  {
+		defer wg.Done()
+		App_test.keys.OnLogin("Maria","Maria",errchan)		
+	}()
+	go func() {
+		wg.Wait()
+		close(errchan)
+	}()	
+
+	err=blockchain.Init(App_test.conn,App_test.in,"9d99735c0d9902c6d4baba9c66f611a45705c52e65f6b037c6fb2e06293273bb",contractAddr);if err!=nil{t.Fatal(err)}	
+	docs,err:=App_test.in.GetDocuments(App_test.conn.CallOpts);if err!=nil{
+		t.Fatal("Error getting docs:",err)
+	}
+	for _,doc :=range docs{
+		pub,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,doc.Institute);if err!=nil{
+			fmt.Println("error : ",err)
+			continue
+		}
+		if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
+			fmt.Println("error : ",err)
+			continue
+		}
+		sec,err:=App_test.keys.GenerateSecret();if err!=nil{
+			fmt.Println("error : ",err)
+			continue
+		}
+		ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(doc.IpfsAddress));if err!=nil{
+			fmt.Println("error : ",err,ipfs)
+			continue
+		}
+		fmt.Println(ipfs)
+	}
+
 }
