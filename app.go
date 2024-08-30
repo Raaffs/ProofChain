@@ -87,6 +87,14 @@ func (app *App)Logout(){
 	app=&App{}
 }
 
+func (app *App)IsLoggedIn()bool{
+	return app.conn.TxOpts!=nil
+}
+
+func (app *App)IsApprovedInstitute()bool{
+	return app.isApproved
+}
+
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
 	if len(privateKeyString)<64{
 		log.Println("private key error")

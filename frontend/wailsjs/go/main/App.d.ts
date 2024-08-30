@@ -3,6 +3,8 @@
 import {blockchain} from '../models';
 import {common} from '../models';
 
+export function ApproveDocument(arg1:number):Promise<void>;
+
 export function FilterStatus(arg1:number):Promise<any>;
 
 export function GetAcceptedDocs():Promise<Array<blockchain.VerificationDocument>>;
@@ -16,6 +18,10 @@ export function GetPendingDocuments():Promise<Array<blockchain.VerificationDocum
 export function GetPublicKeys(arg1:common.Address,arg2:string):Promise<string>;
 
 export function GetRejectedDocuments():Promise<Array<blockchain.VerificationDocument>>;
+
+export function IsApprovedInstitute():Promise<boolean>;
+
+export function IsLoggedIn():Promise<boolean>;
 
 export function Login(arg1:string,arg2:string):Promise<void>;
 

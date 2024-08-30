@@ -1,7 +1,7 @@
 import 'react-pro-sidebar/dist/css/styles.css'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {ProSidebar, Menu, MenuItem} from "react-pro-sidebar"
-import {Box,Button,IconButton,Typography,useTheme} from "@mui/material"
+import {Box,IconButton,Typography,useTheme} from "@mui/material"
 import { Link } from 'react-router-dom'
 import { tokens } from '../../themes'
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -14,14 +14,11 @@ import ReceiptOutlinedIcon from '@mui/icons-material/ReceiptOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import sidebarlogo from '../../assets/images/sidebar-3.jpg'
-import zIndex from '@mui/material/styles/zIndex'
+import { IsLoggedIn } from '../../../wailsjs/go/main/App'
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   let color = colors.grey[100]; // Default color
-
-  // Check title to set color accordingly
   if (title === "Approved") {
     color = "green";
   } else if (title === "Rejected") {
@@ -45,6 +42,20 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
 };
 
 const Sidebar = () => {
+  const [isLoggedIn,setIsLoggedIn]=useState(false)
+  useEffect(()=>{
+    const getLogStatus=()=>{
+      IsLoggedIn()
+      .then((result)=>{
+        setIsLoggedIn(result)
+      })
+      .catch((error)=>{
+        console.log(error)
+      })
+    }
+    getLogStatus()
+  })
+
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -137,13 +148,13 @@ const Sidebar = () => {
               Documents
             </Typography>
     
-            <Item
+            { isLoggedIn &&(<Item
               title="Approved"
               to="/documents/approved"
               icon={<AddTaskOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            />
+            />)}
             <Item
               title="Rejected"
               to="/documents/rejected"
@@ -163,41 +174,6 @@ const Sidebar = () => {
               variant="h4"
               color={colors.grey[300]}
               sx={{ m: "15px 0 5px 5px" }}
-            >
-              Transacts
-            </Typography>
-            <Item
-              title="All"
-              to="/transactions"
-              icon={<ReceiptOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-             <Item
-              title="Approved Transactions"
-              to="/transactions/approved"
-              icon={<AddTaskOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-             <Item
-              title="Rejected Transactions"
-              to="/transactions/rejected"
-              icon={<CancelOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-             <Item
-              title="Pending Trasactions"
-              to="/transactions/pending"
-              icon={<TimerOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Typography
-              variant="h4"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 15px" }}
             >
                 
             Verify

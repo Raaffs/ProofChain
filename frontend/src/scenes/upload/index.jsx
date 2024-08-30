@@ -3,8 +3,8 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
 import { ClassNames } from "@emotion/react";
-import { useEffect, useState } from "react";
-import { GetFilePath, UploadDocument } from "../../../wailsjs/go/main/App";
+import {  useState } from "react";
+import {  UploadDocument } from "../../../wailsjs/go/main/App";
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import PopUp from "../../components/PopUp";
 const UploadDocs = () => {
@@ -22,13 +22,13 @@ const UploadDocs = () => {
     })
     .catch((err)=>{
       setError(err)
-      console.log(err)
     })
   }
   return (
         <Box m="20px">
         <Header title="Verify Document" subtitle="upload document you want to verify" />
         {error && <PopUp Error={error} Message="" onClose={()=>{setError(null)}} />}
+        {message && <PopUp Message={message} Error={null} onClose={()=>{setError(null)}} />}
         <Formik
             onSubmit={uploadFile}
             initialValues={initialValues}
