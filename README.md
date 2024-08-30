@@ -122,15 +122,15 @@ ProofChain is a document verification desktop application using Ethereum Blockch
    ```js
    wails build
    ```
-### Deploying contract
-  ```sh
-  go test -v -run test/TestDeploy 
-  ```
-  Launch Application
-  ```sh
-  ./build/bin/ProofChain
-  ```
-
+### Starting Application
+1. Deploy Contract
+   ```sh
+   go test -v -run test/TestDeploy
+   ```
+2. Launch Application
+   ```sh
+   ./build/bin/ProofChain
+   ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
