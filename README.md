@@ -43,7 +43,7 @@
       </ul>
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#development">Development</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
@@ -73,8 +73,6 @@ ProofChain is a document verification desktop application using Ethereum Blockch
 
 ### Built With
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
 * [![Go][Go]][Go-url]
 * [![React][React.js]][React-url]
 * [![Ethereum][Ethereum]][Ethereum-url]
@@ -87,7 +85,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+## Development
 
 ### Prerequisites
 
@@ -104,7 +102,7 @@ This section should list any major frameworks/libraries used to bootstrap your p
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/Suy56/ProofChain.git
+   git clone https://github.com/Raaffs/ProofChain.git
    ```
 2. Set up Enviroment variables in `.env` file
     ```
@@ -112,8 +110,6 @@ This section should list any major frameworks/libraries used to bootstrap your p
     CONTRACT_ADDR=YOUR_CONTRACT_ADDRESS
     PRIVATE_KEY=YOUR_PRIVATE_KEY
     ```
-
-
    
 3. Install NPM packages
    ```sh
@@ -126,10 +122,14 @@ This section should list any major frameworks/libraries used to bootstrap your p
    ```js
    wails build
    ```
-5. Launch Application
-   ```sh
-   ./build/bin/ProofChain
-   ```
+### Deploying contract
+```sh
+go test -v -run test/TestDeploy 
+```
+Launch Application
+```sh
+./build/bin/ProofChain
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
