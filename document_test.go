@@ -122,7 +122,7 @@ func TestApproveDoc(t *testing.T) {
 	errchan:=make(chan error)
 	var wg sync.WaitGroup
 
-	err=blockchain.Init(App_test.conn,App_test.in,"3a688747a7ea218d2db2d17c5ae2d7b04f9e6fd57284a1616b07c4bd87821ec2",contractAddr);if err!=nil{t.Fatal(err)}	
+	err=blockchain.Init(App_test.conn,App_test.in,"9fba5c638562a9efcccadacda8f54cfa1fee0f1ea5b5967125cc16e609afc124",contractAddr);if err!=nil{t.Fatal(err)}	
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
@@ -133,24 +133,23 @@ func TestApproveDoc(t *testing.T) {
 		close(errchan)
 	}()
 
-	pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress("0x442783011f4A7e04eb00CEa8Ae508b65E7A0283C"));if err!=nil{
+	pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress("0x30ceA26c8de6BCf32B8D4B8Fefa31F4a782669AC"));if err!=nil{
 		t.Fatal("error getting user's pub key: ",err)
 	}
-
 	if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
 		t.Fatal("error getting multi sig:",err)
 	}
 	sec,err:=App_test.keys.GenerateSecret();if err!=nil{
 		t.Fatal("err sec: ",err)
 	}
-	enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmQVH5s5nk8b4UoC7cNZS6xB1cFMs4jWQJiUbjQvnq8KfF"));if err!=nil{
+	enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmeoGRALSU3Zg7qqgVkmFEDiyv6aS8EQKtCiwYXr5rvX9p"));if err!=nil{
 		t.Fatal(err)
 	}
 	fmt.Println("enc",enc)
-	if err:=App_test.in.VerifyDocument(App_test.conn.TxOpts,"ins",enc,0);err!=nil{
+	err=App_test.in.VerifyDocument(App_test.conn.TxOpts,"ins",enc,1);if err!=nil{
 		t.Fatal("Error approving document : ",err)
 	}
-
+	fmt.Println("err ",err)
 }		
 
 func TestEncryptionEquality(t *testing.T) {

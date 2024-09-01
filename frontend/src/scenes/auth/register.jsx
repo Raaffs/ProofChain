@@ -13,7 +13,7 @@ import {useNavigate} from "react-router-dom"
 import { useTheme } from "@emotion/react";
 import logo from '../../assets/images/bg7.jpg'
 import bg from '../../assets/images/Untitled.png'
-function RegisterUser() {
+function RegisterUser({setAuthStatus}) {
     const theme=useTheme()
     const btnstyle={margin:'50px 0',width:'200px'}
     let registerAsVerifier=false
@@ -27,6 +27,7 @@ function RegisterUser() {
     const handleClick = () => {
         Register(input.privateKey, input.username, input.password,registerAsVerifier)
         .then(() => {
+            setAuthStatus(true)
             navigate('/dashboard')
         })
         .catch((err) => {

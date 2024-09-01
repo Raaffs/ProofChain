@@ -4,11 +4,21 @@ import { tokens } from "../../themes";
 import Header from "../../components/Header";
 import { GetPendingDocuments } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
+import { IsApprovedInstitute } from "../../../wailsjs/go/main/App";
 const PendingDocuments=()=>{
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [docs,setDocs]=useState([])
     const [error,setError]=useState(null);
+    const handleApprove = (id) => {
+      console.log('Approved ID:', id);
+      return 0;
+    };
+  
+    const handleReject = (id) => {
+      console.log('Rejected ID:', id);
+      return 1;
+    };
     useEffect(() => {
         GetPendingDocuments()
         .then((result) => {
@@ -36,6 +46,36 @@ const PendingDocuments=()=>{
           .catch((err) => {
             setError(err.message );
           });
+          IsApprovedInstitute()
+          .then((result)=>{
+            if (result==true){
+              columns.push({
+                field:"verify",
+                headerName: "Verify",
+                flex: 1,
+                renderCell: (params) => (
+                  <Box>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleApprove(params.row.ID)}
+                      style={{ marginRight: '10px' }}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => handleReject(params.row.ID)}
+                    >
+                      Reject
+                    </Button>
+                  </Box>
+                ),
+              })
+              .catch((error)=>{console.log(error)})
+            }
+          })
 
     }, []); // Empty dependency array ensures this runs once on mount
     const columns=[

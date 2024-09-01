@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"testing"
@@ -187,6 +188,8 @@ func TestGetInstitute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	key,_:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins")
-	fmt.Println(key)
+	key,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins2"); if err!=nil{
+		log.Fatal(err)
+	}
+	fmt.Println("pub",key)
 }

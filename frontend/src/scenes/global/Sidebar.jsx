@@ -1,5 +1,5 @@
 import 'react-pro-sidebar/dist/css/styles.css'
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {ProSidebar, Menu, MenuItem} from "react-pro-sidebar"
 import {Box,IconButton,Typography,useTheme} from "@mui/material"
 import { Link } from 'react-router-dom'
@@ -10,11 +10,11 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined'
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
-import ReceiptOutlinedIcon from '@mui/icons-material/ReceiptOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import { IsLoggedIn } from '../../../wailsjs/go/main/App'
+
+
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -41,20 +41,7 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
-const Sidebar = () => {
-  const [isLoggedIn,setIsLoggedIn]=useState(false)
-  useEffect(()=>{
-    const getLogStatus=()=>{
-      IsLoggedIn()
-      .then((result)=>{
-        setIsLoggedIn(result)
-      })
-      .catch((error)=>{
-        console.log(error)
-      })
-    }
-    getLogStatus()
-  })
+const Sidebar = ({authStatus}) => {
 
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -126,12 +113,16 @@ const Sidebar = () => {
           )}
 
           <Box paddingLeft={isCollapsed ? undefined : "10%"} paddingRight={isCollapsed?undefined:"10%"}>
-           
-          <Typography
+          {authStatus && (
+          <>
+            <Typography
               variant="h4"
               color={colors.grey[300]}
               sx={{ m: "15px 0 10px 2px" }}
-            >Dashboard</Typography>
+            >
+              Dashboard
+            </Typography>
+
             <Item
               title="Dashboard"
               to="/dashboard"
@@ -147,36 +138,36 @@ const Sidebar = () => {
             >
               Documents
             </Typography>
-    
-            { isLoggedIn &&(<Item
+
+            <Item
               title="Approved"
               to="/documents/approved"
               icon={<AddTaskOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            />)}
+            />
             <Item
               title="Rejected"
               to="/documents/rejected"
               icon={<CancelOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-              style={{color: colors.redAccent[200]}}
+              style={{ color: colors.redAccent[200] }}
             />
-             <Item
+            <Item
               title="Pending"
               to="/documents/pending"
               icon={<TimerOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
+
             <Typography
               variant="h4"
               color={colors.grey[300]}
               sx={{ m: "15px 0 5px 5px" }}
             >
-                
-            Verify
+              Verify
             </Typography>
             <Item
               title="Upload"
@@ -185,8 +176,9 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-          
-
+          </>
+        )}
+           
             <Typography
               variant="h4"
               color={colors.grey[300]}
@@ -194,27 +186,31 @@ const Sidebar = () => {
             >
               Accounts
             </Typography>
-            <Item
+            {authStatus &&(            
+              <Item
               title="Logout"
               to="/logout"
               icon={<LogoutOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-              <Item
+          )}              
+       {!authStatus && (     <Item
               title="Login"
               to="/"
               icon={<LoginOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
-            />
-            <Item
+            />)}
+              {!authStatus && (            
+              <Item
               title="New Account"
               to="/register"
               icon={<PersonAddOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
+          )}          
           </Box>
         </Menu>
       </ProSidebar>

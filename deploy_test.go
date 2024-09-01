@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -20,6 +21,7 @@ func TestDeploy(t *testing.T){
 		t.Fatal("Error loading env")
 	}
 	privateKey:=os.Getenv("PRIVATE_KEY")
+	fmt.Println("p: ",privateKey)
 	blockchain.Init(app.conn,app.in,privateKey[2:],"")
 	if err!=nil{
 		t.Fatal("Error connecting to chain")

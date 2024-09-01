@@ -87,7 +87,7 @@ func (app *App)Logout(){
 	app=&App{}
 }
 
-func (app *App)IsLoggedIn()bool{
+func (app *App)IsLoggedIn()(bool){
 	return app.conn.TxOpts!=nil
 }
 
@@ -134,7 +134,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 						log.Println("error registering institution : ",err)
 						return fmt.Errorf("error registering institution")
 					}
-					log.Println("Registeration successful")
+					log.Println("	cessful")
 				}else{
 					if err:=app.instance.RegisterUser(app.conn.TxOpts,pub);err!=nil{
 						log.Println("error registering user : ",err)
@@ -203,7 +203,6 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("doc id : ",docs[0].ID)
 	accepted:=app.FilterStatus(0)
 	for i:=0;i<len(docs);i++{
 		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
@@ -232,7 +231,6 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	docs, err := app.instance.GetDocuments(app.conn.CallOpts); if err != nil {
 		return nil, err
 	}
-	log.Println("doc id : ",docs[0].ID)
 	pending:=app.FilterStatus(2)
 	for i:=0;i<len(docs);i++{
 		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)

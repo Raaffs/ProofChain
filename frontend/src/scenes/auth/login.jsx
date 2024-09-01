@@ -1,24 +1,17 @@
-import { ChangeEvent,useEffect,useState } from "react";
+import {useState } from "react";
 import { Grid,Box,Paper,TextField,Typography, Button,Avatar, Link,Card,CardContent,CardActions, CardMedia} from "@mui/material";
-import {FormControlLabel} from "@mui/material";
-import Header from "../../components/Header"
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Login,Register } from "../../../wailsjs/go/main/App";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { tokens } from "../../themes";
-import {Formik, Form} from 'formik'
-import * as yup from "yup"
+import { Login } from "../../../wailsjs/go/main/App";
 import { useTheme } from "@emotion/react";
 import {useNavigate} from "react-router-dom"
-import logo from '../../assets/images/bg8.jpg'
 import bg from '../../assets/images/Untitled.png'
-import PopUp from "../../components/PopUp";
+
 const Redirect=({to})=>{
     return(
         <Link to={to}/>
     )
 }
-function LoginUser() {
+function LoginUser({setAuthStatus}) {
     const theme=useTheme()
     const btnstyle={margin:'50px 0',width:'200px'}
     const navigate =useNavigate()
@@ -31,6 +24,7 @@ function LoginUser() {
     const handleClick = () => {
         Login(input.username, input.password)
             .then(() => {
+                setAuthStatus(true)
                 navigate('/dashboard')
             })
             .catch((err) => {
