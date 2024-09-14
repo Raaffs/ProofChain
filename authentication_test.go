@@ -175,7 +175,8 @@ func TestApproveVerifier(t *testing.T){
 		t.Fatal(err)
 	}
 }
-
+// d3d095dc3fd845d259516e8fc78b4b56db2b89700a319a73817c1cf2e28115a3
+// 81833cb772866ceba95f81f2221f53dcdd3608978081a279b3a76322d1a83b41
 func TestGetInstitute(t *testing.T) {
 	err:=godotenv.Load()
 	if err!=nil{
@@ -188,7 +189,7 @@ func TestGetInstitute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	key,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins2"); if err!=nil{
+	key,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins"); if err!=nil{
 		log.Fatal(err)
 	}
 	fmt.Println("pub",key)

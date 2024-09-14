@@ -27,6 +27,7 @@ type App struct {
 	isApproved		bool
 	envMap			map[string]any
 }
+// 8572c
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
@@ -161,7 +162,6 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
-	log.Println("here file ",file)
 	pubKey,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,strings.TrimSpace(institute));if err!=nil{
 		return err
 	}
@@ -181,7 +181,11 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,[]byte(cid));if err!=nil{
 		return err
 	}
-	if err:=app.instance.AddDocument(app.conn.TxOpts,encryptedDocument,institute,name,description); err!=nil{
+	shaHash,err:=Keccak256File(file); if err!=nil{
+		log.Println("Error hashing file:",err)
+		return fmt.Errorf("Error uploading file")
+	}
+	if err:=app.instance.AddDocument(app.conn.TxOpts,shaHash,encryptedDocument,institute,name); err!=nil{
 		return err
 	}		
 	return nil
@@ -195,7 +199,10 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 	for i:=0;i<len(docs);i++{
 		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
-	return docs,nil
+	allDocs:=blockchain.FilterDocument(docs,func(vd blockchain.VerificationDocument) bool {
+		return true
+	})
+	return allDocs,nil
 }
 
 func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
@@ -206,7 +213,6 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	accepted:=app.FilterStatus(0)
 	for i:=0;i<len(docs);i++{
 		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
-		fmt.Println("docs",docs[i])
 	}
 	verifiedDocs := blockchain.FilterDocument(docs,accepted)
 	log.Println("verified : ",verifiedDocs)
@@ -218,12 +224,12 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 	if err != nil {
 		return nil, err
 	}
-	rejected:=app.FilterStatus(1)
+	rejected:=app.FilterStatus(1)		
 	for i:=0;i<len(docs);i++{
 		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
 	rejectedDocs := blockchain.FilterDocument(docs,rejected,)
-
+	log.Println("rejected docs: ",rejectedDocs)
 	return rejectedDocs, nil
 }
 
@@ -233,7 +239,7 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	}
 	pending:=app.FilterStatus(2)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		(docs[i].IpfsAddress)=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
 	}
 	pendingDocs := blockchain.FilterDocument(docs,pending)
 	log.Println("pending : ",pendingDocs)
@@ -244,7 +250,7 @@ func (app *App)ApproveDocument(status int)error{
 	if !app.isApproved{
 		return fmt.Errorf("action not approved")
 	}
-	if err:=app.instance.VerifyDocument(app.conn.TxOpts,app.user,"",uint8(status)); err!=nil{
+	if err:=app.instance.VerifyDocument(app.conn.TxOpts,app.user,"nil",uint8(status)); err!=nil{
 		log.Println("Error approving document : ",err)
 		return fmt.Errorf("error approving document")
 	}

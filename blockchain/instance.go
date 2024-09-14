@@ -14,11 +14,12 @@ type VerificationDocument struct{
 	//id field is required in frontend for data row element
 	ID			int
 	Requester   string
-	Verifier     string
+	Verifier    string
 	Institute	string
 	Name        string
 	Desc        string
 	IpfsAddress string
+	ShaHash		string
 	Stats       uint8
 }
 
@@ -64,16 +65,16 @@ func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_inst
 	return nil
 }
 
-func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, _encryptedIPFSHash, _institute, _name, _description string) (error) {
-	_, err := cv.Instance.AddDocument(opts, _encryptedIPFSHash,_institute,_name,_description)
+func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts,shaHash , _encryptedIPFSHash , _institute, _name string) (error) {
+	_, err := cv.Instance.AddDocument(opts, (shaHash),_encryptedIPFSHash,_institute,_name)
 	if err != nil {
 		return err
 	}
 	return err
 }
 
-func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts,institute string, _docAddressOnIPFS string, _status uint8) error {
-	_, err := cv.Instance.VerifyDocument(opts, institute, _docAddressOnIPFS, _status)
+func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, shaHash string, institute string,_status uint8) error {
+	_, err := cv.Instance.VerifyDocument(opts, shaHash, institute, _status)
 	if err != nil {
 		return err
 	}
@@ -87,6 +88,7 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	if err!=nil{
 		return nil,err
 	}
+	
 	for i:=0;i<len(docs.Requester);i++{
 		userDoc:=VerificationDocument{
 			//ID field is required in frontend for data row element
@@ -95,8 +97,8 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 			Verifier: 		docs.Verifer[i].Hex(),
 			Institute: 		docs.Institute[i],
 			Name: 			docs.Name[i],
-			Desc: 			docs.Desc[i],
 			IpfsAddress:	docs.Ipfs[i],
+			ShaHash:        docs.Hash[i],
 			Stats: 			docs.Stats[i],
 		}
 		userDocs = append(userDocs,userDoc)

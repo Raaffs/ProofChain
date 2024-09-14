@@ -82,14 +82,14 @@ const PendingDocuments=()=>{
         {"field":"Requester",headerName:"Requester",flex:1},
         {"field":"Institute",headerName:"Institute",flex:1},
         {"field":"Name",headerName:"Name",flex:1},
-        {"field":"Desc",headerName:"Description",flex:1},
+        {"field":"ShaHash",headerName:"Hash",flex:1},
         {"field":"IpfsAddress",headerName:"Ipfs Address",flex:1},
     ]
     return (
         <Box m="20px"
           sx={{width:'dynamic',maxWidth:'95%',justifyContent:'center'}}
         >
-            <Header title="Rejected Documents"></Header>
+            <Header title="Pending Documents"></Header>
                             {error && (
                   <Typography color="error" align="center" style={{ marginBottom: '16px' }}>
                     {error}

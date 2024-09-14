@@ -1,12 +1,17 @@
 package main
 
 import (
+	"encoding/hex"
+	"fmt"
+	"io"
 	"log"
+	"os"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"golang.org/x/crypto/sha3"
 )
 
 
@@ -26,21 +31,21 @@ func (app *App)FilterStatus(status int)func(blockchain.VerificationDocument)bool
 func(app *App)TryDecrypt(encryptedIPFS string,user common.Address,institute string )string{
 	pub,err:=app.GetPublicKeys(user,institute);if err!=nil{
 		log.Println("error getting public key: ",err)
-		return ""
+		return "private"
 	}
 	if err:=app.keys.SetMultiSigKey(pub);err!=nil{
 		log.Println("error setting multisigkey: ",err)
-		return ""
+		return "private"
 	}
 	sec,err:=app.keys.GenerateSecret();if err!=nil{
 		log.Println("error generating secret: ",err)
-		return ""
+		return "private"
 	}
 	ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
 		log.Println("error decrypting ipfs hash: ",err,ipfs)
-		return ""
+		return "private"
 	}
-	return ipfs
+	return string(ipfs)
 }
 
 func(app *App)GetPublicKeys(user common.Address,institute string)(string,error){
@@ -72,4 +77,27 @@ func (app *App)GetFilePath()(string,error){
 		return "",err
 	}
 	return filePath,nil
+}
+
+func Keccak256File(filePath string) (string, error) {
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %v", err)
+	}
+	defer file.Close()
+
+	// Create a new Keccak-256 hasher
+	hasher := sha3.New256()
+
+	// Read the file's contents into the hasher
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", fmt.Errorf("failed to hash file: %v", err)
+	}
+
+	// Compute the hash and convert it to a hex string
+	hashBytes := hasher.Sum(nil)
+	hashString := hex.EncodeToString(hashBytes)
+
+	return hashString, nil
 }

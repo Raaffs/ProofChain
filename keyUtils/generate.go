@@ -31,7 +31,6 @@ func(k *ECKeys)OnLogin(user string,passphrase string, errchan chan error,){
 		errchan<-err
 		return
 	}
-	log.Println("priv onLogin ",k.Private)
 	k.Public=k.Private.PublicKey()
 	errchan<-nil
 }
@@ -73,7 +72,6 @@ func(k *ECKeys)SetMultiSigKey(multiSigKey string)error{
 
 //Shared Secret is used for AES encrytion/decryption 
 func(k *ECKeys)GenerateSecret()([]byte,error){
-	log.Println("kpriv",k.Private,k.MultiSig)
 	if k.MultiSig==nil || k.Private==nil{
 		log.Println("multisig or private key is nil")
 		return nil,fmt.Errorf("Multi-Sig-Public-Key not provided")

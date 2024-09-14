@@ -14,7 +14,7 @@ contract Verification{
         pending
     }
     struct User{
-        string publicKey;
+        string publicKey;   
     }
     struct Institution{
         address publicAddr;
@@ -27,7 +27,6 @@ contract Verification{
         address     verifiedBy;
         string      institution; 
         string      name;
-        string      description; 
         string      encrpytedIPFSHash;
         DocStatus   status;
         uint        index;
@@ -35,15 +34,17 @@ contract Verification{
     //each institution can only have one verifier, at least for now. 
     mapping(string=>Institution) public institutions;
     mapping(address=>User) private users;
+    //sha3 to map documents and verify the document's integrity 
     mapping(string=>uint) private documentList;
     mapping(address=>bool) userList;
     
     address[]   requesters;
     address[]   verifiedBy; 
     string[]    names;
+    string[]    documentHash;
     string[]    institution;
     string[]    descriptions;
-    string[]    encrpytedIPFSHashes; 
+    string[]     encrpytedIPFSHashes; 
     DocStatus[] status;
     //all the above arrays depends on  'docIndexCounter ' variable
     //potential improvement: use mapping(user=>[]docs) and mapping(institute=>[]docs)
@@ -67,47 +68,47 @@ contract Verification{
             approved:   false
         });
     }
-
     function getInstituePublicKey(string memory _name) public view returns(string memory pubKey){
         return institutions[_name].publicKey;
     }
-
     function getUserPublicKey(address userAddr)public view returns (string memory){
         return users[userAddr].publicKey;        
     }
-
     function approveVerifier(string memory _name)public{
         require(msg.sender==owner,"Only admin can perfom this action");
         institutions[_name].approved=true;
     }
-
-    function addDocument(string memory _EncryptedIPFSHash, string memory _institute,string memory _name ,string memory _description) public{
+    function addDocument(string memory shaHash,string memory _EncryptedIPFSHash, string memory _institute,string memory _name ) public{
         bool isUser=userList[msg.sender];
         require(isUser==true,"register first to verify");
-        documentList[_EncryptedIPFSHash]=docIndexCounter;
+        documentList[shaHash]=docIndexCounter;
         requesters.push(msg.sender);
         verifiedBy.push(address(0));
         institution.push(_institute);
         names.push(_name);
-        descriptions.push(_description);
         status.push(DocStatus.pending);
         encrpytedIPFSHashes.push(_EncryptedIPFSHash);
+        documentHash.push(shaHash);
         docIndexCounter++;
     }
     //returns all the documents
-    function getDocuments()public view returns(address[] memory requester ,address[] memory verifer ,string[] memory institute,string[] memory ipfs,string[] memory name,string[] memory desc,DocStatus[] memory stats){
-        return (requesters,verifiedBy,institution,encrpytedIPFSHashes,names,descriptions,status);
+    function getDocuments()public view returns(address[] memory requester ,address[] memory verifer ,string[] memory institute,string[] memory ipfs,string[] memory name,string[] memory hash,DocStatus[] memory stats){
+        return (requesters,verifiedBy,institution,encrpytedIPFSHashes,names,documentHash,status);
     }
     
-    function verifyDocument(string memory _institute, string memory _ipfs, DocStatus _status)public payable {
+    function verifyDocument(string memory shaHash,string memory _institute,  DocStatus _status)public payable {
         require(institutions[_institute].approved==true && institutions[_institute].publicAddr==msg.sender);
-        uint index=documentList[_ipfs];
+        uint index=documentList[shaHash];
         status[index]=_status;
         verifiedBy[index]=msg.sender;
     }
-    
+    function getDocIndexCounter()public view returns(uint) {
+        return docIndexCounter;
+    }   
+    function getDocumentIndex(string  memory shaHash)public view returns(uint){
+        return documentList[shaHash];
+    }
     function isApprovedInstitute(string memory name)public view returns (bool){
         return institutions[name].approved==true;
     }
-
 }        

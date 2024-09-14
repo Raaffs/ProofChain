@@ -50,19 +50,25 @@ func NewWallet(privateKeyString string, username string, password string, errcha
 	}
 	writeAccountToFile(username, relativePath)
 
-	fmt.Println("Relative path : ",relativePath)
 	errchan<-nil
 }
 
 func writeAccountToFile(username string, fileName string) error {
-	accountFile := "accounts/accounts"
+	accountDir := "accounts"
+	accountFile := accountDir + "/accounts"
+
+	err := os.MkdirAll(accountDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	// Open or create the file for appending and writing
 	f, err := os.OpenFile(accountFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	// Write to file followed by a new line
 	_, err = fmt.Fprintf(f, "%s=%s\n", username, fileName)
 	if err != nil {
 		return err
@@ -70,6 +76,7 @@ func writeAccountToFile(username string, fileName string) error {
 
 	return nil
 }
+
 
 func RetriveAccount(username string, password string) (string, error) {
 	// filePath := "accounts/accounts"

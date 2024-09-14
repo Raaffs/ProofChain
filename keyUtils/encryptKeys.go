@@ -159,25 +159,37 @@ func ReadKeyMap(user string)([]byte,error){
 	return encryptedKey,nil
 }
 
-func WriteKeyMap(user,keyFilePath string)error{
-	keyFileMap:="keys/keyMap"
-	keyMap,err:=godotenv.Read("keys/keyMap"); if err!=nil{
+func WriteKeyMap(user, keyFilePath string) error {
+	keyDir := "keys"
+	keyFileMap := keyDir + "/keyMap"
+
+	// Ensure the directory exists
+	err := os.MkdirAll(keyDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	keyMap, err := godotenv.Read(keyFileMap)
+	if err != nil {
 		log.Println("Error loading key map")
 		return err
 	}
-	userFilePath:=keyMap[user]
-	if userFilePath!=""{
-		return errors.New("user already exist")
+
+	if _, exists := keyMap[user]; exists {
+		return errors.New("user already exists")
 	}
+
 	f, err := os.OpenFile(keyFileMap, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-			return err
+		return err
 	}
 	defer f.Close()
+
 	_, err = fmt.Fprintf(f, "%s=%s\n", user, keyFilePath)
 	if err != nil {
-			return err
+		return err
 	}
+
 	return nil
 }
 
@@ -206,23 +218,23 @@ func EncryptIPFSHash(sharedKey []byte, plaintext []byte)(string,error){
 	return string(ciphertext), nil
 }
 
-func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) (string, error) {
+func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
-		return "", err
+		return nil, err
 	}
 
 	// Generate a new AES-GCM instance
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
-		return "", err
+		return nil, err
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
-		return "", errors.New("ciphertext too short")
+		return nil, errors.New("ciphertext too short")
 	}
 
 	// Extract the nonce and the actual ciphertext
@@ -232,8 +244,8 @@ func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) (string, error) {
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
-		return "", err
+		return nil, err
 	}
 
-	return string(plaintext), nil
+	return plaintext, nil
 }

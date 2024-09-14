@@ -20,49 +20,21 @@ func TestAddDocument(t *testing.T){
 	errchan:=make(chan error)
 	var wg sync.WaitGroup
 
-	if err:=blockchain.Init(App_test.conn,App_test.in,"9d99735c0d9902c6d4baba9c66f611a45705c52e65f6b037c6fb2e06293273bb",contractAddr);err!=nil{
+	if err:=blockchain.Init(App_test.conn,App_test.in,"5ae503b8f45687a0b1e13d7e2f41d1b830c864b47ecd486b86366eb389fc6a74",contractAddr);err!=nil{
 		t.Fatal(err)
 	}
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
-		App_test.keys.OnLogin("Maria","Maria",errchan)		
+		App_test.keys.OnLogin("user","user",errchan)		
 	}()
 	go func() {
 		wg.Wait()
 		close(errchan)
 	}()
-	App_test.dataNode.New("5001")
-	cid,err:=App_test.dataNode.Upload("testFiles/test1.txt");if err!=nil{
-		t.Fatal("Error uploading file on ipfs : ",err)
-	}
-	pub,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins");if err!=nil{
+	if err:=App_test.in.AddDocument(App_test.conn.TxOpts,"hi",("hi2"),"ins","name");err!=nil{
 		t.Fatal(err)
 	}
-	fmt.Println("institute public key : ",pub)
-	if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println(App_test.keys.MultiSig)
-
-	sharedSecret,err:=App_test.keys.GenerateSecret();if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println("cid ",cid)
-	fmt.Println("shared secret",sharedSecret)
-	encryptedText,err:=keyUtils.EncryptIPFSHash(sharedSecret,[]byte(cid));if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println("encrypted text",encryptedText)
-	// if err:=App_test.in.AddDocument(App_test.conn.TxOpts,encryptedText,"ins","name","desc");err!=nil{
-	// 	t.Fatal(err)
-	// }
-	fmt.Println("lenght : ",len(encryptedText))
-	
-	dec,err:=keyUtils.DecryptIPFSHash(sharedSecret,[]byte(encryptedText));if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println("decrypted text",dec)
 }
 
 
@@ -113,6 +85,9 @@ func TestDoc(t *testing.T){
 
 }
 
+
+//errors might be related to how address are stored in accounts. Letters are not capitialized 
+//in when wallets are made
 func TestApproveDoc(t *testing.T) {
 	err:=godotenv.Load()
 	if err!=nil{
@@ -122,7 +97,7 @@ func TestApproveDoc(t *testing.T) {
 	errchan:=make(chan error)
 	var wg sync.WaitGroup
 
-	err=blockchain.Init(App_test.conn,App_test.in,"9fba5c638562a9efcccadacda8f54cfa1fee0f1ea5b5967125cc16e609afc124",contractAddr);if err!=nil{t.Fatal(err)}	
+	err=blockchain.Init(App_test.conn,App_test.in,"f400f71d5132397be7708ef07285c4e9fe5a1b526e5034febf391ee6c4af28e0",contractAddr);if err!=nil{t.Fatal(err)}	
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
@@ -133,26 +108,36 @@ func TestApproveDoc(t *testing.T) {
 		close(errchan)
 	}()
 
-	pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress("0x30ceA26c8de6BCf32B8D4B8Fefa31F4a782669AC"));if err!=nil{
-		t.Fatal("error getting user's pub key: ",err)
-	}
-	if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
-		t.Fatal("error getting multi sig:",err)
-	}
-	sec,err:=App_test.keys.GenerateSecret();if err!=nil{
-		t.Fatal("err sec: ",err)
-	}
-	enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmeoGRALSU3Zg7qqgVkmFEDiyv6aS8EQKtCiwYXr5rvX9p"));if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println("enc",enc)
-	err=App_test.in.VerifyDocument(App_test.conn.TxOpts,"ins",enc,1);if err!=nil{
+	// pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress("0x9F8cb1C4f6329CFB72C7034C010eD78bdc8e3976"));if err!=nil{
+	// 	t.Fatal("error getting user's pub key: ",err)
+	// }
+	// if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
+	// 	t.Fatal("error getting multi sig:",err)
+	// }
+	// sec,err:=App_test.keys.GenerateSecret();if err!=nil{
+	// 	t.Fatal("err sec: ",err)
+	// }
+	// enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmX8asJ26eMXXCiuKxk7N8QFBKzEwYHmNp2Ss8GNwQYFKn"));if err!=nil{
+	// 	t.Fatal(err)
+	// }
+	err=App_test.in.VerifyDocument(App_test.conn.TxOpts,"d3d095dc3fd845d259516e8fc78b4b56db2b89700a319a73817c1cf2e28115a3","ins",0);if err!=nil{
 		t.Fatal("Error approving document : ",err)
+	}		
+	index,err:=App_test.in.Instance.GetDocIndexCounter(App_test.conn.CallOpts);if err!=nil{
+		t.Fatal("error docsCounterIndex",err)
 	}
-	fmt.Println("err ",err)
+	fmt.Println("docindexCounter : ",index)
+	index2,err:=App_test.in.Instance.GetDocumentIndex(App_test.conn.CallOpts,("d3d095dc3fd845d259516e8fc78b4b56db2b89700a319a73817c1cf2e28115a3"));if err!=nil{
+		t.Fatal("error documentLists[index]",err)
+	}
+	fmt.Println("documentLists[index]",index2)
+	// stat,err:=App_test.in.Instance.VerifyDocumentTest2(App_test.conn.TxOpts,"ins",enc,0); if err!=nil{
+	// 	t.Fatal("Error stat 2",err)
+	// }
+	// fmt.Println("stat2 ",stat.Value())
 }		
 
-func TestEncryptionEquality(t *testing.T) {
+func TestDocIndex(t *testing.T) {
 	err:=godotenv.Load()
 	if err!=nil{
 		t.Fatal(err)
@@ -163,48 +148,39 @@ func TestEncryptionEquality(t *testing.T) {
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
-		App_test.keys.OnLogin("Maria","Maria",errchan)		
+		App_test.keys.OnLogin("ins","ins",errchan)		
 	}()
 	go func() {
 		wg.Wait()
 		close(errchan)
 	}()	
-
-	err=blockchain.Init(App_test.conn,App_test.in,"9d99735c0d9902c6d4baba9c66f611a45705c52e65f6b037c6fb2e06293273bb",contractAddr);if err!=nil{t.Fatal(err)}	
-	docs,err:=App_test.in.GetDocuments(App_test.conn.CallOpts);if err!=nil{
+	err=blockchain.Init(App_test.conn,App_test.in,"fba76c12f61bc57fa86348d2228676dd0cf207baa314541b67a2b34105b8f5d5",contractAddr);if err!=nil{
 		t.Fatal(err)
-	}
-	doc:=docs[0]
-	pub,err:=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,doc.Institute); if err!=nil{
-		t.Fatal("error getting institute's pub key: ",err)
-	}
-	fmt.Println("institute public key : ",doc.Institute,pub)
-	if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
-		t.Fatal("error setting multi sig key: ",err)
-	}
-	fmt.Println(App_test.keys.MultiSig)
-	sec,err:=App_test.keys.GenerateSecret();if err!=nil{
-		t.Fatal("error generating sec:",err)
-	}
-	fmt.Println("sec: ",sec)
-	dec,err:=keyUtils.DecryptIPFSHash(sec,[]byte(doc.IpfsAddress));if err!=nil{
-		t.Fatal(err)
-	}
-	fmt.Println("dec",dec)
-	// err=blockchain.Init(App_test.conn,App_test.in,"607a72b2808feb3cd11f582cc1253c373da1e95c8af26322419763b852e1cb94",contractAddr);if err!=nil{t.Fatal(err)}	
-	// pub,err=App_test.in.Instance.GetInstituePublicKey(App_test.conn.CallOpts,"ins"); if err!=nil{
-	// 	t.Fatal(err)
+	}	
+	// pub,err:=App_test.in.Instance.GetUserPublicKey(App_test.conn.CallOpts,common.HexToAddress("0x9F8cb1C4f6329CFB72C7034C010eD78bdc8e3976"));if err!=nil{
+	// 	t.Fatal("error getting user's pub key: ",err)
 	// }
 	// if err:=App_test.keys.SetMultiSigKey(pub);err!=nil{
+	// 	t.Fatal("error getting multi sig:",err)
+	// }
+	// sec,err:=App_test.keys.GenerateSecret();if err!=nil{
+	// 	t.Fatal("err sec: ",err)
+	// }
+	// enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmX8asJ26eMXXCiuKxk7N8QFBKzEwYHmNp2Ss8GNwQYFKn"));if err!=nil{
 	// 	t.Fatal(err)
 	// }
-	// sec,err=App_test.keys.GenerateSecret();if err!=nil{
-	// 	t.Fatal(err)
-	// }
-	// enc2,err:=keyUtils.DecryptIPFSHash(sec,[]byte("QmTQpEySom7HNb4HJrZPEqTQnC7prd9Z9eiWLrj4moYVD3"));if err!=nil{
-	// 	t.Fatal(err)
-	// }
-	// fmt.Println("enc : ",enc2==enc)
+
+
+
+	index,err:=App_test.in.Instance.GetDocIndexCounter(App_test.conn.CallOpts);if err!=nil{
+		t.Fatal("error docsCounterIndex",err)
+	}
+	fmt.Println("docindexCounter : ",index)
+	index2,err:=App_test.in.Instance.GetDocumentIndex(App_test.conn.CallOpts,"hi2");if err!=nil{
+		t.Fatal("error documentLists[index]",err)
+	}
+	fmt.Println(" documentLists[index]",index2)
+
 }
 
 func TestGetUserDocs(t *testing.T){
@@ -225,7 +201,7 @@ func TestGetUserDocs(t *testing.T){
 		close(errchan)
 	}()	
 
-	err=blockchain.Init(App_test.conn,App_test.in,"9d99735c0d9902c6d4baba9c66f611a45705c52e65f6b037c6fb2e06293273bb",contractAddr);if err!=nil{t.Fatal(err)}	
+	err=blockchain.Init(App_test.conn,App_test.in,"84ef8fd680bf64990853c1a044090905cda74903b65b7fe668f281582bb2b434",contractAddr);if err!=nil{t.Fatal(err)}	
 	docs,err:=App_test.in.GetDocuments(App_test.conn.CallOpts);if err!=nil{
 		t.Fatal("Error getting docs:",err)
 	}
@@ -246,7 +222,7 @@ func TestGetUserDocs(t *testing.T){
 			fmt.Println("error : ",err,ipfs)
 			continue
 		}
-		fmt.Println(ipfs)
+		fmt.Println(doc.Stats,doc.ShaHash)
 	}
 
 }

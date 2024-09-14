@@ -23,7 +23,7 @@ const ApprovedDocuments=()=>{
                 "Requester":"",
                 "Verifier":"",
                 "Name":"",
-                "Desc":"",
+                "Hash":"",
                 "IpfsAddress":""
               }])
               setError("No Verified Documents")
@@ -47,7 +47,7 @@ const ApprovedDocuments=()=>{
         {"field":"Requester",headerName:"Requester",flex:1},
         {"field":"Verifier",headerName:"Verifier",flex:1},
         {"field":"Name",headerName:"Name",flex:1},
-        {"field":"Desc",headerName:"Description",flex:1},
+        {"field":"ShaHash",headerName:"Hash",flex:1},
         {"field":"IpfsAddress",headerName:"Ipfs Address",flex:1},
     ]
     return (
