@@ -3,7 +3,7 @@
 import {blockchain} from '../models';
 import {common} from '../models';
 
-export function ApproveDocument(arg1:number):Promise<void>;
+export function ApproveDocument(arg1:number,arg2:string):Promise<void>;
 
 export function FilterStatus(arg1:number):Promise<any>;
 

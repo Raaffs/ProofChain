@@ -246,11 +246,13 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	return pendingDocs, nil
 }
 
-func (app *App)ApproveDocument(status int)error{
+func (app *App)ApproveDocument(status int,hash string)error{
+	log.Println("document hash : ",hash)
 	if !app.isApproved{
 		return fmt.Errorf("action not approved")
 	}
-	if err:=app.instance.VerifyDocument(app.conn.TxOpts,app.user,"nil",uint8(status)); err!=nil{
+	log.Println("user : ",app.user)
+	if err:=app.instance.VerifyDocument(app.conn.TxOpts,hash,app.user,uint8(status)); err!=nil{
 		log.Println("Error approving document : ",err)
 		return fmt.Errorf("error approving document")
 	}

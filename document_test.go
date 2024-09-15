@@ -120,7 +120,7 @@ func TestApproveDoc(t *testing.T) {
 	// enc,err:=keyUtils.EncryptIPFSHash(sec,[]byte("QmX8asJ26eMXXCiuKxk7N8QFBKzEwYHmNp2Ss8GNwQYFKn"));if err!=nil{
 	// 	t.Fatal(err)
 	// }
-	err=App_test.in.VerifyDocument(App_test.conn.TxOpts,"d3d095dc3fd845d259516e8fc78b4b56db2b89700a319a73817c1cf2e28115a3","ins",0);if err!=nil{
+	err=App_test.in.VerifyDocument(App_test.conn.TxOpts,"8cceabce917f7f34e4a6dddb2eb320b30041902b9417e1eab5569992e2196b29","ins",2);if err!=nil{
 		t.Fatal("Error approving document : ",err)
 	}		
 	index,err:=App_test.in.Instance.GetDocIndexCounter(App_test.conn.CallOpts);if err!=nil{
