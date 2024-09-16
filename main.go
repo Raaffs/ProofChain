@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 
-	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/Suy56/ProofChain/nodeData"
 	"github.com/joho/godotenv"
@@ -18,11 +17,8 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := &App{
-		conn:     		&blockchain.ClientConnection{},
-		instance: 		&blockchain.ContractVerifyOperations{},
 		keys: 	  		&keyUtils.ECKeys{},
 		ipfs: 	  		&nodeData.IPFSManager{},
-		user:	  		"",
 		envMap: 		make(map[string]any),
 	}
 	

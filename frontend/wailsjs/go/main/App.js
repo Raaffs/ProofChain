@@ -6,10 +6,6 @@ export function ApproveDocument(arg1, arg2) {
   return window['go']['main']['App']['ApproveDocument'](arg1, arg2);
 }
 
-export function FilterStatus(arg1) {
-  return window['go']['main']['App']['FilterStatus'](arg1);
-}
-
 export function GetAcceptedDocs() {
   return window['go']['main']['App']['GetAcceptedDocs']();
 }
@@ -24,10 +20,6 @@ export function GetFilePath() {
 
 export function GetPendingDocuments() {
   return window['go']['main']['App']['GetPendingDocuments']();
-}
-
-export function GetPublicKeys(arg1, arg2) {
-  return window['go']['main']['App']['GetPublicKeys'](arg1, arg2);
 }
 
 export function GetRejectedDocuments() {
@@ -54,8 +46,8 @@ export function Register(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Register'](arg1, arg2, arg3, arg4);
 }
 
-export function TryDecrypt(arg1, arg2, arg3) {
-  return window['go']['main']['App']['TryDecrypt'](arg1, arg2, arg3);
+export function TryDecrypt2(arg1, arg2, arg3) {
+  return window['go']['main']['App']['TryDecrypt2'](arg1, arg2, arg3);
 }
 
 export function UploadDocument(arg1, arg2, arg3) {

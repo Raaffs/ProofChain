@@ -10,24 +10,18 @@ import (
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/Suy56/ProofChain/keyUtils"
 	"github.com/Suy56/ProofChain/nodeData"
+	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
-
 // App struct
 type App struct {
 	ctx      		context.Context
-	conn		  	*blockchain.ClientConnection
-	instance 		*blockchain.ContractVerifyOperations
+	account			users.User
 	keys			*keyUtils.ECKeys
 	ipfs 			*nodeData.IPFSManager
-	user			string
-	isApproved		bool
 	envMap			map[string]any
 }
-// 8572c
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (app *App) startup(ctx context.Context) {
@@ -43,6 +37,8 @@ func (app *App) startup(ctx context.Context) {
 }
 
 func (app *App)Login(username string, password string) (error) {
+	c:=&blockchain.ClientConnection{}
+	i:=&blockchain.ContractVerifyOperations{}
 	var wg sync.WaitGroup
 	errchan:=make(chan error)
 	if err:=godotenv.Load(); err!=nil{
@@ -69,18 +65,19 @@ func (app *App)Login(username string, password string) (error) {
 		return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
 
 	}
-
-	if err:=blockchain.Init(app.conn,app.instance,privateKey,app.envMap["CONTRACT_ADDR"].(string));err!=nil{
+	if err:=blockchain.Init(c,i,privateKey,app.envMap["CONTRACT_ADDR"].(string));err!=nil{
 		log.Println("Error connecting to the blockchain : ",err)
 		return fmt.Errorf("error connecting to the smart contract")
 	}
-
-	app.isApproved,err=app.instance.Instance.IsApprovedInstitute(app.conn.CallOpts,username);if err!=nil{
+	approved,err:=i.Instance.IsApprovedInstitute(c.CallOpts,username); if err!=nil{
 		log.Println("Error getting the account verification status : ",err)
 		return fmt.Errorf("error getting the account verification status")
 	}
-	log.Println("is approved : ",app.isApproved)
-	app.user=username
+	if approved{
+		app.account=&users.Verifier{Conn: c,Instance: i,Name: username}
+	}else{
+		app.account=&users.Requester{Conn: c,Instance: i}
+	}
 	return nil
 }
 
@@ -89,11 +86,15 @@ func (app *App)Logout(){
 }
 
 func (app *App)IsLoggedIn()(bool){
-	return app.conn.TxOpts!=nil
+	return app.account.GetTxOpts()!=nil
 }
 
 func (app *App)IsApprovedInstitute()bool{
-	return app.isApproved
+	approved,err:=app.account.GetApprovalStatus();if err!=nil{
+		log.Println("Error getting approval status : ",err)
+		return false
+	}
+	return approved
 }
 
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
@@ -101,7 +102,9 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 		log.Println("private key error")
 		return fmt.Errorf("invalid private key")
 	}
-	if err:=blockchain.Init(app.conn,app.instance,privateKeyString[2:],app.envMap["CONTRACT_ADDR"].(string));err!=nil{
+	c:=&blockchain.ClientConnection{}
+	i:=&blockchain.ContractVerifyOperations{}
+	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap["CONTRACT_ADDR"].(string));err!=nil{
 		return err
 	}
 	var wg sync.WaitGroup
@@ -131,13 +134,17 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 				continue
 			}else{
 				if isInstitute{
-					if err:=app.instance.RegisterInstitution(app.conn.TxOpts,pub,name);err!=nil{
+					verifier:=&users.Verifier{Conn: c,Instance: i,Name: name}
+					app.account=verifier
+					if err:=app.account.Register(pub,name);err!=nil{
 						log.Println("error registering institution : ",err)
 						return fmt.Errorf("error registering institution")
 					}
-					log.Println("	cessful")
+					log.Println("registered successful")
 				}else{
-					if err:=app.instance.RegisterUser(app.conn.TxOpts,pub);err!=nil{
+					requester:=&users.Requester{Conn: c,Instance: i}
+					app.account=requester
+					if err:=app.account.Register(pub,name);err!=nil{
 						log.Println("error registering user : ",err)
 						return fmt.Errorf("error registering institution")
 					}
@@ -152,7 +159,6 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 			}
 		}
 	}
-	
 }
 
 
@@ -162,7 +168,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
-	pubKey,err:=app.instance.Instance.GetInstituePublicKey(app.conn.CallOpts,strings.TrimSpace(institute));if err!=nil{
+	pubKey,err:=app.account.GetPublicKeys(strings.TrimSpace(institute),"");if err!=nil{
 		return err
 	}
 	if pubKey==""{
@@ -185,76 +191,68 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("Error hashing file:",err)
 		return fmt.Errorf("Error uploading file")
 	}
-	if err:=app.instance.AddDocument(app.conn.TxOpts,shaHash,encryptedDocument,institute,name); err!=nil{
-		return err
-	}		
-	return nil
+	if account,ok:=app.account.(*users.Requester);ok{
+		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,encryptedDocument,institute,name);err!=nil{
+			return err
+		}
+		return nil
+	}
+	return fmt.Errorf("invalid account type")
 }
 
 func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
-	docs, err := app.instance.GetDocuments(&bind.CallOpts{})
-	if err != nil {
-		return nil, err
+	docs,err:=app.account.GetDocuments(); if err!=nil{
+		log.Println("Error getAllDocs:",err)
+		return nil,fmt.Errorf("error retrieving documents")
 	}
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
-	allDocs:=blockchain.FilterDocument(docs,func(vd blockchain.VerificationDocument) bool {
-		return true
-	})
-	return allDocs,nil
+	return docs,nil
 }
 
 func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
-	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
+	docs, err := app.account.GetDocuments()
 	if err != nil {
 		return nil, err
 	}
-	accepted:=app.FilterStatus(0)
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
-	verifiedDocs := blockchain.FilterDocument(docs,accepted)
-	log.Println("verified : ",verifiedDocs)
+	verifiedDocs := app.account.GetAcceptedDocuments(docs)
 	return verifiedDocs, nil
 }
 
 func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error) {
-	docs, err := app.instance.GetDocuments(app.conn.CallOpts)
-	if err != nil {
+	docs, err := app.account.GetDocuments();if err != nil {
 		return nil, err
 	}
-	rejected:=app.FilterStatus(1)		
 	for i:=0;i<len(docs);i++{
-		docs[i].IpfsAddress=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
-	rejectedDocs := blockchain.FilterDocument(docs,rejected,)
-	log.Println("rejected docs: ",rejectedDocs)
+	rejectedDocs := app.account.GetRejectedDocuments(docs)
 	return rejectedDocs, nil
 }
 
 func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error) {
-	docs, err := app.instance.GetDocuments(app.conn.CallOpts); if err != nil {
+	docs, err := app.account.GetDocuments(); if err != nil {
 		return nil, err
 	}
-	pending:=app.FilterStatus(2)
 	for i:=0;i<len(docs);i++{
-		(docs[i].IpfsAddress)=app.TryDecrypt(docs[i].IpfsAddress,common.HexToAddress(docs[i].Requester),docs[i].Institute)
+		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
-	pendingDocs := blockchain.FilterDocument(docs,pending)
-	log.Println("pending : ",pendingDocs)
+	pendingDocs := app.account.GetPendingDocuments(docs)
 	return pendingDocs, nil
 }
 
 func (app *App)ApproveDocument(status int,hash string)error{
 	log.Println("document hash : ",hash)
-	if !app.isApproved{
-		return fmt.Errorf("action not approved")
+	if verifier,ok:=app.account.(*users.Verifier);ok{
+		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{
+			log.Println("Error approving document : ",err)
+			return fmt.Errorf("error approving document")
+		}
+		return nil
 	}
-	log.Println("user : ",app.user)
-	if err:=app.instance.VerifyDocument(app.conn.TxOpts,hash,app.user,uint8(status)); err!=nil{
-		log.Println("Error approving document : ",err)
-		return fmt.Errorf("error approving document")
-	}
-	return nil
+	return fmt.Errorf("invalid account type")
 }
