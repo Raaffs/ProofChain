@@ -76,4 +76,3 @@ func(r *Requester)GetPendingDocuments(docs []blockchain.VerificationDocument)([]
 	pendingDocs:=blockchain.FilterDocument(docs,pending)
 	return pendingDocs
 }
-

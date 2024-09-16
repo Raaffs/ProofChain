@@ -206,6 +206,13 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		return nil,fmt.Errorf("error retrieving documents")
 	}
 	for i:=0;i<len(docs);i++{
+		//We're calling contract to get public key of institute or requester, however if
+		//user is not either of them, we don't need to try and drcrypt ipfs cid.
+		//This also avoids any unecessary calls to contract
+		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+			docs[i].IpfsAddress="not authorized"
+			continue
+		}
 		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	return docs,nil
@@ -217,6 +224,10 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
+		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+			docs[i].IpfsAddress="not authorized"
+			continue
+		}
 		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	verifiedDocs := app.account.GetAcceptedDocuments(docs)
@@ -228,6 +239,10 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
+		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+			docs[i].IpfsAddress="not authorized"
+			continue
+		}
 		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	rejectedDocs := app.account.GetRejectedDocuments(docs)
@@ -239,6 +254,10 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
+		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+			docs[i].IpfsAddress="not authorized"
+			continue
+		}
 		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	pendingDocs := app.account.GetPendingDocuments(docs)
