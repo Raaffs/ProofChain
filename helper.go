@@ -12,9 +12,6 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-
-
-
 func(app *App)TryDecrypt2(encryptedIPFS string,institute string,user string)string{
 	pub,err:=app.account.GetPublicKeys(institute,user); if err!=nil{
 		log.Println("error getting public key: ",err)
