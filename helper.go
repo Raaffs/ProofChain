@@ -48,9 +48,8 @@ func (app *App)GetFilePath()(string,error){
 	return filePath,nil
 }
 
-func Keccak256File(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
+func Keccak256File(path string) (string, error) {
+	file, err := os.Open(path);if err != nil {
 		return "", fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
@@ -66,3 +65,4 @@ func Keccak256File(filePath string) (string, error) {
 
 	return hashString, nil
 }
+

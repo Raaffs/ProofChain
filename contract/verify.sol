@@ -46,7 +46,7 @@ contract Verification{
     string[]    descriptions;
     string[]     encrpytedIPFSHashes; 
     DocStatus[] status;
-    //all the above arrays depends on  'docIndexCounter ' variable
+    //all the above arrays depends on  'docIndexCounter' variable
     //potential improvement: use mapping(user=>[]docs) and mapping(institute=>[]docs)
     //that way there won't be a need to rely and keep track of all these arrays separately
     

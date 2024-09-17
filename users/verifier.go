@@ -11,6 +11,15 @@ type Verifier struct{
 	Name		string
 }
 
+func(v *Verifier)GetClient()*blockchain.ClientConnection{
+	return v.Conn
+}
+
+func(v *Verifier)GetInstance()*blockchain.ContractVerifyOperations{
+	return v.Instance
+}
+
+
 func(v *Verifier)SetTxOpts(c *blockchain.ClientConnection,i *blockchain.ContractVerifyOperations){
 	v.Conn=c
 	v.Instance=i

@@ -1,7 +1,9 @@
 package users
 
 import (
+	"fmt"
 	"log"
+	"math/big"
 
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,6 +13,21 @@ type Requester struct{
 	Instance 	*blockchain.ContractVerifyOperations
 }
 
+func(r *Requester)UpdateNonce()error{
+	nonce,err:=r.Conn.Client.PendingNonceAt(r.GetTxOpts().Context,r.GetTxOpts().From);if err!=nil{
+		return fmt.Errorf("Error getting nonce %w",err)
+	}
+	r.Conn.TxOpts.Nonce=big.NewInt(int64(nonce))
+	return nil
+}
+
+func(r *Requester)GetClient()*blockchain.ClientConnection{
+	return r.Conn
+}
+
+func(r *Requester)GetInstance()*blockchain.ContractVerifyOperations{
+	return r.Instance
+}
 func(r *Requester)SetTxOpts(c *blockchain.ClientConnection, i *blockchain.ContractVerifyOperations){
 	r.Conn=c
 	r.Instance=i
@@ -20,9 +37,6 @@ func(r *Requester)GetTxOpts()*bind.TransactOpts{
 	return r.Conn.TxOpts
 }
 
-func(r *Requester)UpdateTxOpts(opts *bind.TransactOpts)*bind.TransactOpts{
-	return r.Conn.TxOpts
-}
 
 func(r *Requester)Register(publicKey string,name string)error{
 	if err:=r.Instance.RegisterUser(r.Conn.TxOpts,publicKey); err!=nil{

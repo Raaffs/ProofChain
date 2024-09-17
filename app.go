@@ -163,6 +163,10 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 
 
 func (app *App)UploadDocument(institute,name,description string)error{
+	if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return fmt.Errorf("Invalid transaction nonce")
+	}
 	log.Println("Here ",institute,name,description)
 	file,err:=app.GetFilePath();if err!=nil{
 		log.Println("Error uploading File:",err)
@@ -207,7 +211,7 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 	}
 	for i:=0;i<len(docs);i++{
 		//We're calling contract to get public key of institute or requester, however if
-		//user is not either of them, we don't need to try and drcrypt ipfs cid.
+		//loggedIn user's address doesn't match with either of them, we don't need to try and drcrypt ipfs cid.
 		//This also avoids any unecessary calls to contract
 		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
 			docs[i].IpfsAddress="not authorized"
@@ -265,6 +269,10 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 }
 
 func (app *App)ApproveDocument(status int,hash string)error{
+	if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return fmt.Errorf("Invalid transaction nonce")
+	}
 	log.Println("document hash : ",hash)
 	if verifier,ok:=app.account.(*users.Verifier);ok{
 		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{

@@ -1,12 +1,17 @@
 package users
+
 import (
+	"log"
+	"math/big"
+
 	"github.com/Suy56/ProofChain/blockchain"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 type User interface{
 	SetTxOpts(*blockchain.ClientConnection,*blockchain.ContractVerifyOperations)
 	GetTxOpts() *bind.TransactOpts
-	UpdateTxOpts(*bind.TransactOpts)*bind.TransactOpts
+	GetClient()*blockchain.ClientConnection
+	GetInstance()*blockchain.ContractVerifyOperations
 	Register(string,string)error
 	GetApprovalStatus()(bool,error)
 	GetPublicKeys(string,string)(string,error)
@@ -14,4 +19,15 @@ type User interface{
 	GetAcceptedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	GetRejectedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	GetPendingDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
+}
+
+func UpdateNonce(u User)error{
+	c:=u.GetClient()
+	nonce,err:=c.Client.PendingNonceAt(u.GetTxOpts().Context,u.GetTxOpts().From);if err!=nil{
+		log.Println("Error getting nonce :",err)
+		return err
+	}
+	u.GetTxOpts().Nonce=big.NewInt(int64(nonce))
+	u.SetTxOpts(c,u.GetInstance())
+	return nil
 }
