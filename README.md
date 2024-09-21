@@ -125,7 +125,7 @@ ProofChain is a document verification desktop application using Ethereum Blockch
 ### Starting Application
 1. Deploy Contract
    ```sh
-   go test -v -run test/TestDeploy
+   go test -v -run TestDeploy
    ```
    
 2. Launch Application
