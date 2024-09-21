@@ -50,7 +50,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#UML">UML</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -144,9 +144,17 @@ ProofChain is a document verification desktop application using Ethereum Blockch
 
 
 
-<!-- ROADMAP -->
-## Roadmap
-
+<!-- UML -->
+## UML
+ ### 1. Uploading Documents
+![Alt text](./assest/Uploading.png)
+---
+ ### 2. Verification
+![Alt text](./assest/verification.png)
+---
+ ### 3. API to check integrity of documents
+![Alt text](./assest/API.png)
+---
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
