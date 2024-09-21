@@ -22,12 +22,10 @@ type User interface{
 }
 
 func UpdateNonce(u User)error{
-	c:=u.GetClient()
-	nonce,err:=c.Client.PendingNonceAt(u.GetTxOpts().Context,u.GetTxOpts().From);if err!=nil{
+	nonce,err:=u.GetClient().Client.PendingNonceAt(u.GetTxOpts().Context,u.GetTxOpts().From);if err!=nil{
 		log.Println("Error getting nonce :",err)
 		return err
 	}
 	u.GetTxOpts().Nonce=big.NewInt(int64(nonce))
-	u.SetTxOpts(c,u.GetInstance())
 	return nil
 }
