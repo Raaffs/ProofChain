@@ -11,6 +11,14 @@ type Verifier struct{
 	Name		string
 }
 
+func(v *Verifier)SetName(name string){
+	v.Name = name
+}
+
+func (v *Verifier)GetName()string{
+	return v.Name
+}
+
 func(v *Verifier)GetClient()*blockchain.ClientConnection{
 	return v.Conn
 }

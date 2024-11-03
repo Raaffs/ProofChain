@@ -9,8 +9,16 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 type Requester struct{
+	Name		string
 	Conn 		*blockchain.ClientConnection
 	Instance 	*blockchain.ContractVerifyOperations
+}
+func(r *Requester)SetName(name string){
+	r.Name = name
+}
+
+func (r *Requester)GetName()string{
+	return r.Name
 }
 
 func(r *Requester)UpdateNonce()error{

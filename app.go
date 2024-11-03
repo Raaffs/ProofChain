@@ -78,6 +78,7 @@ func (app *App)Login(username string, password string) (error) {
 	}else{
 		app.account=&users.Requester{Conn: c,Instance: i}
 	}
+	app.account.SetName(username)
 	return nil
 }
 
@@ -140,6 +141,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 						log.Println("error registering institution : ",err)
 						return fmt.Errorf("error registering institution")
 					}
+					app.account.SetName(name)
 					log.Println("registered successful")
 				}else{
 					requester:=&users.Requester{Conn: c,Instance: i}
@@ -148,6 +150,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 						log.Println("error registering user : ",err)
 						return fmt.Errorf("error registering institution")
 					}
+					app.account.SetName(name)
 				}
 			}
 		case err,ok:=<-errchan:
@@ -213,7 +216,7 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		//We're calling contract to get public key of institute or requester, however if
 		//loggedIn user's address doesn't match with either of them, we don't need to try and drcrypt ipfs cid.
 		//This also avoids any unecessary calls to contract
-		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+		if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
 			docs[i].IpfsAddress="not authorized"
 			continue
 		}
@@ -258,28 +261,33 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 		return nil, err
 	}
 	for i:=0;i<len(docs);i++{
-		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+		if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
 			docs[i].IpfsAddress="not authorized"
 			continue
 		}
 		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	pendingDocs := app.account.GetPendingDocuments(docs)
+	fmt.Println("pending docs:",pendingDocs)
 	return pendingDocs, nil
 }
 
 func (app *App)ApproveDocument(status int,hash string)error{
+	log.Println("here in approved doucs")
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
 	}
-	log.Println("document hash : ",hash)
+	log.Println("approved document hash : ",hash)
 	if verifier,ok:=app.account.(*users.Verifier);ok{
 		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{
 			log.Println("Error approving document : ",err)
 			return fmt.Errorf("error approving document")
 		}
+	fmt.Println("approved")
+
 		return nil
 	}
+	fmt.Println("rejected")
 	return fmt.Errorf("invalid account type")
 }

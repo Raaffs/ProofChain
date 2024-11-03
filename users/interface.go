@@ -19,6 +19,8 @@ type User interface{
 	GetAcceptedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	GetRejectedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	GetPendingDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
+	SetName(string)
+	GetName()string
 }
 
 func UpdateNonce(u User)error{
