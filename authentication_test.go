@@ -171,7 +171,7 @@ func TestApproveVerifier(t *testing.T){
 	if err:=blockchain.Init(App_test.conn,App_test.in,privateKey[2:],contractAddr);err!=nil{
 		t.Fatal(err)
 	}
-	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"ins"); err!=nil{
+	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"gnat"); err!=nil{
 		t.Fatal(err)
 	}
 }

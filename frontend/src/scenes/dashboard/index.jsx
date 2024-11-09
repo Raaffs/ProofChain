@@ -9,6 +9,8 @@ import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import { useEffect, useState } from "react";
 import { GetAllDocs } from "../../../wailsjs/go/main/App";
 import { IsApprovedInstitute } from "../../../wailsjs/go/main/App";
+import StatusBreakdownChart from "../../components/PieChart";
+import InstituteStatusChart from "../../components/BarChart";
 const Dashboard=()=>{
     const theme=useTheme()
     const colors=tokens(theme.palette.mode)
@@ -138,8 +140,8 @@ const Dashboard=()=>{
                   />
                 </Box>
                 <Box
-                  gridColumn="span 7"
-                  gridRow="span 2"
+                  gridColumn="span 8"
+                  gridRow="span 3"
                   backgroundColor={colors.primary[500]}
                   overflow="auto"
                 >
@@ -157,7 +159,7 @@ const Dashboard=()=>{
                     {docs.map((doc, i) => (
                       <Box 
                           key={i}  // Add a key for each item in the list
-                          display="flex"
+                          // display="flex"
                           justifyContent="space-between"
                           alignItems="center"
                           borderBottom={`4px solid ${colors.primary[900]}`}
@@ -191,8 +193,25 @@ const Dashboard=()=>{
                       </Box>
                       </Box>
                       ))}
+                      
                 </Box>
+                <Box
+                  gridColumn="span 4"
+                  gridRow="span 3"
+                  backgroundColor={colors.primary[500]}
+                  overflow="auto"
+                >
+                  <StatusBreakdownChart data={docs}/>
 
+                </Box>
+                <Box
+                  gridColumn="span 12 "
+                  gridRow="span 2"
+                  backgroundColor={colors.primary[500]}
+                  overflow="auto"
+                >
+                  <InstituteStatusChart data={docs}/>
+                </Box>
             </Box>
         </Box>
     )
