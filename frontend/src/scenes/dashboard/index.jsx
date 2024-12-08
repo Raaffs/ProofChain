@@ -1,5 +1,4 @@
 import { Box,Typography } from "@mui/material";
-import Header from "../../components/Header";
 import { useTheme } from "@emotion/react";
 import { tokens } from "../../themes";
 import StatBox from "../../components/StatBox";
@@ -31,7 +30,6 @@ const Dashboard=()=>{
             setApproved(approvedCount.length)
             setPending(pendingCount.length)
             setRejected(rejectedCount.length)
-            console.log("hi len ",approvedCount.length,pendingCount.length,rejectedCount.length)
             setdDocs(result)
             setLoading(false)
         })
@@ -80,7 +78,7 @@ const Dashboard=()=>{
                     subtitle="Approved Documents"
                     icon={
                         <AddTaskOutlinedIcon
-                            sx={{ color: colors.greenAccent[600], fontSize: "26px",margin:"5px" }}
+                            sx={{ color: colors.greenAccent[500], fontSize: "26px",margin:"5px" }}
                         />
                     }
                     path='/documents/approved'
@@ -158,8 +156,8 @@ const Dashboard=()=>{
                     </Box>
                     {docs.map((doc, i) => (
                       <Box 
-                          key={i}  // Add a key for each item in the list
-                          // display="flex"
+                          key={i}  
+                          display="flex"
                           justifyContent="space-between"
                           alignItems="center"
                           borderBottom={`4px solid ${colors.primary[900]}`}

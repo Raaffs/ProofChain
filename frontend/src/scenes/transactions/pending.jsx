@@ -2,9 +2,9 @@ import { Box, Typography, useTheme, Button } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../themes";
 import Header from "../../components/Header";
-import { GetPendingDocuments, IsApprovedInstitute, ApproveDocument } from "../../../wailsjs/go/main/App";
+import { GetPendingDocuments, IsApprovedInstitute, ApproveDocument, ViewDocument } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
-
+import Modal from '@mui/material/Modal';
 const PendingDocuments = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
@@ -16,51 +16,74 @@ const PendingDocuments = () => {
         { field: "Verifier", headerName: "Verifier", flex: 1 },
         { field: "Name", headerName: "Name", flex: 1 },
         { field: "ShaHash", headerName: "Hash", flex: 1 },
-        { field: "IpfsAddress", headerName: "IPFS Address", flex: 1 }
+        {field: "Institute", headerName: "Institute", flex: 1},
+        {
+            field: "view",
+            headerName: "View",
+            flex: 1,
+            renderCell: (params) => {
+                const doc = docs.find((doc) => doc.ID === params.id);
+                return (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            handleView(params.row.ShaHash,params.row.Institute,params.row.Requester)
+                            console.log("document in handle view: ",params.row.ShaHash)
+                        }}
+                    >
+                        View
+                    </Button>
+                );
+            },
+        },
     ]);
 
-      const handleApprove = (id) => {
-        setDocs((prevDocs) => {
-            const result = prevDocs.find((doc) => doc.ID === id);
-            if (!result) {
-                setError("Document not found");
-                console.log("Document id not found, id: ", id);
-                return prevDocs; // Return previous state if not found
-            }
+    const [image, setImage] = useState(null); // To store the base64 image
+    const [isModalOpen, setModalOpen] = useState(false); // Modal state
 
-            // Approve the document
-            ApproveDocument(0, result.ShaHash)
-                .then(() => {
-                    setMessage("Document approved successfully");
-                    // Optionally refresh documents after approval
-                    fetchDocuments();
-                })
-                .catch((err) => setError(err.message));
-            
-            return prevDocs; // Return previous state
-        });
+    const handleView = (shaHash, institute, requester) => {
+        ViewDocument(shaHash, institute, requester)
+            .then((base64Image) => {
+                if (base64Image) {
+                    setImage(base64Image); // Set the image received from the backend
+                    setModalOpen(true); // Open the modal to display the image
+                } else {
+                    setError("No image received from the server");
+                }
+            })
+            .catch((err) => setError(err.message));
     };
 
-    const handleReject = (id) => {
-        setDocs((prevDocs) => {
-            const result = prevDocs.find((doc) => doc.ID === id);
-            if (!result) {
-                console.log("result and docs",prevDocs,result)
-                setError("Document not found");
-                return prevDocs; // Return previous state if not found
-            }
+    const handleApprove = (doc) => {
+        console.log("document id: ",doc.ID)
+        if (doc===undefined||doc===null) {
+            setError("Document not found");
+            console.log("Document id not found, id: ", id);
+            return;
+        }
 
-            // Reject the document
-            ApproveDocument(1, result.ShaHash)
-                .then(() => {
-                    setMessage("Document rejected successfully");
-                    // Optionally refresh documents after rejection
-                    fetchDocuments();
-                })
-                .catch((err) => setError(err.message));
-            
-            return prevDocs; // Return previous state
-        });
+        ApproveDocument(0, doc.ShaHash)
+            .then(() => {
+                setMessage("Document approved successfully");
+                fetchDocuments(); // Refresh documents after approval
+            })
+            .catch((err) => setError(err.message));
+    };
+
+    const handleReject = (doc) => {
+        if (doc===undefined||doc===null) {
+            setError("Document not found");
+            console.log("Document id not found, id: ", id);
+            return;
+        }
+
+        ApproveDocument(1, doc.ShaHash)
+            .then(() => {
+                setMessage("Document rejected successfully");
+                fetchDocuments(); // Refresh documents after rejection
+            })
+            .catch((err) => setError(err.message));
     };
 
     const setupColumns = () => {
@@ -78,15 +101,15 @@ const PendingDocuments = () => {
                                     <Button
                                         variant="contained"
                                         color="success"
-                                        onClick={() => handleApprove(params.id)}
-                                        style={{ marginRight: '10px' }}
+                                        onClick={() => handleApprove(params.row)}
+                                        style={{ marginRight: "10px" }}
                                     >
                                         Approve
                                     </Button>
                                     <Button
                                         variant="contained"
                                         color="error"
-                                        onClick={() => handleReject(params.id)}
+                                        onClick={() => handleReject(params.row)}
                                     >
                                         Reject
                                     </Button>
@@ -106,7 +129,7 @@ const PendingDocuments = () => {
                     setDocs([]);
                     setError("No Pending Documents");
                     return;
-                } 
+                }
                 setDocs(result);
                 setError(null); // Clear error if documents are fetched successfully
             })
@@ -116,18 +139,18 @@ const PendingDocuments = () => {
     useEffect(() => {
         fetchDocuments();
         setupColumns();
-    }, []);  // Runs only once on mount
+    }, []); // Runs only once on mount
 
     return (
-        <Box m="20px" sx={{ width: 'dynamic', maxWidth: '95%', justifyContent: 'center' }}>
+        <Box m="20px" sx={{ width: "dynamic", maxWidth: "95%", justifyContent: "center" }}>
             <Header title="Pending Documents" />
             {error && (
-                <Typography color="error" align="center" style={{ marginBottom: '16px' }}>
+                <Typography color="error" align="center" style={{ marginBottom: "16px" }}>
                     {error}
                 </Typography>
             )}
             {message && (
-                <Typography color="success" align="center" style={{ marginBottom: '16px' }}>
+                <Typography color="success" align="center" style={{ marginBottom: "16px" }}>
                     {message}
                 </Typography>
             )}
@@ -142,7 +165,7 @@ const PendingDocuments = () => {
                         },
                         "& .MuiDataGrid-cell": {
                             borderBottom: "none",
-                            fontSize: '1.1rem',
+                            fontSize: "1.1rem",
                         },
                         "& .MuiDataGrid-columnHeaders": {
                             backgroundColor: colors.blueAccent[700],
@@ -166,6 +189,41 @@ const PendingDocuments = () => {
                     />
                 </Box>
             )}
+
+            {/* Modal for image display */}
+            <Modal
+                open={isModalOpen}
+                onClose={() => setModalOpen(false)}
+                sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+                <Box
+                    sx={{
+                        backgroundColor: "white",
+                        padding: "20px",
+                        borderRadius: "10px",
+                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.25)",
+                        textAlign: "center",
+                    }}
+                >
+                    {image ? (
+                        <img
+                            src={`data:image/png;base64,${image}`}
+                            alt="Document"
+                            style={{ maxWidth: "100%", maxHeight: "70vh" }}
+                        />
+                    ) : (
+                        <Typography color="error">Failed to load image</Typography>
+                    )}
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => setModalOpen(false)}
+                        style={{ marginTop: "10px" }}
+                    >
+                        Close
+                    </Button>
+                </Box>
+            </Modal>
         </Box>
     );
 };

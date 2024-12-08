@@ -12,24 +12,25 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func(app *App)TryDecrypt2(encryptedIPFS string,institute string,user string)string{
+func(app *App)TryDecrypt2(encryptedDocument []byte,institute string,user string)([]byte,error){
 	pub,err:=app.account.GetPublicKeys(institute,user); if err!=nil{
 		log.Println("error getting public key: ",err)
-		return ""
+		return nil,fmt.Errorf("Error retrieving public keys")
 	}
+	log.Println("public key of ins: ",pub)
 	if err:=app.keys.SetMultiSigKey(pub);err!=nil{
 		log.Println("error setting multisigkey: ",err)
-		return "private"
+		return nil,fmt.Errorf("Error retrieving multi-sig keys")
 	}
 	sec,err:=app.keys.GenerateSecret();if err!=nil{
 		log.Println("error generating secret: ",err)
-		return "private"
+		return nil,fmt.Errorf("Error generating secret key")
 	}
-	ipfs,err:=keyUtils.DecryptIPFSHash(sec,[]byte(encryptedIPFS));if err!=nil{
-		log.Println("error decrypting ipfs hash here: ",err,ipfs)
-		return "private"
+	document,err:=keyUtils.DecryptIPFSHash(sec,encryptedDocument);if err!=nil{
+		log.Println("error decrypting ipfs hash here: ",err)
+		return nil,fmt.Errorf("You're not authorized")
 	}
-	return string(ipfs)
+	return document,nil
 }
 
 func (app *App)GetFilePath()(string,error){

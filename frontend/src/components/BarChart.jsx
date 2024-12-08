@@ -1,12 +1,13 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
-// Register components
+import { tokens } from '../themes';
+import { useTheme } from '@emotion/react';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const InstituteStatusChart = ({ data }) => {
-  // Define available statuses
+  const theme=useTheme();
+  const colors=tokens(theme.palette.mode)
   const statuses = { 0: 'Approved', 1: 'Rejected', 2: 'Pending' };
 
   // Aggregate data by Institute and status
@@ -29,17 +30,26 @@ const InstituteStatusChart = ({ data }) => {
       {
         label: 'Approved',
         data: Object.values(aggregatedData).map((entry) => entry.Approved),
-        backgroundColor: '#4caf50', // Green for Approved
+        backgroundColor: colors.greenAccent[500], // Green for Approved
+        categoryPercentage:1,
+        barPercentage:0.5,
+        borderWidth:1,
       },
       {
         label: 'Rejected',
         data: Object.values(aggregatedData).map((entry) => entry.Rejected),
         backgroundColor: 'red', // Red for Rejected
+        categoryPercentage:1,
+        barPercentage:0.5,
+        borderWidth:1,
       },
       {
         label: 'Pending',
         data: Object.values(aggregatedData).map((entry) => entry.Pending),
-        backgroundColor: '#ff9800', // Orange for Pending
+        backgroundColor: colors.blueAccent[400], // Orange for Pending
+        categoryPercentage:1,
+        barPercentage:0.5,
+        borderWidth:1,
       },
     ],
   };
@@ -59,13 +69,19 @@ const InstituteStatusChart = ({ data }) => {
       x: {
         stacked: true,
         title: { display: true, text: 'Document Count' },
-        beginAtZero: true
+        beginAtZero: true  ,
+        categoryPercentage: 1, 
+        barPercentage: 1,      // Adjust bar width to fit the reduced category width
+ 
       },
       y: {
         stacked: true,
-        title: { display: true, text: 'Institute' }
-      }
+        title: { display: true, text: 'Institute' },
+        categoryPercentage: 1, 
+        barPercentage: 1,      // Adjust bar width to fit the reduced category width
+      },
     },
+    // barThickness: 30, // Adjust this value for desired bar width
   };
 
   return (

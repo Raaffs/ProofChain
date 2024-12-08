@@ -20,7 +20,9 @@ func(r *Requester)SetName(name string){
 func (r *Requester)GetName()string{
 	return r.Name
 }
-
+func (r *Requester)GetPublicAddress()string{
+	return r.Conn.TxOpts.From.Hex()
+}
 func(r *Requester)UpdateNonce()error{
 	nonce,err:=r.Conn.Client.PendingNonceAt(r.GetTxOpts().Context,r.GetTxOpts().From);if err!=nil{
 		return fmt.Errorf("Error getting nonce %w",err)

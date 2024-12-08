@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"sync"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
 )
+
 // App struct
 type App struct {
 	ctx      		context.Context
@@ -33,6 +36,7 @@ func (app *App) startup(ctx context.Context) {
 	for key,val:=range keyMap{
 		app.envMap[key]=val
 	}
+
 	app.ipfs.New("5001")	
 }
 
@@ -166,12 +170,12 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 
 
 func (app *App)UploadDocument(institute,name,description string)error{
+	var document nodeData.DocumentStore
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
 	}
-	log.Println("Here ",institute,name,description)
-	file,err:=app.GetFilePath();if err!=nil{
+	filePath,err:=app.GetFilePath();if err!=nil{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
@@ -182,8 +186,9 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("error retrieving the name of institute")
 		return fmt.Errorf("invalid institution")
 	}
-	cid,err:=app.ipfs.Upload(file);if err!=nil{
-		return err					
+	file,err:=os.ReadFile(filePath);if err!=nil{
+		log.Println("Error reading file : ",err)
+		return err
 	}
 	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
 		return err
@@ -191,15 +196,23 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	secretKey,err:=app.keys.GenerateSecret();if err!=nil{
 		return err
 	}
-	encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,[]byte(cid));if err!=nil{
+	encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,file);if err!=nil{
 		return err
 	}
-	shaHash,err:=Keccak256File(file); if err!=nil{
+	shaHash,err:=Keccak256File(filePath); if err!=nil{
 		log.Println("Error hashing file:",err)
 		return fmt.Errorf("Error uploading file")
 	}
+	document.EncryptedDocument=encryptedDocument
+	document.Shahash=shaHash
+	document.PublicAddress=app.account.GetPublicAddress()
+	
+	if err:=nodeData.UploadDocument(document);err!=nil{
+		log.Println("Error uploading file to mongodb : ",err)
+		return fmt.Errorf("Error uploading file")
+	}
 	if account,ok:=app.account.(*users.Requester);ok{
-		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,encryptedDocument,institute,name);err!=nil{
+		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,"1",institute,name);err!=nil{
 			return err
 		}
 		return nil
@@ -216,11 +229,11 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		//We're calling contract to get public key of institute or requester, however if
 		//loggedIn user's address doesn't match with either of them, we don't need to try and drcrypt ipfs cid.
 		//This also avoids any unecessary calls to contract
-		if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
-			docs[i].IpfsAddress="not authorized"
-			continue
-		}
-		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
+		// if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+		// 	docs[i].IpfsAddress="not authorized"
+		// 	continue
+		// }
+		// docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	return docs,nil
 }
@@ -230,13 +243,6 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i:=0;i<len(docs);i++{
-		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
-			docs[i].IpfsAddress="not authorized"
-			continue
-		}
-		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
-	}
 	verifiedDocs := app.account.GetAcceptedDocuments(docs)
 	return verifiedDocs, nil
 }
@@ -244,13 +250,6 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error) {
 	docs, err := app.account.GetDocuments();if err != nil {
 		return nil, err
-	}
-	for i:=0;i<len(docs);i++{
-		if docs[i].Verifier!=app.account.GetTxOpts().From.Hex() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
-			docs[i].IpfsAddress="not authorized"
-			continue
-		}
-		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	rejectedDocs := app.account.GetRejectedDocuments(docs)
 	return rejectedDocs, nil
@@ -260,34 +259,41 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	docs, err := app.account.GetDocuments(); if err != nil {
 		return nil, err
 	}
-	for i:=0;i<len(docs);i++{
-		if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
-			docs[i].IpfsAddress="not authorized"
-			continue
-		}
-		docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
-	}
 	pendingDocs := app.account.GetPendingDocuments(docs)
-	fmt.Println("pending docs:",pendingDocs)
 	return pendingDocs, nil
 }
 
 func (app *App)ApproveDocument(status int,hash string)error{
-	log.Println("here in approved doucs")
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
 	}
-	log.Println("approved document hash : ",hash)
 	if verifier,ok:=app.account.(*users.Verifier);ok{
 		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{
 			log.Println("Error approving document : ",err)
 			return fmt.Errorf("error approving document")
 		}
-	fmt.Println("approved")
-
 		return nil
 	}
 	fmt.Println("rejected")
 	return fmt.Errorf("invalid account type")
+}
+
+func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
+	encryptedDocument,err:=nodeData.RetrieveDocument(shahash); if err!=nil{
+		log.Fatal("Error retrieving document: ",err)
+		return "",fmt.Errorf("Error retrieving document")
+	}
+
+
+	log.Println("encrypted document",encryptedDocument)
+	
+	decryptedDoc,err:=app.TryDecrypt2(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
+		log.Println("Error decrypting :",err)
+		return "",fmt.Errorf("Error decrypting document")
+	}
+
+	encodedDocument:=base64.StdEncoding.EncodeToString(decryptedDoc)
+
+	return encodedDocument, nil
 }

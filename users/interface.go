@@ -21,6 +21,7 @@ type User interface{
 	GetPendingDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	SetName(string)
 	GetName()string
+	GetPublicAddress()string
 }
 
 func UpdateNonce(u User)error{

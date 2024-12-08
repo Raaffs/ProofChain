@@ -24,6 +24,8 @@ export function Logout():Promise<void>;
 
 export function Register(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<void>;
 
-export function TryDecrypt2(arg1:string,arg2:string,arg3:string):Promise<string>;
+export function TryDecrypt2(arg1:Array<number>,arg2:string,arg3:string):Promise<Array<number>>;
 
 export function UploadDocument(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function ViewDocument(arg1:string,arg2:string,arg3:string):Promise<string>;

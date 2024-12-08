@@ -41,4 +41,5 @@ func main() {
 	if err:=godotenv.Load(".env","keys/keyMap","accounts/accounts");err!=nil{
 		println("Error : ",err.Error())
 	}
+
 }

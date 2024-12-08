@@ -195,27 +195,27 @@ func WriteKeyMap(user, keyFilePath string) error {
 
 
 
-func EncryptIPFSHash(sharedKey []byte, plaintext []byte)(string,error){
+func EncryptIPFSHash(sharedKey []byte, plaintext []byte)([]byte,error){
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Generate a new AES-GCM instance
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Create a nonce. Nonce size should be equal to gcm.NonceSize()
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Encrypt the data
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
-	return string(ciphertext), nil
+	return ciphertext, nil
 }
 
 func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) ([]byte, error) {

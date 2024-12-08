@@ -21,7 +21,6 @@ func Init(c Connect, i Connect, privateKey string, contractAddr string)error{
 	}
 	c.SetClient(client)
 	i.SetClient(client)
-
 	if err:=c.New(privateKey);err!=nil{
 		fmt.Println("Error initalizing the connection to blockchain : ", err)
 		return err

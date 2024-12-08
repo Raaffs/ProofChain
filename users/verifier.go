@@ -18,7 +18,9 @@ func(v *Verifier)SetName(name string){
 func (v *Verifier)GetName()string{
 	return v.Name
 }
-
+func (v *Verifier)GetPublicAddress()string{
+	return v.Conn.TxOpts.From.Hex()
+}
 func(v *Verifier)GetClient()*blockchain.ClientConnection{
 	return v.Conn
 }
