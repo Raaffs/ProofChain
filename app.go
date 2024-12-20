@@ -285,8 +285,7 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 		return "",fmt.Errorf("Error retrieving document")
 	}
 
-
-	log.Println("encrypted document",encryptedDocument)
+	log.Println("encrypted document",encryptedDocument.PublicAddress)
 	
 	decryptedDoc,err:=app.TryDecrypt2(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
 		log.Println("Error decrypting :",err)
