@@ -151,7 +151,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 					requester:=&users.Requester{Conn: c,Instance: i}
 					app.account=requester
 					if err:=app.account.Register(pub,name);err!=nil{
-						log.Println("error registering user : ",err)
+						log.Println("error registering requester : ",err)
 						return fmt.Errorf("error registering institution")
 					}
 					app.account.SetName(name)
@@ -159,6 +159,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 			}
 		case err,ok:=<-errchan:
 			if err!=nil{
+				log.Println("Error registering user: ",err)
 				return err
 			}
 			if !ok{
@@ -221,6 +222,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 }
 
 func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
+	var userDocs []blockchain.VerificationDocument
 	docs,err:=app.account.GetDocuments(); if err!=nil{
 		log.Println("Error getAllDocs:",err)
 		return nil,fmt.Errorf("error retrieving documents")
@@ -229,13 +231,13 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		//We're calling contract to get public key of institute or requester, however if
 		//loggedIn user's address doesn't match with either of them, we don't need to try and drcrypt ipfs cid.
 		//This also avoids any unecessary calls to contract
-		// if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
-		// 	docs[i].IpfsAddress="not authorized"
-		// 	continue
-		// }
+		if docs[i].Institute!=app.account.GetName() && docs[i].Requester!=app.account.GetTxOpts().From.Hex(){
+			continue
+		}
+		userDocs = append(userDocs, docs[i])
 		// docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
-	return docs,nil
+	return userDocs,nil
 }
 
 func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {

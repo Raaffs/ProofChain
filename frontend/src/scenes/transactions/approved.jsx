@@ -51,7 +51,6 @@ const ApprovedDocuments = () => {
         { field: "Verifier", headerName: "Verifier", flex: 1 },
         { field: "Name", headerName: "Name", flex: 1 },
         { field: "ShaHash", headerName: "Hash", flex: 1 },
-        { field: "IpfsAddress", headerName: "IPFS Address", flex: 1 }
     ];
 
     return (

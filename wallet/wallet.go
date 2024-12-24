@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -18,9 +19,9 @@ func NewWallet(privateKeyString string, username string, password string, errcha
 		return
 	}
 	accountPath:=accountMap[username]
+	log.Println("accountpath: ",accountPath)
 	if accountPath!=""{
-		fmt.Println(accountMap)
-		errchan<-fmt.Errorf("account already exist")
+		errchan<-fmt.Errorf("account already exist.")
 		return
 	}
 
