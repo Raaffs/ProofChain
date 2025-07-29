@@ -23,7 +23,7 @@ func UploadDocument(doc DocumentStore) error {
 		return fmt.Errorf("failed to marshal document: %v", err)
 	}
 
-	resp, err := http.Post("http://localhost:8080/add", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://localhost:8000/add", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to send POST request: %v", err)
 	}
@@ -53,7 +53,7 @@ func RetrieveDocument(sha string) (DocumentStore, error) {
 		return DocumentStore{}, fmt.Errorf("failed to marshal sha data: %v", err)
 	}
 	var data DocumentStore
-	resp, err := http.Post("http://localhost:8080/retrieve", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("http://localhost:8000/retrieve", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return DocumentStore{}, fmt.Errorf("failed to send POST request: %v", err)
 	}

@@ -105,6 +105,3 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 	}
 	return userDocs,nil
 }
-
-
-

@@ -69,7 +69,7 @@ func (app *App)Login(username string, password string) (error) {
 		return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
 
 	}
-	if err:=blockchain.Init(c,i,privateKey,app.envMap["CONTRACT_ADDR"].(string));err!=nil{
+	if err:=blockchain.Init(c,i,privateKey,app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
 		log.Println("Error connecting to the blockchain : ",err)
 		return fmt.Errorf("error connecting to the smart contract")
 	}
@@ -109,7 +109,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 	}
 	c:=&blockchain.ClientConnection{}
 	i:=&blockchain.ContractVerifyOperations{}
-	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap["CONTRACT_ADDR"].(string));err!=nil{
+	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
 		return err
 	}
 	var wg sync.WaitGroup
@@ -180,6 +180,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
+	//empty string, cause we don't want public keys of requester
 	pubKey,err:=app.account.GetPublicKeys(strings.TrimSpace(institute),"");if err!=nil{
 		return err
 	}
@@ -187,10 +188,12 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("error retrieving the name of institute")
 		return fmt.Errorf("invalid institution")
 	}
+
 	file,err:=os.ReadFile(filePath);if err!=nil{
 		log.Println("Error reading file : ",err)
 		return err
 	}
+	//set public key of institution for performing ECDH key exchange
 	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
 		return err
 	}
@@ -206,6 +209,13 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	}
 	document.EncryptedDocument=encryptedDocument
 	document.Shahash=shaHash
+
+	//potential security risk. Since user can directly modify GetPublicAddress function
+	//to set any public address
+	//Though It won't effect third party verification as the api will directly be sending
+	//user's public key stored on the chain, which third party needs to take a hash of to get
+	//the public address of user. 
+	
 	document.PublicAddress=app.account.GetPublicAddress()
 	
 	if err:=nodeData.UploadDocument(document);err!=nil{
@@ -235,7 +245,6 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 			continue
 		}
 		userDocs = append(userDocs, docs[i])
-		// docs[i].IpfsAddress=app.TryDecrypt2(docs[i].IpfsAddress,docs[i].Institute,docs[i].Requester)
 	}
 	return userDocs,nil
 }
@@ -270,6 +279,7 @@ func (app *App)ApproveDocument(status int,hash string)error{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
 	}
+	//need to look at this again
 	if verifier,ok:=app.account.(*users.Verifier);ok{
 		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{
 			log.Println("Error approving document : ",err)
@@ -277,17 +287,15 @@ func (app *App)ApproveDocument(status int,hash string)error{
 		}
 		return nil
 	}
-	fmt.Println("rejected")
 	return fmt.Errorf("invalid account type")
 }
 
 func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
 	encryptedDocument,err:=nodeData.RetrieveDocument(shahash); if err!=nil{
-		log.Fatal("Error retrieving document: ",err)
+		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}
 
-	log.Println("encrypted document",encryptedDocument.PublicAddress)
 	
 	decryptedDoc,err:=app.TryDecrypt2(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
 		log.Println("Error decrypting :",err)

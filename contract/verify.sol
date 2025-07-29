@@ -1,9 +1,6 @@
     // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 contract Verification{
-    //Need to rewrite this entire thing cause the way documents are retrieved is
-    //not optimal and code is too convoluted to easily understand reasoning behind some functions and behavior
-
     address owner;
     constructor(){
         owner=msg.sender;
@@ -61,6 +58,7 @@ contract Verification{
     }
     
     function registerInstitution(string memory _publicKey, string memory _name) public{
+        require(institutions[_name].publicAddr == address(0), "Institution already registered");
         institutions[_name]=Institution({
             publicAddr: msg.sender,
             publicKey:  _publicKey,
