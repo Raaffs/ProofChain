@@ -180,7 +180,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- CONTACT -->
 ## Contact
 
-Suyash - [@Suyash](https://twitter.com/your_username) - suyashsaraf5@gmail.com
+Suyash - suyashsaraf5@gmail.com
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
