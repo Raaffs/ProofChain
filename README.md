@@ -76,7 +76,7 @@ ProofChain is a document verification desktop application using Ethereum Blockch
 * [![Go][Go]][Go-url]
 * [![React][React.js]][React-url]
 * [![Ethereum][Ethereum]][Ethereum-url]
-* [![ipfs][ipfs]][ipfs-url]
+* [![mongodb][mongodb]][mongodb-url]
 * [![wails][wails]][wails-url]
 
 
@@ -217,8 +217,8 @@ Suyash - suyashsaraf5@gmail.com
 [React-url]: https://reactjs.org/
 [Ethereum]: https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white
 [Ethereum-url]: https://ethereum.org/
-[ipfs]: https://img.shields.io/badge/ipfs-blue?style=for-the-badge&logo=ipfs
-[ipfs-url]: https://ipfs.tech
+[mongodb]: https://img.shields.io/badge/-MongoDB-13aa52?style=for-the-badge&logo=mongodb&logoColor=white
+[mongodb-url]: https://www.mongodb.com/
 [wails]: https://img.shields.io/badge/wails-red?style=for-the-badge&logo=wails
 [wails-url]: https://wails.io
 [Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
