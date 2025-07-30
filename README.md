@@ -63,9 +63,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 ProofChain is a document verification desktop application using Ethereum Blockchain
-* Document uploaded by user gets stored on ipfs
+* Document uploaded by user gets stored on mongodb in an encrypted format
 * Verifiers can view the document and set the status of document to either approved or rejected
-* Users can view documents that have been approved and rejected
+* Third parties can verify the authenticity of documents without seeing it's contents
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
