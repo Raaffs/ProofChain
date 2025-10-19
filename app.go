@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/keyUtils"
-	"github.com/Suy56/ProofChain/nodeData"
+	"github.com/Suy56/ProofChain/storage"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
@@ -22,7 +22,6 @@ type App struct {
 	ctx      		context.Context
 	account			users.User
 	keys			*keyUtils.ECKeys
-	ipfs 			*nodeData.IPFSManager
 	envMap			map[string]any
 }
 // startup is called when the app starts. The context is saved
@@ -37,7 +36,6 @@ func (app *App) startup(ctx context.Context) {
 		app.envMap[key]=val
 	}
 
-	app.ipfs.New("5001")	
 }
 
 func (app *App)Login(username string, password string) (error) {
@@ -171,7 +169,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 
 
 func (app *App)UploadDocument(institute,name,description string)error{
-	var document nodeData.DocumentStore
+	var document storage.DocumentStore
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
@@ -218,7 +216,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	
 	document.PublicAddress=app.account.GetPublicAddress()
 	
-	if err:=nodeData.UploadDocument(document);err!=nil{
+	if err:=storage.UploadDocument(document);err!=nil{
 		log.Println("Error uploading file to mongodb : ",err)
 		return fmt.Errorf("Error uploading file")
 	}
@@ -291,7 +289,7 @@ func (app *App)ApproveDocument(status int,hash string)error{
 }
 
 func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
-	encryptedDocument,err:=nodeData.RetrieveDocument(shahash); if err!=nil{
+	encryptedDocument,err:=storage.RetrieveDocument(shahash); if err!=nil{
 		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}

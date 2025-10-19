@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/joho/godotenv"
 )
 func TestDeploy(t *testing.T){

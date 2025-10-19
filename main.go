@@ -4,7 +4,6 @@ import (
 	"embed"
 
 	"github.com/Suy56/ProofChain/keyUtils"
-	"github.com/Suy56/ProofChain/nodeData"
 	"github.com/joho/godotenv"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -18,7 +17,6 @@ func main() {
 	// Create an instance of the app structure
 	app := &App{
 		keys: 	  		&keyUtils.ECKeys{},
-		ipfs: 	  		&nodeData.IPFSManager{},
 		envMap: 		make(map[string]any),
 	}
 	

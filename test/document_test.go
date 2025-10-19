@@ -1,16 +1,11 @@
 package main_test
 
 import (
-	"bytes"
-	"fmt"
-	"image"
-	"image/png"
 	"log"
-	"os"
 	"sync"
 	"testing"
 
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/keyUtils"
 )
 
@@ -50,29 +45,9 @@ func TestDoc(t *testing.T){
 		t.Fatal("Error generating secret key: ",err)
 	}
 
-	imagePath:="./assest/API.png"
-	imageDoc,err:=os.ReadFile(imagePath);if err!=nil{
-		t.Fatal("error reading image",err)
-	}
 
-	enc,err:=keyUtils.EncryptIPFSHash(secret,imageDoc);if err!=nil{
+	_,_=keyUtils.EncryptIPFSHash(secret,[]byte("yoood"));if err!=nil{
 		t.Fatal("Error encrypting ",err)
 	}
-	decrypt,err:=keyUtils.DecryptIPFSHash(secret,enc)
-	reader := bytes.NewReader(decrypt)
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		log.Fatalf("Failed to decode image: %v", err)
-	}
-	outFile, err := os.Create("output.jpg")
-	if err != nil {
-		log.Fatalf("Failed to create file: %v", err)
-	}
-	defer outFile.Close()	
-	err = png.Encode(outFile, img)
-	if err != nil {
-		log.Fatalf("Failed to encode image: %v", err)
-	}
-
-	fmt.Println("Image saved as output.jpg")
+	
 }

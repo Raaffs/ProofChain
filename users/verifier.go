@@ -1,7 +1,7 @@
 package users
 
 import (
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )

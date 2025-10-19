@@ -4,7 +4,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 type User interface{

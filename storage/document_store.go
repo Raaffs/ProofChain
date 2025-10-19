@@ -1,4 +1,4 @@
-package nodeData
+package storage
 
 import (
 	"bytes"

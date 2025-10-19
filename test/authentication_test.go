@@ -7,9 +7,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Suy56/ProofChain/blockchain"
+	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/keyUtils"
-	"github.com/Suy56/ProofChain/nodeData"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
 )
@@ -18,14 +17,12 @@ type app struct{
 	conn	*blockchain.ClientConnection
 	in		*blockchain.ContractVerifyOperations
 	keys	*keyUtils.ECKeys
-	dataNode 	*nodeData.IPFSManager
 }
 
 var App_test=&app{
 	conn: &blockchain.ClientConnection{},
 	in: &blockchain.ContractVerifyOperations{},
 	keys: &keyUtils.ECKeys{},
-	dataNode: &nodeData.IPFSManager{},
 }
 
 func TestRegisterUser(t *testing.T) {
@@ -193,3 +190,4 @@ func TestGetInstitute(t *testing.T) {
 	}
 	fmt.Println("pub",key)
 }
+

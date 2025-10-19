@@ -4,7 +4,7 @@ import (
 	
 	"log"
 
-	"github.com/Suy56/ProofChain/verify"
+	"github.com/Suy56/ProofChain/chaincore/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
