@@ -23,6 +23,7 @@ type App struct {
 	account			users.User
 	keys			*keyUtils.ECKeys
 	envMap			map[string]any
+	storage 		storage.Document
 }
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
@@ -169,7 +170,7 @@ func (app *App)Register(privateKeyString, name, password string, isInstitute boo
 
 
 func (app *App)UploadDocument(institute,name,description string)error{
-	var document storage.DocumentStore
+	var document storage.Document
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
@@ -235,7 +236,7 @@ func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
 		log.Println("Error getAllDocs:",err)
 		return nil,fmt.Errorf("error retrieving documents")
 	}
-	for i:=0;i<len(docs);i++{
+	for i:=range docs{
 		//We're calling contract to get public key of institute or requester, however if
 		//loggedIn user's address doesn't match with either of them, we don't need to try and drcrypt ipfs cid.
 		//This also avoids any unecessary calls to contract

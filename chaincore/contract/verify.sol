@@ -41,7 +41,7 @@ contract Verification{
     string[]    documentHash;
     string[]    institution;
     string[]    descriptions;
-    string[]     encrpytedIPFSHashes; 
+    string[]    encrpytedIPFSHashes; 
     DocStatus[] status;
     //all the above arrays depends on  'docIndexCounter' variable
     //potential improvement: use mapping(user=>[]docs) and mapping(institute=>[]docs)
@@ -66,6 +66,7 @@ contract Verification{
             approved:   false
         });
     }
+
     function getInstituePublicKey(string memory _name) public view returns(string memory pubKey){
         return institutions[_name].publicKey;
     }

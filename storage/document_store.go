@@ -11,13 +11,8 @@ import (
 )
 
 // Connects to MongoDB and sets a Stable API version
-type DocumentStore struct {
-	Shahash           string `bson:"shahash" json:"shahash"`
-	EncryptedDocument []byte `bson:"encryptedDocument" json:"encryptedDocument"`
-	PublicAddress     string `bson:"publicAddress" json:"publicAddress"`
-}
 
-func UploadDocument(doc DocumentStore) error {
+func UploadDocument(doc Document) error {
 	jsonData, err := json.Marshal(doc)
 	if err != nil {
 		return fmt.Errorf("failed to marshal document: %v", err)
@@ -43,33 +38,33 @@ func UploadDocument(doc DocumentStore) error {
 	}
 }
 
-func RetrieveDocument(sha string) (DocumentStore, error) {
+func RetrieveDocument(sha string) (Document, error) {
 	shaData := struct {
 		Sha string `json:"shahash"`
 	}{Sha: sha}
 	log.Println("sha of document to retrieve : ",shaData.Sha)
 	jsonData, err := json.Marshal(shaData)
 	if err != nil {
-		return DocumentStore{}, fmt.Errorf("failed to marshal sha data: %v", err)
+		return Document{}, fmt.Errorf("failed to marshal sha data: %v", err)
 	}
-	var data DocumentStore
+	var data Document
 	resp, err := http.Post("http://localhost:8000/retrieve", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return DocumentStore{}, fmt.Errorf("failed to send POST request: %v", err)
+		return Document{}, fmt.Errorf("failed to send POST request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return DocumentStore{}, fmt.Errorf("failed to retrieve document, status code: %d", resp.StatusCode)
+		return Document{}, fmt.Errorf("failed to retrieve document, status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return DocumentStore{}, fmt.Errorf("failed to read response body: %v", err)
+		return Document{}, fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	if err := json.Unmarshal(body, &data); err != nil {
-		return DocumentStore{}, fmt.Errorf("failed to decode response into Document: %v", err)
+		return Document{}, fmt.Errorf("failed to decode response into Document: %v", err)
 	}
 	return data, nil
 }

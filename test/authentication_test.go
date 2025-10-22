@@ -9,6 +9,7 @@ import (
 
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/keyUtils"
+	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
 )
@@ -17,12 +18,14 @@ type app struct{
 	conn	*blockchain.ClientConnection
 	in		*blockchain.ContractVerifyOperations
 	keys	*keyUtils.ECKeys
+	storage *storageclient.Client
 }
 
 var App_test=&app{
 	conn: &blockchain.ClientConnection{},
 	in: &blockchain.ContractVerifyOperations{},
 	keys: &keyUtils.ECKeys{},
+	storage: storageclient.New("http://localhost:8080"),
 }
 
 func TestRegisterUser(t *testing.T) {
@@ -170,6 +173,10 @@ func TestApproveVerifier(t *testing.T){
 	}
 	if err:=App_test.in.ApproveVerifier(App_test.conn.TxOpts,"ins2"); err!=nil{
 		t.Fatal(err)
+	}
+
+	if err:=App_test.storage.DoRequest("POST","/approveVerifier",map[string]string{"institute":"ins2"},nil);err!=nil{
+		t.Fatal("error approving verifier in storage : ",err)
 	}
 }
 
