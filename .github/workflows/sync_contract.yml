@@ -1,0 +1,40 @@
+name: Sync Smart Contracts to ProofChain-admin
+
+on:
+  push:
+    paths:
+      - 'chaincore/verify/verify.go'
+      - 'chaincore/contract/verify.sol'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout ProofChain
+      uses: actions/checkout@v3
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.1
+      with:
+        ssh-private-key: ${{ secrets.SYNC_SSH_KEY }}
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Clone ProofChain-admin via SSH
+      run: |
+        git clone git@github.com:raaffs/ProofChain-admin.git
+        mkdir -p ProofChain-admin/chaincore/verify
+        mkdir -p ProofChain-admin/chaincore/contract
+        cp chaincore/verify/verify.go ProofChain-admin/chaincore/verify/verify.go
+        cp chaincore/contract/verify.sol ProofChain-admin/chaincore/contract/verify.sol
+
+    - name: Commit & Push to ProofChain-admin
+      working-directory: ProofChain-admin
+      run: |
+        git add chaincore/verify/verify.go chaincore/contract/verify.sol
+        git commit -m "Update verify.go and verify.sol from ProofChain" || echo "No changes to commit"
+        git push
