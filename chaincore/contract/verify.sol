@@ -111,3 +111,4 @@ contract Verification{
         return institutions[name].approved==true;
     }
 }        
+//test
