@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
-	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/storage"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"

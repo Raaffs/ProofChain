@@ -22,14 +22,10 @@ const RejectedDocuments = () => {
                             "Verifier": "",
                             "Name": "",
                             "ShaHash": "",
-                            "IpfsAddress": ""
                         }]);
                         setError("No Rejected Documents");
                     } else {
                         const updatedDocs = result.map((doc) => {
-                            if (doc.IpfsAddress === '') {
-                                doc.IpfsAddress = 'private';
-                            }
                             return {
                                 ...doc,
                                 ShaHash: doc.ShaHash 
@@ -50,7 +46,6 @@ const RejectedDocuments = () => {
         { field: "Verifier", headerName: "Verifier", flex: 1 },
         { field: "Name", headerName: "Name", flex: 1 },
         { field: "ShaHash", headerName: "Hash", flex: 1 },
-        { field: "IpfsAddress", headerName: "IPFS Address", flex: 1 }
     ];
 
     return (

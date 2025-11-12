@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
-	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"

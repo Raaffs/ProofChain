@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Suy56/ProofChain/keyUtils"
+	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"golang.org/x/crypto/sha3"
 )
