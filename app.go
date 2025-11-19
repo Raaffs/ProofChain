@@ -11,10 +11,12 @@ import (
 
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
+	"github.com/Suy56/ProofChain/crypto/zkp"
 	"github.com/Suy56/ProofChain/storage"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
+	"golang.org/x/sync/errgroup"
 )
 
 // App struct
@@ -24,6 +26,8 @@ type App struct {
 	keys			*keyUtils.ECKeys
 	envMap			map[string]any
 	storage 		storage.Document
+	identity		zkp.DigitalIdentity
+	config			Config
 }
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
@@ -36,50 +40,54 @@ func (app *App) startup(ctx context.Context) {
 	for key,val:=range keyMap{
 		app.envMap[key]=val
 	}
-
+	if err:=app.config.Load();err!=nil{
+		log.Fatalf("Fatal error: loading config failed\n%v",err)
+	}
 }
 
-func (app *App)Login(username string, password string) (error) {
+func (app *App)Login(username string, password string)(error){
 	c:=&blockchain.ClientConnection{}
 	i:=&blockchain.ContractVerifyOperations{}
-	var wg sync.WaitGroup
-	errchan:=make(chan error)
-	if err:=godotenv.Load(); err!=nil{
-		return err
-	}
-	wg.Add(1)
-	go func(){
-		defer wg.Done()
-		app.keys.OnLogin(username,password,errchan)
-	}()
-	go func(){
-		wg.Wait()
-		defer close(errchan)
-	}()
-	for err:=range errchan{
-		if err!=nil{
-			log.Println("Error retrieving user's keys  : ",err)
-			return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error {
+		if err:=app.keys.OnLogin(username,password,app.config.Profiles[username].KeyPath);err!=nil{
+			return err
 		}
-	}
+		return nil
+	})
 
-	privateKey,err:=wallet.RetriveAccount(username,password);if err!=nil{
-		log.Println("Error retrieving user's wallet in : ",err)
-		return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
+	g.Go(func() error {
+		app.identity=zkp.NewEllipticIdentity()
+		if err:=app.identity.Load("");err!=nil{
+			log.Println("Failed to load identity: ",err)
+			// return fmt.Errorf("failed to load digital identity")
+		}	
+		return nil
+	})
 
-	}
-	if err:=blockchain.Init(c,i,privateKey,app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
-		log.Println("Error connecting to the blockchain : ",err)
-		return fmt.Errorf("error connecting to the smart contract")
-	}
-	approved,err:=i.Instance.IsApprovedInstitute(c.CallOpts,username); if err!=nil{
-		log.Println("Error getting the account verification status : ",err)
-		return fmt.Errorf("error getting the account verification status")
-	}
-	if approved{
-		app.account=&users.Verifier{Conn: c,Instance: i,Name: username}
-	}else{
-		app.account=&users.Requester{Conn: c,Instance: i}
+	g.Go(func() error {
+		privateKey,err:=wallet.RetriveAccount(username,password,app.config.Profiles[username].AccountPath);if err!=nil{
+			log.Println("Error retrieving user's wallet in : ",err)
+			return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
+
+		}
+		if err:=blockchain.Init(c,i,privateKey,app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
+			log.Println("Error connecting to the blockchain : ",err)
+			return fmt.Errorf("error connecting to the smart contract")
+		}
+		approved,err:=i.Instance.IsApprovedInstitute(c.CallOpts,username); if err!=nil{
+			log.Println("Error getting the account verification status : ",err)
+			return fmt.Errorf("error getting the account verification status")
+		}
+		if approved{
+			app.account=&users.Verifier{Conn: c,Instance: i,Name: username}
+		}else{
+			app.account=&users.Requester{Conn: c,Instance: i}
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+   		return err
 	}
 	app.account.SetName(username)
 	return nil
@@ -99,6 +107,81 @@ func (app *App)IsApprovedInstitute()bool{
 		return false
 	}
 	return approved
+}
+
+func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)error{
+		if len(privateKeyString)<64{
+		log.Println("private key error")
+		return fmt.Errorf("invalid private key")
+	}
+	c:=&blockchain.ClientConnection{}
+	i:=&blockchain.ContractVerifyOperations{}
+	var (
+		publicKey string
+		accountPath string
+		keyPath string
+	) 
+
+	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
+		return err
+	}
+	g,_:=errgroup.WithContext(context.Background())
+	g.Go(func() error {
+		pub, path,err:=app.keys.OnRegister2(name,password); if err!=nil{
+			return err
+		}
+		publicKey=pub
+		keyPath=path
+		return nil
+	})
+	g.Go(func() error {
+		path,err:=wallet.NewWallet2(privateKeyString[2:],name,password);if err!=nil{
+			return err
+		}
+		accountPath=path
+		return nil
+	})
+	g.Go(func() error {
+		if err:=app.identity.New();err!=nil{
+			log.Println("Failed to create digital identity: ",err)
+			return fmt.Errorf("Failed to create digital identity")
+		}
+		path, err:=app.identity.Save();if err!=nil{
+			log.Println("Failed to save digital identity: ",err)
+			return fmt.Errorf("Failed to save digital identity")
+		}
+		log.Println("Digital identity saved at path: ",path)
+		return nil
+	})
+	if err:=g.Wait();err!=nil{
+		return err
+	}
+	
+	if err:=app.config.AddProfile(name,accountPath,keyPath,"");err!=nil{
+		log.Fatalf("Error creating profile : %v",err)
+		return fmt.Errorf("Failed to create profile")
+	}
+
+	if isInstitute{
+		verifier:=&users.Verifier{Conn: c,Instance: i,Name: name}
+		app.account=verifier
+		if err:=app.account.Register(publicKey,name);err!=nil{
+			log.Println("error registering institution : ",err)
+			return fmt.Errorf("error registering institution")
+		}
+		app.account.SetName(name)
+		log.Println("registered successful")
+	}else{
+		requester:=&users.Requester{Conn: c,Instance: i}
+		app.account=requester
+		if err:=app.account.Register(publicKey,name);err!=nil{
+			log.Println("error registering requester : ",err)
+			return fmt.Errorf("error registering institution")
+		}
+		app.account.SetName(name)
+	}
+	
+	return nil
 }
 
 func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {

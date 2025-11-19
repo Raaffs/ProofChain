@@ -46,6 +46,10 @@ export function Register(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Register'](arg1, arg2, arg3, arg4);
 }
 
+export function Register2(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['Register2'](arg1, arg2, arg3, arg4);
+}
+
 export function TryDecrypt2(arg1, arg2, arg3) {
   return window['go']['main']['App']['TryDecrypt2'](arg1, arg2, arg3);
 }

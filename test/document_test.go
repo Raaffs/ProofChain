@@ -21,7 +21,7 @@ func TestDoc(t *testing.T){
 	wg.Add(1)
 	go func ()  {
 		defer wg.Done()
-		App_test.keys.OnLogin("Maria","Maria",errchan)		
+		App_test.keys.OnLogin("Maria","Maria","errchan")		
 	}()
 	go func(){
 		wg.Wait()

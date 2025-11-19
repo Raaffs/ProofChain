@@ -89,7 +89,7 @@ func TestLoginUser(t *testing.T){
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		App_test.keys.OnLogin("Maria","Maria",errchan)
+		App_test.keys.OnLogin("Maria","Maria","")
 	}()
 	go func(){
 		wg.Wait()
@@ -101,7 +101,7 @@ func TestLoginUser(t *testing.T){
 			t.Fatal("error logging in : ",err)
 		}
 	}
-	pk,err:=wallet.RetriveAccount("",""); if err!=nil{
+	pk,err:=wallet.RetriveAccount("","",""); if err!=nil{
 		t.Fatal(err)
 	}
 	if err:=blockchain.Init(App_test.conn,App_test.in,pk,contractAddr);err!=nil{

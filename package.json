@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@nivo/bar": "^0.87.0",
-    "formik": "^2.4.6"
-  }
-}

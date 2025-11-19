@@ -54,6 +54,44 @@ func NewWallet(privateKeyString string, username string, password string, errcha
 	errchan<-nil
 }
 
+func NewWallet2(privateKeyString, username string, password string)(string,error){
+		accountMap,err:=godotenv.Read("accounts/accounts"); if err!=nil{
+		return "", err
+	}
+	accountPath:=accountMap[username]
+	log.Println("accountpath: ",accountPath)
+	if accountPath!=""{
+		return "", errors.New("account already exist")
+	}
+
+	var relativePath string
+	privateKey, err := crypto.HexToECDSA(privateKeyString)
+	if err != nil {
+		return "", err
+	}
+	ks := keystore.NewKeyStore("accounts", keystore.StandardScryptN, keystore.StandardScryptP)
+	account, err := ks.ImportECDSA(privateKey, password)
+	if err != nil {
+		fmt.Println(accountMap)
+
+		return "", err
+	}
+	path := account.URL.Path
+	fmt.Println("Path : ",path)
+	index := strings.Index(path, "accounts")
+	// If "accounts" is found
+	if index != -1 {
+		// Extract substring from "accounts" to the end
+		relativePath = path[index:]
+	} else {
+		return "", errors.New("path not found")
+	}
+	writeAccountToFile(username, relativePath)
+
+	return relativePath, nil
+
+}
+
 func writeAccountToFile(username string, fileName string) error {
 	accountDir := "accounts"
 	accountFile := accountDir + "/accounts"
@@ -79,17 +117,11 @@ func writeAccountToFile(username string, fileName string) error {
 }
 
 
-func RetriveAccount(username string, password string) (string, error) {
-	// filePath := "accounts/accounts"
-	accountMap,err := godotenv.Read("accounts/accounts")
-	if err != nil {
-		return "", err
-	}
-	accountPath := accountMap[username]
-	if accountPath==""{
+func RetriveAccount(username, password, path string) (string, error) {
+	if path==""{
 		return "",fmt.Errorf("account not found")
 	}
-	accountFile, err := os.ReadFile(accountPath)
+	accountFile, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}

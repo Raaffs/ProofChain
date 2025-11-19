@@ -74,30 +74,30 @@ func generateKeyFromPassphrase(passphrase string,salt []byte) (*[32]byte,error) 
 }
 
 
-func EncryptPrivateKeyFile(data, account, passphrase string) ([]byte, error) {
+func EncryptPrivateKeyFile(data, account, passphrase string) ( string, error) {
 	salt := make([]byte, 10)
 	_, err := rand.Read(salt)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	key,err := generateKeyFromPassphrase(passphrase,salt);if err!=nil{
-		return nil,err
+		return "",err
 	}
 	encryptedData, err := cryptopasta.Encrypt([]byte(data), key)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encrypt data: %v", err)
+		return "", fmt.Errorf("failed to encrypt data: %v", err)
 	}
 	encryptedDataWithSalt := append(salt, encryptedData...)
-	err=WKey(account, string(encryptedDataWithSalt))
+	filePath,err:=WKey(account, string(encryptedDataWithSalt))
 	if err!=nil{
-		return nil,err
+		return "",err
 	}
-	return encryptedDataWithSalt, nil
+	return filePath, nil
 }
 
-func DecryptPrivateKeyFile(user,passphrase string) ([]byte, error) {
+func DecryptPrivateKeyFile(user, passphrase, path string) ([]byte, error) {
 
-	encryptedDataWithSalt,err:=ReadKeyMap(user); if err!=nil{
+	encryptedDataWithSalt,err:=RKey(path); if err!=nil{
 		return nil,err
 	}
 	salt := encryptedDataWithSalt[:10]
@@ -127,37 +127,37 @@ func RKey(filepath string)([]byte,error){
 
 //helper function to write encrypted private key to file
 //file name is generated based on time
-func WKey(user,encryptedData string)(error){
+func WKey(user,encryptedData string)(string,error){
 	filePath:=fmt.Sprintf("keys/%d",time.Now().UnixNano()) 
 	err:=WriteKeyMap(user,filePath)
 	if err!=nil{
-		return err
+		return "",err
 	}
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-			return err
+			return "",err
 	}
 	defer f.Close()
 	_,err=f.Write([]byte(encryptedData)); if err!=nil{
-		return err
+		return "",err
 	}
-	return nil
+	return filePath,nil
 }
 
 //Used to keep track of username and corresponding file in which private key is 
 //stored in encrypted format
-func ReadKeyMap(user string)([]byte,error){
-	keyMapPath:="keys/keyMap"
-	keyMap, err:=godotenv.Read(keyMapPath); if err!=nil{
-		return nil,err
+	func ReadKeyMap(user string)([]byte,error){
+		keyMapPath:="keys/keyMap"
+		keyMap, err:=godotenv.Read(keyMapPath); if err!=nil{
+			return nil,err
+		}
+		userKeyFile:=keyMap[user]
+		encryptedKey,err:=RKey(userKeyFile)
+		if err!=nil{
+			return nil,err
+		}
+		return encryptedKey,nil
 	}
-	userKeyFile:=keyMap[user]
-	encryptedKey,err:=RKey(userKeyFile)
-	if err!=nil{
-		return nil,err
-	}
-	return encryptedKey,nil
-}
 
 func WriteKeyMap(user, keyFilePath string) error {
 	keyDir := "keys"
