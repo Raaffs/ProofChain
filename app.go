@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
@@ -43,6 +42,7 @@ func (app *App) startup(ctx context.Context) {
 	if err:=app.config.Load();err!=nil{
 		log.Fatalf("Fatal error: loading config failed\n%v",err)
 	}
+	app.identity=zkp.NewEllipticIdentity()
 }
 
 func (app *App)Login(username string, password string)(error){
@@ -57,7 +57,6 @@ func (app *App)Login(username string, password string)(error){
 	})
 
 	g.Go(func() error {
-		app.identity=zkp.NewEllipticIdentity()
 		if err:=app.identity.Load("");err!=nil{
 			log.Println("Failed to load identity: ",err)
 			// return fmt.Errorf("failed to load digital identity")
@@ -135,7 +134,7 @@ func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)
 		return nil
 	})
 	g.Go(func() error {
-		path,err:=wallet.NewWallet2(privateKeyString[2:],name,password);if err!=nil{
+		path,err:=wallet.NewWallet(privateKeyString[2:],name,password);if err!=nil{
 			return err
 		}
 		accountPath=path
@@ -183,74 +182,6 @@ func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)
 	
 	return nil
 }
-
-func (app *App)Register(privateKeyString, name, password string, isInstitute bool) error {
-	if len(privateKeyString)<64{
-		log.Println("private key error")
-		return fmt.Errorf("invalid private key")
-	}
-	c:=&blockchain.ClientConnection{}
-	i:=&blockchain.ContractVerifyOperations{}
-	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
-		return err
-	}
-	var wg sync.WaitGroup
-	errchan:=make(chan error)
-	publicKeychan:=make(chan string)	
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		app.keys.OnRegister(name,password,publicKeychan,errchan)
-		
-	}()
-	go func(){
-		defer wg.Done()
-		wallet.NewWallet(privateKeyString[2:],name,password,errchan)
-	}()
-	go func(){
-		wg.Wait()
-		close(publicKeychan)
-		close(errchan)
-	}()
-
-	for{
-		select{
-		case pub,ok:=<-publicKeychan:
-			if !ok{
-				continue
-			}else{
-				if isInstitute{
-					verifier:=&users.Verifier{Conn: c,Instance: i,Name: name}
-					app.account=verifier
-					if err:=app.account.Register(pub,name);err!=nil{
-						log.Println("error registering institution : ",err)
-						return fmt.Errorf("error registering institution")
-					}
-					app.account.SetName(name)
-					log.Println("registered successful")
-				}else{
-					requester:=&users.Requester{Conn: c,Instance: i}
-					app.account=requester
-					if err:=app.account.Register(pub,name);err!=nil{
-						log.Println("error registering requester : ",err)
-						return fmt.Errorf("error registering institution")
-					}
-					app.account.SetName(name)
-				}
-			}
-		case err,ok:=<-errchan:
-			if err!=nil{
-				log.Println("Error registering user: ",err)
-				return err
-			}
-			if !ok{
-				return nil
-			}
-		}
-	}
-}
-
 
 func (app *App)UploadDocument(institute,name,description string)error{
 	var document storage.Document

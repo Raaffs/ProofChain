@@ -1,31 +1,14 @@
 {
     "profiles":{
-        "Maria":{ 
+        "name1":{ 
             "accountPath":"accounts/UTC--2024-12-23T12-43-47.517705614Z--adde3a8563e819ba552062be1950e4702e6896cd", 
             "keyPath":"keys/1734957827528421720", 
             "identityPath":"" 
         }, 
-        "Suyash":{ 
+        "name2":{ 
             "accountPath":"accounts/UTC--2024-12-23T12-53-00.550123571Z--c2fc94e7b8b28aa5db9b52746b6bce9399a566e7", 
             "keyPath":"keys/1734958380557149868", 
             "identityPath":"" 
-        },
-        "ins":{
-            "accountPath":"accounts/UTC--2024-12-23T12-44-08.830941599Z--499453d21d431f9e7459d397e129bdfe0970c850", 
-            "keyPath":"keys/1734957848848640184", 
-            "identityPath":"" 
-        },
-        "ins2":{
-            "accountPath":"accounts/UTC--2024-12-23T12-50-26.368603787Z--1b62cf954fb38ec009aa4964b100696de07bae25", 
-            "keyPath":"keys/1734958226382090127", 
-            "identityPath":"" 
-
-        },
-        "users1":{
-            "accountPath":"accounts/UTC--2025-10-15T12-20-51.068698287Z--874c33285e14e610920e7cbda01f9eea6ead899a", 
-            "keyPath":"keys/1760530851074091743", 
-            "identityPath":"" 
-
         }
     },
     "dirs":{

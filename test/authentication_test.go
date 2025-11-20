@@ -49,7 +49,7 @@ func TestRegisterUser(t *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		wallet.NewWallet(privateKey[2:], username, username, errchan)
+		wallet.NewWallet(privateKey[2:], username, username)
 	}()
 	go func() {
 		wg.Wait()
@@ -131,7 +131,7 @@ func TestRegisterVerifier(t *testing.T){
 	}()
 	go func() {
 		defer wg.Done()
-		wallet.NewWallet(privateKey[2:], institute, institute, errchan)
+		wallet.NewWallet(privateKey[2:], institute, institute)
 	}()
 	go func ()  {
 		wg.Wait()

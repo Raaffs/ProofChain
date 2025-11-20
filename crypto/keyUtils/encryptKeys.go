@@ -17,10 +17,8 @@ import (
 	"time"
 
 	"github.com/gtank/cryptopasta"
-	"github.com/joho/godotenv"
 	"golang.org/x/crypto/pbkdf2"
 )
-
 
 func GetECDSAPrivateKeyFromPEM(pk string)(*ecdh.PrivateKey,error){
 	block, _ := pem.Decode([]byte(pk))
@@ -42,14 +40,12 @@ func GetECDSAPrivateKeyFromPEM(pk string)(*ecdh.PrivateKey,error){
 	return ecdhPrivateKey,nil
 }
 
-
 //The public key string retrieved from smart contract is converted to public key object
 func GetECDSAPublicKeyFromPEM(rawPublicKey string) (*ecdh.PublicKey, error) {
 	block, _ := pem.Decode([]byte(rawPublicKey))
 	if block == nil {
 		return nil, errors.New("failed to parse PEM block containing the public key")
 	}
-
 	parsedKey, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse public key: %v", err)
@@ -96,7 +92,6 @@ func EncryptPrivateKeyFile(data, account, passphrase string) ( string, error) {
 }
 
 func DecryptPrivateKeyFile(user, passphrase, path string) ([]byte, error) {
-
 	encryptedDataWithSalt,err:=RKey(path); if err!=nil{
 		return nil,err
 	}
@@ -129,10 +124,6 @@ func RKey(filepath string)([]byte,error){
 //file name is generated based on time
 func WKey(user,encryptedData string)(string,error){
 	filePath:=fmt.Sprintf("keys/%d",time.Now().UnixNano()) 
-	err:=WriteKeyMap(user,filePath)
-	if err!=nil{
-		return "",err
-	}
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 			return "",err
@@ -144,54 +135,6 @@ func WKey(user,encryptedData string)(string,error){
 	return filePath,nil
 }
 
-//Used to keep track of username and corresponding file in which private key is 
-//stored in encrypted format
-	func ReadKeyMap(user string)([]byte,error){
-		keyMapPath:="keys/keyMap"
-		keyMap, err:=godotenv.Read(keyMapPath); if err!=nil{
-			return nil,err
-		}
-		userKeyFile:=keyMap[user]
-		encryptedKey,err:=RKey(userKeyFile)
-		if err!=nil{
-			return nil,err
-		}
-		return encryptedKey,nil
-	}
-
-func WriteKeyMap(user, keyFilePath string) error {
-	keyDir := "keys"
-	keyFileMap := keyDir + "/keyMap"
-
-	// Ensure the directory exists
-	err := os.MkdirAll(keyDir, 0755)
-	if err != nil {
-		return err
-	}
-
-	keyMap, err := godotenv.Read(keyFileMap)
-	if err != nil {
-		log.Println("Error loading key map")
-		return err
-	}
-
-	if _, exists := keyMap[user]; exists {
-		return errors.New("user already exists")
-	}
-
-	f, err := os.OpenFile(keyFileMap, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = fmt.Fprintf(f, "%s=%s\n", user, keyFilePath)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 
 
