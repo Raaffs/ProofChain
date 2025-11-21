@@ -1,13 +1,13 @@
-package main_test
+package main
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
-	"github.com/joho/godotenv"
 )
+var ETH_CLIENT_URL="http://localhost:7545"
+
 func TestDeploy(t *testing.T){
 	app:=&struct{
 		conn *blockchain.ClientConnection
@@ -16,17 +16,13 @@ func TestDeploy(t *testing.T){
 		conn: &blockchain.ClientConnection{},
 		in: &blockchain.ContractVerifyOperations{},
 	}
-	err:=godotenv.Load()
-	if err!=nil{
-		t.Fatal("Error loading env")
-	}
-	privateKey:=os.Getenv("PRIVATE_KEY")
+
+	privateKey:="0x552d079fe5a76c34f075ddd694784a0f9a3c19aeadc62632fde406492073b48d"
 	fmt.Println("p: ",privateKey)
-	blockchain.Init(app.conn,app.in,privateKey[2:],"")
-	if err!=nil{
-		t.Fatal("Error connecting to chain")
+	if err:=blockchain.Init(app.conn,app.in,privateKey[2:],"",ETH_CLIENT_URL);err!=nil{
+		t.Fatal(err)
 	}
-	_,_,err=blockchain.Deploy(app.conn.TxOpts,app.conn.Client);if err!=nil{
+	_,_,err:=blockchain.Deploy(app.conn.TxOpts,app.conn.Client);if err!=nil{
 		t.Fatal(err)
 	}
 }

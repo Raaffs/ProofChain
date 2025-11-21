@@ -11,6 +11,7 @@ import (
 )
 
 func Deploy(txOpts *bind.TransactOpts, client *ethclient.Client)(string,*types.Transaction,error){
+	
 	contractAddr,tx,_,err:=verify.DeployVerify(txOpts,client)
 	if err!=nil{
 		log.Print("Error deploying contract")

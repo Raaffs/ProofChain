@@ -51,6 +51,7 @@ func (c *Client) GetApprovedInstitution() ([]string, error) {
 	}
 	return result.Institution, nil
 }	
+
 func (c *Client) DoRequest(method, path string, body interface{}, out interface{}) error {
 	url := fmt.Sprintf("%s%s", c.BaseURL, path)
 

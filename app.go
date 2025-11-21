@@ -12,19 +12,26 @@ import (
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/crypto/zkp"
 	"github.com/Suy56/ProofChain/storage"
+	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/joho/godotenv"
 	"golang.org/x/sync/errgroup"
 )
 
+const(
+	GANACHE="Ganache"
+	INFURA="Infura"
+	CLOUDFLARE="CloudFlare"
+	DRPC="dRPC"
+) 
 // App struct
 type App struct {
 	ctx      		context.Context
 	account			users.User
 	keys			*keyUtils.ECKeys
 	envMap			map[string]any
-	storage 		storage.Document
+	storage 		*storageclient.Client
 	identity		zkp.DigitalIdentity
 	config			Config
 }
@@ -43,34 +50,48 @@ func (app *App) startup(ctx context.Context) {
 		log.Fatalf("Fatal error: loading config failed\n%v",err)
 	}
 	app.identity=zkp.NewEllipticIdentity()
+	app.storage=storageclient.New(app.config.Services.STORAGE)
 }
 
 func (app *App)Login(username string, password string)(error){
 	c:=&blockchain.ClientConnection{}
 	i:=&blockchain.ContractVerifyOperations{}
 	g, _ := errgroup.WithContext(context.Background())
+	profile,ok:=app.config.Profiles[username];if !ok{
+		return fmt.Errorf("Profile doesn't exist")
+	}
 	g.Go(func() error {
-		if err:=app.keys.OnLogin(username,password,app.config.Profiles[username].KeyPath);err!=nil{
+		if err:=app.keys.OnLogin(username,password,profile.KeyPath);err!=nil{
 			return err
 		}
 		return nil
 	})
 
 	g.Go(func() error {
-		if err:=app.identity.Load("");err!=nil{
+		if err:=app.identity.Load(profile.IdentityPath);err!=nil{
 			log.Println("Failed to load identity: ",err)
-			// return fmt.Errorf("failed to load digital identity")
+			return fmt.Errorf("failed to load digital identity")
 		}	
 		return nil
 	})
 
 	g.Go(func() error {
-		privateKey,err:=wallet.RetriveAccount(username,password,app.config.Profiles[username].AccountPath);if err!=nil{
+		privateKey,err:=wallet.RetriveAccount(
+				username,
+				password,
+				profile.AccountPath,
+			)
+			if err!=nil{
 			log.Println("Error retrieving user's wallet in : ",err)
 			return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
-
 		}
-		if err:=blockchain.Init(c,i,privateKey,app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
+		if err:=blockchain.Init(
+				c,
+				i,
+				privateKey,
+				app.config.Services.CONTRACT_ADDR,
+				app.config.Services.RPC_PROVIDERS_URLS.Local[GANACHE],
+			);err!=nil{
 			log.Println("Error connecting to the blockchain : ",err)
 			return fmt.Errorf("error connecting to the smart contract")
 		}
@@ -108,10 +129,13 @@ func (app *App)IsApprovedInstitute()bool{
 	return approved
 }
 
-func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)error{
-		if len(privateKeyString)<64{
+func(app *App)Register(privateKeyString,name,password string, isInstitute bool)error{
+	if len(privateKeyString)<64{
 		log.Println("private key error")
 		return fmt.Errorf("invalid private key")
+	}
+	if _,exist:=app.config.Profiles[name];exist{
+		return fmt.Errorf("Profile already exist, please use different name or private key")
 	}
 	c:=&blockchain.ClientConnection{}
 	i:=&blockchain.ContractVerifyOperations{}
@@ -119,14 +143,21 @@ func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)
 		publicKey string
 		accountPath string
 		keyPath string
+		identityPath string
 	) 
 
-	if err:=blockchain.Init(c,i,privateKeyString[2:],app.envMap[ENV_CONTRACT_ADDR].(string));err!=nil{
+	if err:=blockchain.Init(
+			c,
+			i,
+			privateKeyString[2:],
+			app.config.Services.CONTRACT_ADDR,
+			app.config.Services.RPC_PROVIDERS_URLS.Local[GANACHE],
+		);err!=nil{
 		return err
 	}
 	g,_:=errgroup.WithContext(context.Background())
 	g.Go(func() error {
-		pub, path,err:=app.keys.OnRegister2(name,password); if err!=nil{
+		pub, path,err:=app.keys.OnRegister(password,app.config.Dirs.Key); if err!=nil{
 			return err
 		}
 		publicKey=pub
@@ -134,7 +165,12 @@ func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)
 		return nil
 	})
 	g.Go(func() error {
-		path,err:=wallet.NewWallet(privateKeyString[2:],name,password);if err!=nil{
+		path,err:=wallet.NewWallet(
+				privateKeyString[2:],
+				name,password,
+				app.config.Dirs.Account,
+			)
+			if err!=nil{
 			return err
 		}
 		accountPath=path
@@ -145,18 +181,18 @@ func(app *App)Register2(privateKeyString,name,password string, isInstitute bool)
 			log.Println("Failed to create digital identity: ",err)
 			return fmt.Errorf("Failed to create digital identity")
 		}
-		path, err:=app.identity.Save();if err!=nil{
+		path, err:=app.identity.Save(app.config.Dirs.Identity);if err!=nil{
 			log.Println("Failed to save digital identity: ",err)
 			return fmt.Errorf("Failed to save digital identity")
 		}
-		log.Println("Digital identity saved at path: ",path)
+		identityPath=path
 		return nil
 	})
 	if err:=g.Wait();err!=nil{
 		return err
 	}
 	
-	if err:=app.config.AddProfile(name,accountPath,keyPath,"");err!=nil{
+	if err:=app.config.AddProfile(name,accountPath,keyPath,identityPath);err!=nil{
 		log.Fatalf("Error creating profile : %v",err)
 		return fmt.Errorf("Failed to create profile")
 	}

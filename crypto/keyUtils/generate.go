@@ -34,32 +34,7 @@ func(k *ECKeys)OnLogin(user ,passphrase,  path string)error{
 	return err
 }
 
-func (k *ECKeys)OnRegister(username,password string,publicKey chan string,errchan chan error){
-	privECDSA,err:=ecdsa.GenerateKey(elliptic.P256(),rand.Reader);if err!=nil{
-		errchan<- err
-		return
-	}
-	k.Private,err=privECDSA.ECDH();if err!=nil{
-		errchan<- err
-		return
-	}
-	k.Public=k.Private.PublicKey()
-	pemPrivateKey,err:=k.MarshalECDHPrivateKey();if err!=nil{
-		errchan<- err
-		return
-	}
-	pemPublicKey,err:=k.MarshalECDHPublicKey();if err!=nil{
-		errchan<-err
-	}
-	_,err=EncryptPrivateKeyFile(pemPrivateKey,username,password)
-	if err!=nil{
-		errchan<- err
-		return
-	}
-	publicKey<-pemPublicKey
-}
-
-func(k *ECKeys)OnRegister2(username, password string)(string, string, error){
+func(k *ECKeys)OnRegister(password, keyDir string)(string, string, error){
 	privECDSA,err:=ecdsa.GenerateKey(elliptic.P256(),rand.Reader);if err!=nil{
 		return "","",err
 	}
@@ -73,7 +48,7 @@ func(k *ECKeys)OnRegister2(username, password string)(string, string, error){
 	pemPublicKey,err:=k.MarshalECDHPublicKey();if err!=nil{
 		return  "","",err
 	}
-	filePath,err:=EncryptPrivateKeyFile(pemPrivateKey,username,password)
+	filePath,err:=EncryptPrivateKeyFile(pemPrivateKey,password,keyDir)
 	if err!=nil{
 		return "","",err
 	}

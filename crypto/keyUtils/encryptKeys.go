@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gtank/cryptopasta"
@@ -22,7 +23,7 @@ import (
 
 func GetECDSAPrivateKeyFromPEM(pk string)(*ecdh.PrivateKey,error){
 	block, _ := pem.Decode([]byte(pk))
-    if block == nil || block.Type!= "PRIVATE KEY" {
+if block == nil || block.Type!= "PRIVATE KEY" {
         log.Fatal("Failed to decode PEM block containing private key")
     }
     privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
@@ -70,21 +71,21 @@ func generateKeyFromPassphrase(passphrase string,salt []byte) (*[32]byte,error) 
 }
 
 
-func EncryptPrivateKeyFile(data, account, passphrase string) ( string, error) {
+func EncryptPrivateKeyFile(privateKey, password, keyDir string) ( string, error) {
 	salt := make([]byte, 10)
 	_, err := rand.Read(salt)
 	if err != nil {
 		return "", err
 	}
-	key,err := generateKeyFromPassphrase(passphrase,salt);if err!=nil{
+	key,err := generateKeyFromPassphrase(password,salt);if err!=nil{
 		return "",err
 	}
-	encryptedData, err := cryptopasta.Encrypt([]byte(data), key)
+	encryptedData, err := cryptopasta.Encrypt([]byte(privateKey), key)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt data: %v", err)
 	}
 	encryptedDataWithSalt := append(salt, encryptedData...)
-	filePath,err:=WKey(account, string(encryptedDataWithSalt))
+	filePath,err:=WKey(string(encryptedDataWithSalt),keyDir)
 	if err!=nil{
 		return "",err
 	}
@@ -122,8 +123,13 @@ func RKey(filepath string)([]byte,error){
 
 //helper function to write encrypted private key to file
 //file name is generated based on time
-func WKey(user,encryptedData string)(string,error){
-	filePath:=fmt.Sprintf("keys/%d",time.Now().UnixNano()) 
+func WKey(encryptedData,keyDir string)(string,error){
+	homeDir, err := os.UserHomeDir()
+    if err != nil {
+        return "", err
+    }
+
+	filePath:=filepath.Join(homeDir,keyDir,fmt.Sprintf("%d",time.Now().UnixNano()) ) 
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 			return "",err

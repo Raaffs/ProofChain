@@ -12,10 +12,6 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-const(
-	ENV_CONTRACT_ADDR="CONTRACT_ADDR"
-	
-)
 
 func(app *App)TryDecrypt2(encryptedDocument []byte,institute string,user string)([]byte,error){
 	pub,err:=app.account.GetPublicKeys(institute,user); if err!=nil{

@@ -54,31 +54,19 @@ func (id *EllipticIdentity) New() error {
 	return nil
 }
 
-func (id *EllipticIdentity) Save() (string,error) {
-	configData,err:=os.ReadFile("config.json");if err!=nil{
-		return "",err
-	}
-		var cfg struct {
-		IdentityDir string `json:"identity_dir"`
-	}
-	if err := json.Unmarshal(configData, &cfg); err != nil {
-		return "", err
-	}
-
-	// Step 2: Prepend home directory
+func (id *EllipticIdentity) Save(identityDir string) (string,error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(home, cfg.IdentityDir)
+	dir := filepath.Join(home, identityDir)
 
 	// Step 3: Ensure directory exists
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", err
 	}
 	// Step 4: Generate filename and full path
-	filename := fmt.Sprintf("%d.json", time.Now().UnixNano())
-	path := filepath.Join(dir, filename)
+	path := filepath.Join(dir, fmt.Sprintf("%d.json", time.Now().UnixNano()))
 
 	// Step 5: Marshal and save JSON
 	data, err := json.MarshalIndent(id, "", "  ")

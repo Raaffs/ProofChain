@@ -1,44 +1,50 @@
-	package main
+package main
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
 
-	import (
-		"encoding/json"
-		"fmt"
-		"os"
-	)
+type Config struct {
+	Profiles map[string]Profile `json:"profiles"`
+	Dirs     Dirs               `json:"dirs"`
+	Services Services           `json:"services"`
+}
 
-	type Config struct {
-		Profiles map[string]Profile `json:"profiles"`
-		Dirs     Dirs               `json:"dirs"`
-		Services Services           `json:"services"`
+type Profile struct {
+	AccountPath  string `json:"accountPath"`
+	KeyPath      string `json:"keyPath"`
+	IdentityPath string `json:"identityPath"`
+}
+
+type Dirs struct {
+	Identity string `json:"identity"`
+	Account  string `json:"account"`
+	Key      string `json:"key"`
+}
+
+type RPCProviders struct {
+	Local   map[string]string `json:"local"`
+	Public  map[string]string `json:"public"`
+	Private map[string]string `json:"private"`
+}
+
+type Services struct {
+	STORAGE           string       `json:"STORAGE"`
+	CONTRACT_ADDR     string       `json:"CONTRACT_ADDR"`
+	RPC_PROVIDERS_URLS RPCProviders `json:"RPC_PROVIDERS_URLS"`
+}
+
+func (c *Config) Load() error {
+	data, err := os.ReadFile(".config_test.json")
+	if err != nil {
+		return fmt.Errorf("failed to read config file: %w", err)
 	}
-
-	type Profile struct {
-		AccountPath  string `json:"accountPath"`
-		KeyPath      string `json:"keyPath"`
-		IdentityPath string `json:"identityPath"`
+	if err := json.Unmarshal(data, c); err != nil {
+		return fmt.Errorf("failed to parse config JSON: %w", err)
 	}
-
-	type Dirs struct {
-		Identity string `json:"identity"`
-		Account  string `json:"account"`
-		Key      string `json:"key"`
-	}
-
-	type Services struct {
-		Storage      string `json:"STORAGE"`
-		ContractAddr string `json:"CONTRACT_ADDR"`
-	}
-
-	func (c *Config) Load() error {
-		data, err := os.ReadFile(".config_test.json")
-		if err != nil {
-			return fmt.Errorf("failed to read config file: %w", err)
-		}
-		if err := json.Unmarshal(data, c); err != nil {
-			return fmt.Errorf("failed to parse config JSON: %w", err)
-		}
-		return nil
-	}
+	return nil
+}
 
 func (c *Config) AddProfile(username, accountPath, keyPath, identityPath string) error {
 	// Load existing config (if this func isn't called after Load already)

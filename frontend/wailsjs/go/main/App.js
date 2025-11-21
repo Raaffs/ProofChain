@@ -42,10 +42,6 @@ export function Logout() {
   return window['go']['main']['App']['Logout']();
 }
 
-export function Register(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['Register'](arg1, arg2, arg3, arg4);
-}
-
 export function Register2(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['Register2'](arg1, arg2, arg3, arg4);
 }

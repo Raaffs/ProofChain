@@ -8,7 +8,7 @@ type DigitalIdentity interface {
 	New() error
 
 	//Saves identity locally at the specified path
-	Save()(string,error)
+	Save(identityDir string)(string,error)
 
 	Load(path string)error
 

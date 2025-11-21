@@ -2,77 +2,38 @@ package wallet
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"log"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/joho/godotenv"
 )
 
 
-func NewWallet(privateKeyString, username string, password string)(string,error){
-		accountMap,err:=godotenv.Read("accounts/accounts"); if err!=nil{
-		return "", err
-	}
-	accountPath:=accountMap[username]
-	log.Println("accountpath: ",accountPath)
-	if accountPath!=""{
-		return "", errors.New("account already exist")
-	}
+func NewWallet(privateKeyString, username, password, accountDir string )(string,error){
+	homeDir, err := os.UserHomeDir()
+    if err != nil {
+        return "", err
+    }
 
-	var relativePath string
+    // Ensure the directory exists
+    fullDir := filepath.Join(homeDir, accountDir)
+    if err := os.MkdirAll(fullDir, 0700); err != nil {
+        return "", err
+    }
+
 	privateKey, err := crypto.HexToECDSA(privateKeyString)
 	if err != nil {
 		return "", err
 	}
-	ks := keystore.NewKeyStore("accounts", keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(fullDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	account, err := ks.ImportECDSA(privateKey, password)
 	if err != nil {
-		fmt.Println(accountMap)
-
 		return "", err
 	}
-	path := account.URL.Path
-	fmt.Println("Path : ",path)
-	index := strings.Index(path, "accounts")
-	// If "accounts" is found
-	if index != -1 {
-		// Extract substring from "accounts" to the end
-		relativePath = path[index:]
-	} else {
-		return "", errors.New("path not found")
-	}
-	return relativePath, nil
+	return account.URL.Path,nil
 }
-
-func writeAccountToFile(username string, fileName string) error {
-	accountDir := "accounts"
-	accountFile := accountDir + "/accounts"
-
-	err := os.MkdirAll(accountDir, 0755)
-	if err != nil {
-		return err
-	}
-
-	// Open or create the file for appending and writing
-	f, err := os.OpenFile(accountFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = fmt.Fprintf(f, "%s=%s\n", username, fileName)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 
 func RetriveAccount(username, password, path string) (string, error) {
 	if path==""{
