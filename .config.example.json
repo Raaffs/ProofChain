@@ -1,23 +1,37 @@
 {
-    "profiles":{
-        "name1":{ 
-            "accountPath":"accounts/UTC--2024-12-23T12-43-47.517705614Z--adde3a8563e819ba552062be1950e4702e6896cd", 
-            "keyPath":"keys/1734957827528421720", 
-            "identityPath":"" 
-        }, 
-        "name2":{ 
-            "accountPath":"accounts/UTC--2024-12-23T12-53-00.550123571Z--c2fc94e7b8b28aa5db9b52746b6bce9399a566e7", 
-            "keyPath":"keys/1734958380557149868", 
-            "identityPath":"" 
+    "profiles": {
+        "Maria": {
+            "accountPath": "/home/user/.config/proofchain/account/UTC--2025-11-21T12-51-08.149230132Z--16f03eee7b03fcd7b549a94ba23f7ee938f3817a",
+            "keyPath": "/home/user/.config/proofchain/key/1763729468153239536",
+            "identityPath": "/home/user/.config/proofchain/identity/1763729468148826540.json"
+        },
+        "John": {
+            "accountPath": "/home/user/.config/proofchain/account/UTC--2025-11-21T14-30-44.066488202Z--3455bf97131efa404999301b22a15f09ea606e13",
+            "keyPath": "/home/user/.config/proofchain/key/1763735444086752282",
+            "identityPath": "/home/user/.config/proofchain/identity/1763735444064090774.json"
         }
     },
-    "dirs":{
-        "identity":".config/proofchain/identity",
-        "account":".config/proofchain/account",
-        "key":".config/proofchain/key"
+    "dirs": {
+        "identity": ".config/proofchain/identity",
+        "account": ".config/proofchain/account",
+        "key": ".config/proofchain/key"
     },
-    "services":{
-        "STORAGE":"http://localhost:8000/",
-        "CONTRACT_ADDR":"0x09760F266e03d3d76a99564Eaf565D757cf66371"
+    "services": {
+        "STORAGE": "http://localhost:8000/",
+        "CONTRACT_ADDR": "0xBBf03Cb4A6074844B40020acd6baAf4F436E9DCd",
+        "RPC_PROVIDERS_URLS": {
+            "local": {
+                "Ganache": "http://localhost:7545"
+            },
+            "public": {
+                "Ankr": "https://rpc.ankr.com/eth",
+                "CloudFlare": "https://cloudflare-eth.com",
+                "Flashbots": "https://rpc.flashbots.net/fast",
+                "dRPC": "https://eth.drpc.org"
+            },
+            "private": {
+                "Infura": ""
+            }
+        }
     }
 }
