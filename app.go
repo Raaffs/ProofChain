@@ -11,7 +11,7 @@ import (
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/crypto/zkp"
-	"github.com/Suy56/ProofChain/storage"
+	"github.com/Suy56/ProofChain/storage/models"
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
@@ -220,7 +220,7 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 }
 
 func (app *App)UploadDocument(institute,name,description string)error{
-	var document storage.Document
+	var document models.Document
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return fmt.Errorf("Invalid transaction nonce")
@@ -267,7 +267,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	
 	document.PublicAddress=app.account.GetPublicAddress()
 	
-	if err:=storage.UploadDocument(document);err!=nil{
+	if err:=app.storage.UploadDocument(document);err!=nil{
 		log.Println("Error uploading file to mongodb : ",err)
 		return fmt.Errorf("Error uploading file")
 	}
@@ -340,7 +340,7 @@ func (app *App)ApproveDocument(status int,hash string)error{
 }
 
 func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
-	encryptedDocument,err:=storage.RetrieveDocument(shahash); if err!=nil{
+	encryptedDocument,err:=app.storage.RetrieveDocument(shahash); if err!=nil{
 		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}
