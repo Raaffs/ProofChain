@@ -34,6 +34,10 @@ export function IsLoggedIn() {
   return window['go']['main']['App']['IsLoggedIn']();
 }
 
+export function IssueCertificate(arg1) {
+  return window['go']['main']['App']['IssueCertificate'](arg1);
+}
+
 export function Login(arg1, arg2) {
   return window['go']['main']['App']['Login'](arg1, arg2);
 }
@@ -42,12 +46,12 @@ export function Logout() {
   return window['go']['main']['App']['Logout']();
 }
 
-export function Register2(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['Register2'](arg1, arg2, arg3, arg4);
+export function Register(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['Register'](arg1, arg2, arg3, arg4);
 }
 
-export function TryDecrypt2(arg1, arg2, arg3) {
-  return window['go']['main']['App']['TryDecrypt2'](arg1, arg2, arg3);
+export function TryDecrypt(arg1, arg2, arg3) {
+  return window['go']['main']['App']['TryDecrypt'](arg1, arg2, arg3);
 }
 
 export function UploadDocument(arg1, arg2, arg3) {

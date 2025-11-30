@@ -14,6 +14,7 @@
 abigen
 wails
 build/*
+concept
 # Test binary, built with `go test -c`
 *.test
 .config_test.json

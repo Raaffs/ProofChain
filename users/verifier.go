@@ -2,6 +2,7 @@ package users
 
 import (
 	"github.com/Suy56/ProofChain/chaincore/core"
+	"github.com/Suy56/ProofChain/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -71,7 +72,7 @@ func(v *Verifier)GetAcceptedDocuments(docs []blockchain.VerificationDocument)([]
 	accepted:=func(doc blockchain.VerificationDocument)bool{
 		return doc.Institute==v.Name && doc.Stats==0
 	}
-	acceptedDocs:=blockchain.FilterDocument(docs,accepted)
+	acceptedDocs:=utils.FilterDocument(docs,accepted)
 	return acceptedDocs
 }
 
@@ -79,7 +80,7 @@ func(v *Verifier)GetRejectedDocuments(docs []blockchain.VerificationDocument)([]
 	rejected:=func(doc blockchain.VerificationDocument)bool{
 		return doc.Institute==v.Name && doc.Stats==1
 	}
-	rejectedDocs:=blockchain.FilterDocument(docs,rejected)
+	rejectedDocs:=utils.FilterDocument(docs,rejected)
 	return rejectedDocs
 
 }
@@ -88,6 +89,6 @@ func(v *Verifier)GetPendingDocuments(docs []blockchain.VerificationDocument)([]b
 	pending:=func(doc blockchain.VerificationDocument)bool{
 		return doc.Institute==v.Name && doc.Stats==2
 	}
-	pendingDocs:=blockchain.FilterDocument(docs,pending)
+	pendingDocs:=utils.FilterDocument(docs,pending)
 	return pendingDocs
 }

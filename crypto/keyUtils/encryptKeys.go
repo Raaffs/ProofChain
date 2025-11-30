@@ -57,17 +57,16 @@ func GetECDSAPublicKeyFromPEM(rawPublicKey string) (*ecdh.PublicKey, error) {
 	}
 	ecdhPubKey,err:=publicKey.ECDH()
 	if err!=nil{
-		log.Println("Error getting ecdh public key : ",err)
-		return nil,err
+		return nil,fmt.Errorf("error generating ecdh public key : %v",err)
 	}
 	return ecdhPubKey, nil
 }
 
-func generateKeyFromPassphrase(passphrase string,salt []byte) (*[32]byte,error) {
+func generateKeyFromPassphrase(passphrase string,salt []byte) (*[32]byte) {
 	key := pbkdf2.Key([]byte(passphrase), salt, 10000, 32, sha256.New)
 	var keyArray [32]byte
 	copy(keyArray[:], key)
-	return &keyArray,nil
+	return &keyArray
 }
 
 
@@ -75,11 +74,9 @@ func EncryptPrivateKeyFile(privateKey, password, keyDir string) ( string, error)
 	salt := make([]byte, 10)
 	_, err := rand.Read(salt)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read random bytes: %s",err)
 	}
-	key,err := generateKeyFromPassphrase(password,salt);if err!=nil{
-		return "",err
-	}
+	key := generateKeyFromPassphrase(password,salt)
 	encryptedData, err := cryptopasta.Encrypt([]byte(privateKey), key)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt data: %v", err)
@@ -98,14 +95,11 @@ func DecryptPrivateKeyFile(user, passphrase, path string) ([]byte, error) {
 	}
 	salt := encryptedDataWithSalt[:10]
 	encryptedData := encryptedDataWithSalt[10:]
-	key, err := generateKeyFromPassphrase(passphrase, salt)
-	if err != nil {
-		return nil, err
-	}
+	key:= generateKeyFromPassphrase(passphrase, salt)
+	
 	decryptedData, err := cryptopasta.Decrypt([]byte(encryptedData), key)
     if err != nil {
-		log.Println("Error decrypting file ",err)
-        return nil, err
+        return nil, fmt.Errorf("decrypting data failed: %v",err)
     }
     return decryptedData, nil
 }
@@ -115,7 +109,7 @@ func DecryptPrivateKeyFile(user, passphrase, path string) ([]byte, error) {
 func RKey(filepath string)([]byte,error){
 	keyBytes,err:=os.ReadFile(filepath)
 	if err!=nil{
-		return nil,err
+		return nil,fmt.Errorf("failed reading key path: %v",err)
 	}
 	return (keyBytes),nil
 }
@@ -126,75 +120,61 @@ func RKey(filepath string)([]byte,error){
 func WKey(encryptedData,keyDir string)(string,error){
 	homeDir, err := os.UserHomeDir()
     if err != nil {
-        return "", err
+        return "", fmt.Errorf("failed to read home dir path while writing keys :%v",err)
     }
-
 	filePath:=filepath.Join(homeDir,keyDir,fmt.Sprintf("%d",time.Now().UnixNano()) ) 
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
-			return "",err
+			return "",fmt.Errorf("failed to open keyDir file: %v",err)
 	}
 	defer f.Close()
 	_,err=f.Write([]byte(encryptedData)); if err!=nil{
-		return "",err
+		return "",fmt.Errorf("failed to open keyDir file: %v",err)
 	}
 	return filePath,nil
 }
 
 
-
-
-func EncryptIPFSHash(sharedKey []byte, plaintext []byte)([]byte,error){
+func Encrypt(sharedKey []byte, plaintext []byte)([]byte,error){
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
 		return nil, err
 	}
-
-	// Generate a new AES-GCM instance
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
-
 	// Create a nonce. Nonce size should be equal to gcm.NonceSize()
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return nil, err
 	}
-
-	// Encrypt the data
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
 	return ciphertext, nil
 }
 
-func DecryptIPFSHash(sharedKey []byte, ciphertext []byte) ([]byte, error) {
+func Decrypt(sharedKey []byte, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
 		return nil, err
 	}
-
-	// Generate a new AES-GCM instance
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
 		return nil, err
 	}
-
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
 		return nil, errors.New("ciphertext too short")
 	}
-
 	// Extract the nonce and the actual ciphertext
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-
-	// Decrypt the data
+	
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		log.Println("error decrypting ipfs hash : ",err)
 		return nil, err
 	}
-
 	return plaintext, nil
 }

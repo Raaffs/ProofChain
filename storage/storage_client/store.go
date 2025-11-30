@@ -15,7 +15,6 @@ type Client struct {
 	Client  *http.Client
 }
 
-// New returns a new instance of the storage service client
 func New(baseURL string) *Client {
 	return &Client{
 		BaseURL: baseURL,
@@ -23,7 +22,6 @@ func New(baseURL string) *Client {
 	}
 }
 
-// UploadDocument uploads a document to the storage service
 func (c *Client) UploadDocument(doc models.Document) error {
 	return c.DoRequest("POST", "/add", doc, nil)
 }
@@ -44,7 +42,6 @@ func (c *Client) GetApprovedInstitution() ([]string, error) {
 	var result struct {
 		Institution []string `bson:"institution" json:"institution"`
 	}
-
 	err := c.DoRequest("GET", "/retrieve/institution", nil, &result)
 	if err != nil {
 		return nil, err
@@ -54,7 +51,6 @@ func (c *Client) GetApprovedInstitution() ([]string, error) {
 
 func (c *Client) DoRequest(method, path string, body interface{}, out interface{}) error {
 	url := fmt.Sprintf("%s%s", c.BaseURL, path)
-
 	var reqBody io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
@@ -63,24 +59,19 @@ func (c *Client) DoRequest(method, path string, body interface{}, out interface{
 		}
 		reqBody = bytes.NewBuffer(data)
 	}
-
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
 	resp, err := c.Client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
-
-	// Centralized HTTP status code handling
 	if err := handleHTTPError(resp); err != nil {
 		return err
 	}
-
 	// If no response expected, return early
 	if out == nil {
 		return nil

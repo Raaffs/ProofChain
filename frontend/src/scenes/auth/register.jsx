@@ -8,7 +8,7 @@ import {
     MenuItem
 } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Login,Register2 } from "../../../wailsjs/go/main/App";
+import { Login,Register } from "../../../wailsjs/go/main/App";
 import {useNavigate} from "react-router-dom"
 import { useTheme } from "@emotion/react";
 import logo from '../../assets/images/bg7.jpg'
@@ -25,7 +25,7 @@ function RegisterUser({setAuthStatus}) {
     });
     const [error, setError] = useState(null);
     const handleClick = () => {
-        Register2(input.privateKey, input.username, input.password,registerAsVerifier)
+        Register(input.privateKey, input.username, input.password,registerAsVerifier)
         .then(() => {
             setAuthStatus(true)
             navigate('/dashboard')

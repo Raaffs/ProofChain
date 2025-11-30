@@ -13,6 +13,7 @@ import RejectedDocuments from './scenes/transactions/rejected';
 import PendingDocuments from './scenes/transactions/pending';
 import UploadDocs from './scenes/upload'
 import { useState } from 'react';
+import Issue from './scenes/issue/issue';
 // import Documents from './scenes/documents';
 // import Line from './scenes/line';
 // import Pie from './scenes/pie';
@@ -38,6 +39,7 @@ function App() {
                                 <Route path="/documents/rejected" element={<RejectedDocuments/>}/>
                                 <Route path="/documents/pending" element={<PendingDocuments/>}/>
                                 <Route path="/documents/upload" element={<UploadDocs/>}/>
+                                <Route path="/documents/issue" element={<Issue/>}/>
                             </Routes>
                     </main>    
                  </div>

@@ -1,5 +1,6 @@
 import 'react-pro-sidebar/dist/css/styles.css'
-import { useState } from "react"
+import { useState, useEffect } from "react" // Import useEffect
+import { IsApprovedInstitute } from '../../../wailsjs/go/main/App'
 import {ProSidebar, Menu, MenuItem} from "react-pro-sidebar"
 import {Box,IconButton,Typography,useTheme} from "@mui/material"
 import { Link } from 'react-router-dom'
@@ -9,10 +10,11 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined'
-import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
-import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
-import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
+import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import LoginOutlinedIcon from "@mui/icons-material/LoginOutlined";
+import PersonAddOutlinedIcon from "@mui/icons-material/PersonAddOutlined";
+import FileOpenOutlinedIcon from "@mui/icons-material/FileOpenOutlined"; // New icon for 'Issue/Issued'
 
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -47,6 +49,34 @@ const Sidebar = ({authStatus}) => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+  // 1. State to hold the result of IsApprovedInstitute
+  const [isApproved, setIsApproved] = useState(null); // null means loading
+
+  // 2. Use useEffect to call the asynchronous Go function
+  useEffect(() => {
+    // Only call if the user is authenticated, otherwise it might not be needed
+    if (authStatus) {
+        IsApprovedInstitute()
+            .then(result => {
+                setIsApproved(result); // true or false
+            })
+            .catch(err => {
+                console.error("Error fetching institute approval status:", err);
+                setIsApproved(false); // Default to false on error
+            });
+    } else {
+        setIsApproved(false); // If not authenticated, assume not approved or not relevant
+    }
+  }, [authStatus]); // Re-run if authStatus changes
+
+  // Optional: Show a loading state if needed
+  if (isApproved === null && authStatus) {
+    return (
+        <Box sx={{ p: 2, color: colors.grey[100] }}>
+            <Typography>Loading Menu...</Typography>
+        </Box>
+    );
+  }
 
   return (
     <Box
@@ -169,13 +199,36 @@ const Sidebar = ({authStatus}) => {
             >
               Verify
             </Typography>
-            <Item
-              title="Upload"
-              to="/documents/upload"
-              icon={<UploadFileOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+            {/* 3. Conditional rendering of 'Upload' */}
+            {!isApproved && (
+                <Item
+                title="Upload"
+                to="/documents/upload"
+                icon={<UploadFileOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+                />
+            )}
+            
+            {/* 4. Conditional rendering of 'Issue' or 'Issued' */}
+            {isApproved ? (
+                 <Item
+                 title="Issue"
+                 to="/documents/issue" // Assuming a route for issuing documents
+                 icon={<FileOpenOutlinedIcon />}
+                 selected={selected}
+                 setSelected={setSelected}
+               />
+            ) : (
+                <Item
+                title="Issued"
+                to="/documents/issued" // Assuming a route for viewing issued documents
+                icon={<FileOpenOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+            )}
+            
           </>
         )}
            

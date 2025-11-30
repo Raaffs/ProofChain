@@ -1,165 +1,223 @@
 package zkp
 
 import (
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"math/big"
-	"os"
-	"path/filepath"
-	"time"
+	"sort"
+
+	"github.com/Suy56/ProofChain/storage/models"
 )
 
-type EllipticIdentity struct {
-	Curve  elliptic.Curve `json:"-"`
-	Nonce  string         `json:"nonce"`
-	HashX  string         `json:"hash_x"`
-	HashY  string         `json:"hash_y"`
-	Proofs []Proof        `json:"proofs"`
+// MerkleProof implements the ZKProof interface and holds the committed data state.
+type MerkleProof struct {
+	RootHash   Hash
+	FieldLeaves map[string]FieldLeaf // Map for O(1) lookup during Disclosure
+	LeafHashes []Hash                // Ordered list for Merkle Tree construction
 }
 
-func NewEllipticIdentity() *EllipticIdentity {
-	return &EllipticIdentity{
-		Curve:  elliptic.P256(),
-		Proofs: []Proof{},
-	}
+func NewMerkleProof() *MerkleProof {
+	mp:=&MerkleProof{}
+	mp.New()
+	return mp
 }
 
-// --- Utility functions ---
-
-func (id *EllipticIdentity) ensureCurve() {
-	if id.Curve == nil {
-		id.Curve = elliptic.P256()
-	}
+func (id *MerkleProof) New()  {
+	id.RootHash = ""
+	id.FieldLeaves = make(map[string]FieldLeaf)
+	id.LeafHashes = make([]Hash, 0)
 }
 
-// --- IdentityBackend implementation ---
-
-func (id *EllipticIdentity) New() error {
-	id.ensureCurve()
-	nonceBytes := make([]byte, 32)
-	_, err := rand.Read(nonceBytes)
+// GenerateRootProof (Issuer side)
+func (id *MerkleProof) GenerateRootProof(c models.CertificateData) (Hash, SaltedCertificate, error) {
+	// 1. Salt the fields
+	saltedCert, err := SaltCertificate(c)
 	if err != nil {
-		return err
+		return "", SaltedCertificate{}, err
 	}
-	id.Nonce = hex.EncodeToString(nonceBytes)
-	x := HashToScalar(id.Curve, "nonce:", id.Nonce)
-	hashX, hashY := id.Curve.ScalarBaseMult(x.Bytes())
-	id.HashX = hashX.Text(16)
-	id.HashY = hashY.Text(16)
-	id.Proofs = []Proof{}
+
+	// 2. Prepare state for Merkle Tree generation (keys must be sorted for deterministic ordering)
+	var keys []string
+	for key := range saltedCert.SaltedFields {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	id.FieldLeaves = saltedCert.SaltedFields
+	id.LeafHashes = make([]Hash, 0, len(keys))
+
+	// 3. Build the ordered LeafHashes list
+	for _, key := range keys {
+		leaf := id.FieldLeaves[key]
+		id.LeafHashes = append(id.LeafHashes, leaf.Hash)
+	}
+
+	// 4. Calculate Merkle Root
+	id.RootHash = calculateMerkleRoot(id.LeafHashes)
+
+	// The Issuer sends the Root Hash (to Blockchain) and the SaltedCertificate (to Requestor)
+	return id.RootHash, saltedCert, nil
+}
+
+// LoadSaltedData (Requestor side)
+func (id *MerkleProof) LoadSaltedData(sc SaltedCertificate) error {
+	id.New() // Reset state
+
+	// 1. Prepare state for Merkle Tree generation (keys must be sorted for deterministic ordering)
+	var keys []string
+	for key := range sc.SaltedFields {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	id.FieldLeaves = sc.SaltedFields
+	id.LeafHashes = make([]Hash, 0, len(keys))
+
+	// 2. Rebuild the ordered LeafHashes list from the received data
+	for _, key := range keys {
+		leaf := id.FieldLeaves[key]
+		id.LeafHashes = append(id.LeafHashes, leaf.Hash)
+	}
+	
+	// 3. Re-calculate Merkle Root (must match the one published by the issuer)
+	id.RootHash = calculateMerkleRoot(id.LeafHashes)
+
 	return nil
 }
 
-func (id *EllipticIdentity) Save(identityDir string) (string,error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	dir := filepath.Join(home, identityDir)
-
-	// Step 3: Ensure directory exists
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return "", err
-	}
-	// Step 4: Generate filename and full path
-	path := filepath.Join(dir, fmt.Sprintf("%d.json", time.Now().UnixNano()))
-
-	// Step 5: Marshal and save JSON
-	data, err := json.MarshalIndent(id, "", "  ")
-	if err != nil {
-		return "", err
+// Disclose (Requestor side)
+func (id *MerkleProof) Disclose(attribute string) (Proof, error) {
+	// Requestor can access FieldLeaves because they loaded the SaltedCertificate
+	leaf, exists := id.FieldLeaves[attribute]
+	if !exists {
+		return Proof{}, fmt.Errorf("attribute '%s' does not exist in the certificate", attribute)
 	}
 
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return "", err
+	// 1. Find index in the ordered leaf list
+	index := -1
+	for i, h := range id.LeafHashes {
+		if h == leaf.Hash {
+			index = i
+			break
+		}
 	}
-	return path,nil
+	if index == -1 {
+		return Proof{}, fmt.Errorf("integrity error: leaf hash not found in tree")
+	}
+
+	// 2. Calculate Merkle Path
+	merklePath := calculateMerkleProof(id.LeafHashes, index)
+
+	// 3. Construct Proof
+	return Proof{
+		RootHash:    id.RootHash,
+		Attribute:   attribute,
+		Value:       leaf.Value,
+		Salt:        leaf.Salt,
+		MerkleProof: merklePath,
+	}, nil
 }
 
-func (id *EllipticIdentity) Load(path string) error {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return err
+// --- Verification Helper (Verifier Logic) ---
+
+// VerifyProof checks if a disclosed proof matches the expected root hash.
+// This runs on the client/verifier side.
+func VerifyProof(p Proof, expectedRoot Hash) bool {
+	// 1. Re-calculate the leaf hash: Hash(Value + Salt)
+	leafHash := HashData([]byte(p.Value), []byte(p.Salt))
+	
+	currentHash := leafHash
+
+	// 2. Traverse the Merkle path to reconstruction the root
+	for _, sibling := range p.MerkleProof {
+		h1 := currentHash
+		h2 := sibling
+		
+		// Apply canonical ordering (same as in construction)
+		if h1 < h2 {
+			currentHash = HashData([]byte(h1), []byte(h2))
+		} else {
+			currentHash = HashData([]byte(h2), []byte(h1))
+		}
 	}
-	if err := json.Unmarshal(data, id); err != nil {
-		return err
-	}
-	id.ensureCurve()
-	return nil
+
+	// 3. Compare calculated root with expected root
+	return currentHash == expectedRoot && currentHash == p.RootHash
 }
 
-func (id *EllipticIdentity) PublicHash() (hashX, hashY *big.Int) {
-	x := new(big.Int)
-	y := new(big.Int)
-	x.SetString(id.HashX, 16)
-	y.SetString(id.HashY, 16)
-	return x, y
-}
 
-func (id *EllipticIdentity) GenerateProof(attribute string) (*Proof, error) {
-	id.ensureCurve()
-	x := HashToScalar(id.Curve, "nonce:", id.Nonce)
-	hashX, hashY := id.PublicHash()
-
-	r, err := rand.Int(rand.Reader, id.Curve.Params().N)
-	if err != nil {
-		return nil, err
+// calculateMerkleRoot calculates the root hash from an ordered list of leaf hashes.
+func calculateMerkleRoot(leaves []Hash) Hash {
+	if len(leaves) == 0 {
+		return ""
 	}
-	rx, ry := id.Curve.ScalarBaseMult(r.Bytes())
-
-	eBytes := sha256.Sum256([]byte(fmt.Sprintf("%x%x%x%x%s", rx, ry, hashX, hashY, attribute)))
-	e := new(big.Int).SetBytes(eBytes[:])
-	e.Mod(e, id.Curve.Params().N)
-
-	s := new(big.Int).Mul(e, x)
-	s.Add(s, r)
-	s.Mod(s, id.Curve.Params().N)
-
-	proof := Proof{
-		Name: attribute,
-		Rx:   rx.Text(16),
-		Ry:   ry.Text(16),
-		S:    s.Text(16),
+	if len(leaves) == 1 {
+		return leaves[0]
 	}
-	id.Proofs = append(id.Proofs, proof)
-	return &proof, nil
-}
 
-func (id *EllipticIdentity) Verify(proof *Proof, attribute string) bool {
-	id.ensureCurve()
-	hashX, hashY := id.PublicHash()
-	rx := new(big.Int)
-	ry := new(big.Int)
-	s := new(big.Int)
-	rx.SetString(proof.Rx, 16)
-	ry.SetString(proof.Ry, 16)
-	s.SetString(proof.S, 16)
-
-	eBytes := sha256.Sum256([]byte(fmt.Sprintf("%x%x%x%x%s", rx, ry, hashX, hashY, attribute)))
-	e := new(big.Int).SetBytes(eBytes[:])
-	e.Mod(e, id.Curve.Params().N)
-
-	sGx, sGy := id.Curve.ScalarBaseMult(s.Bytes())
-	eHx, eHy := id.Curve.ScalarMult(hashX, hashY, e.Bytes())
-	negEHy := new(big.Int).Neg(eHy)
-	negEHy.Mod(negEHy, id.Curve.Params().P)
-	vx, vy := id.Curve.Add(rx, ry, eHx, negEHy)
-
-	return vx.Cmp(sGx) == 0 && vy.Cmp(sGy) == 0
-}
-
-func (id *EllipticIdentity) Serialize() ([]byte, error) {
-	return json.MarshalIndent(id, "", "  ")
-}
-
-func (id *EllipticIdentity) Deserialize(data []byte) error {
-	if err := json.Unmarshal(data, id); err != nil {
-		return err
+	// Pad if odd
+	currentLeaves := make([]Hash, len(leaves))
+	copy(currentLeaves, leaves)
+	if len(currentLeaves)%2 != 0 {
+		currentLeaves = append(currentLeaves, currentLeaves[len(currentLeaves)-1])
 	}
-	id.ensureCurve()
-	return nil
+
+	var nextLevel []Hash
+	for i := 0; i < len(currentLeaves); i += 2 {
+		h1 := currentLeaves[i]
+		h2 := currentLeaves[i+1]
+		// Sort hashes before concatenating to ensure canonical parent hash
+		if h1 < h2 {
+			nextLevel = append(nextLevel, HashData([]byte(h1), []byte(h2)))
+		} else {
+			nextLevel = append(nextLevel, HashData([]byte(h2), []byte(h1)))
+		}
+	}
+
+	return calculateMerkleRoot(nextLevel)
+}
+
+// calculateMerkleProof generates the sibling hashes needed to verify a leaf at a specific index.
+func calculateMerkleProof(leaves []Hash, index int) []Hash {
+	proof := []Hash{}
+	current := leaves
+
+	// Work with a copy to avoid modifying the original
+	workingLeaves := make([]Hash, len(leaves))
+	copy(workingLeaves, leaves)
+
+	if len(workingLeaves)%2 != 0 {
+		workingLeaves = append(workingLeaves, workingLeaves[len(workingLeaves)-1])
+	}
+	current = workingLeaves
+
+	for len(current) > 1 {
+		var nextLevel []Hash
+		for i := 0; i < len(current); i += 2 {
+			h1 := current[i]
+			h2 := current[i+1]
+			
+			// If our target is in this pair, append the OTHER one to the proof
+			if i == index || i+1 == index {
+				if i == index {
+					proof = append(proof, h2)
+				} else {
+					proof = append(proof, h1)
+				}
+			}
+
+			if h1 < h2 {
+				nextLevel = append(nextLevel, HashData([]byte(h1), []byte(h2)))
+			} else {
+				nextLevel = append(nextLevel, HashData([]byte(h2), []byte(h1)))
+			}
+		}
+
+		current = nextLevel
+		index /= 2 
+		
+		if len(current)%2 != 0 && len(current) > 1 {
+			current = append(current, current[len(current)-1])
+		}
+	}
+
+	return proof
 }

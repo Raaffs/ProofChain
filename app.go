@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
@@ -32,7 +32,7 @@ type App struct {
 	keys			*keyUtils.ECKeys
 	envMap			map[string]any
 	storage 		*storageclient.Client
-	identity		zkp.DigitalIdentity
+	proof			zkp.ZKProof
 	config			Config
 }
 // startup is called when the app starts. The context is saved
@@ -49,7 +49,7 @@ func (app *App) startup(ctx context.Context) {
 	if err:=app.config.Load();err!=nil{
 		log.Fatalf("Fatal error: loading config failed\n%v",err)
 	}
-	app.identity=zkp.NewEllipticIdentity()
+	app.proof=zkp.NewMerkleProof()
 	app.storage=storageclient.New(app.config.Services.STORAGE)
 }
 
@@ -64,14 +64,6 @@ func (app *App)Login(username string, password string)(error){
 		if err:=app.keys.OnLogin(username,password,profile.KeyPath);err!=nil{
 			return err
 		}
-		return nil
-	})
-
-	g.Go(func() error {
-		if err:=app.identity.Load(profile.IdentityPath);err!=nil{
-			log.Println("Failed to load identity: ",err)
-			return fmt.Errorf("failed to load digital identity")
-		}	
 		return nil
 	})
 
@@ -121,14 +113,6 @@ func (app *App)IsLoggedIn()(bool){
 	return app.account.GetTxOpts()!=nil
 }
 
-func (app *App)IsApprovedInstitute()bool{
-	approved,err:=app.account.GetApprovalStatus();if err!=nil{
-		log.Println("Error getting approval status : ",err)
-		return false
-	}
-	return approved
-}
-
 func(app *App)Register(privateKeyString,name,password string, isInstitute bool)error{
 	if len(privateKeyString)<64{
 		log.Println("private key error")
@@ -145,7 +129,6 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 		keyPath string
 		identityPath string
 	) 
-
 	if err:=blockchain.Init(
 			c,
 			i,
@@ -176,18 +159,6 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 		accountPath=path
 		return nil
 	})
-	g.Go(func() error {
-		if err:=app.identity.New();err!=nil{
-			log.Println("Failed to create digital identity: ",err)
-			return fmt.Errorf("Failed to create digital identity")
-		}
-		path, err:=app.identity.Save(app.config.Dirs.Identity);if err!=nil{
-			log.Println("Failed to save digital identity: ",err)
-			return fmt.Errorf("Failed to save digital identity")
-		}
-		identityPath=path
-		return nil
-	})
 	if err:=g.Wait();err!=nil{
 		return err
 	}
@@ -215,7 +186,6 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 		}
 		app.account.SetName(name)
 	}
-	
 	return nil
 }
 
@@ -223,9 +193,9 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	var document models.Document
 	if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
-		return fmt.Errorf("Invalid transaction nonce")
+		return fmt.Errorf("invalid transaction nonce")
 	}
-	filePath,err:=app.GetFilePath();if err!=nil{
+	file,path,err:=app.GetFileAndPath();if err!=nil{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
@@ -237,45 +207,26 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("error retrieving the name of institute")
 		return fmt.Errorf("invalid institution")
 	}
-
-	file,err:=os.ReadFile(filePath);if err!=nil{
-		log.Println("Error reading file : ",err)
-		return err
+	encryptedDocument,err:=app.Encrypt(file,pubKey);if err!=nil{
+		log.Println(err)
+		return fmt.Errorf("An error occurred while encrypting document")
 	}
-	//set public key of institution for performing ECDH key exchange
-	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
-		return err
-	}
-	secretKey,err:=app.keys.GenerateSecret();if err!=nil{
-		return err
-	}
-	encryptedDocument,err:=keyUtils.EncryptIPFSHash(secretKey,file);if err!=nil{
-		return err
-	}
-	shaHash,err:=Keccak256File(filePath); if err!=nil{
+	shaHash,err:=Keccak256File(path); if err!=nil{
 		log.Println("Error hashing file:",err)
 		return fmt.Errorf("Error uploading file")
 	}
 	document.EncryptedDocument=encryptedDocument
 	document.Shahash=shaHash
-
-	//potential security risk. Since user can directly modify GetPublicAddress function
-	//to set any public address
-	//Though It won't effect third party verification as the api will directly be sending
-	//user's public key stored on the chain, which third party needs to take a hash of to get
-	//the public address of user. 
-	
 	document.PublicAddress=app.account.GetPublicAddress()
-	
-	if err:=app.storage.UploadDocument(document);err!=nil{
-		log.Println("Error uploading file to mongodb : ",err)
-		return fmt.Errorf("Error uploading file")
-	}
 	if account,ok:=app.account.(*users.Requester);ok{
 		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,"1",institute,name);err!=nil{
 			return err
 		}
 		return nil
+	}
+	if err:=app.storage.UploadDocument(document);err!=nil{
+		log.Println("Error uploading file to mongodb : ",err)
+		return fmt.Errorf("Error uploading file")
 	}
 	return fmt.Errorf("invalid account type")
 }
@@ -336,7 +287,39 @@ func (app *App)ApproveDocument(status int,hash string)error{
 		}
 		return nil
 	}
-	return fmt.Errorf("invalid account type")
+	return fmt.Errorf("You're not authorized to perform this action")
+}
+
+func (app *App)IssueCertificate(certificate models.CertificateData)error{
+	if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return fmt.Errorf("Invalid transaction nonce")
+	}
+	if _,ok:=app.account.(*users.Verifier);!ok{
+		return fmt.Errorf("You're not approved to issue certificate")
+	}
+	pubKey,err:=app.account.GetPublicKeys("",certificate.PublicAddress);if err!=nil{
+		log.Println("Error getting public key of user : ",err)
+		return fmt.Errorf("Error getting public key of user. Please check if public address is valid")
+	}
+	
+	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
+		log.Println(err)
+		return fmt.Errorf("An error occurred while issuing certificate")
+	}
+	log.Println(publicCommit,saltedCertificate)
+	json, err := json.Marshal(saltedCertificate);if err!=nil{
+		log.Println("Error marshaling the certificate: ",err)
+		return fmt.Errorf("Invalid certificate format")
+	}
+	encryptedCertificate,err:=app.Encrypt(json,pubKey);if err!=nil{
+		log.Println(err)
+		return fmt.Errorf("error encrypting document")
+	}
+	log.Println(string(encryptedCertificate))
+
+	return nil
+
 }
 
 func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
@@ -344,14 +327,11 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}
-
 	
-	decryptedDoc,err:=app.TryDecrypt2(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
+	decryptedDoc,err:=app.TryDecrypt(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
 		log.Println("Error decrypting :",err)
 		return "",fmt.Errorf("Error decrypting document")
 	}
-
 	encodedDocument:=base64.StdEncoding.EncodeToString(decryptedDoc)
-
 	return encodedDocument, nil
 }
