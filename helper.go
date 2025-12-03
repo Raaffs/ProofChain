@@ -11,6 +11,8 @@ import (
 	"reflect"
 
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
+	"github.com/Suy56/ProofChain/storage/models"
+	"github.com/Suy56/ProofChain/users"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"golang.org/x/crypto/sha3"
 )
@@ -92,6 +94,35 @@ func (app *App)IsApprovedInstitute()bool{
 		return false
 	}
 	return approved
+}
+
+func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Document,string,error){
+if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return models.Document{},"",fmt.Errorf("invalid transaction nonce")
+	}
+	pubKey,err:=app.account.GetPublicKeys("",certificate.PublicAddress);if err!=nil{
+		log.Println("Error getting public key of user : ",err)
+		return models.Document{},"",fmt.Errorf("error getting public key of user. Please check if public address is valid")
+	}
+	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
+		log.Println(err)
+		return models.Document{},"",fmt.Errorf("an error occurred while issuing certificate")
+	}
+	json, err := json.Marshal(saltedCertificate);if err!=nil{
+		log.Println("Error marshaling the certificate: ",err)
+		return models.Document{},"",fmt.Errorf("invalid certificate format")
+	}
+	encryptedCertificate,err:=app.Encrypt(json,pubKey);if err!=nil{
+		log.Println(err)
+		return models.Document{},"",fmt.Errorf("error encrypting document")
+	}
+	doc:=models.Document{
+		Shahash: string(publicCommit),
+		EncryptedDocument: encryptedCertificate,
+		PublicAddress: certificate.PublicAddress,
+	}
+	return doc,string(publicCommit),nil
 }
 
 func Walk[S any](s S) func(yield func(string, any) bool) {

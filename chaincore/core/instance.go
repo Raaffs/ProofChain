@@ -65,16 +65,22 @@ func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_inst
 	return nil
 }
 
-func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts,shaHash , _encryptedIPFSHash , _institute, _name string) (error) {
-	_, err := cv.Instance.AddDocument(opts, (shaHash),_encryptedIPFSHash,_institute,_name)
+func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, shaHash, _institute string) (error) {
+	_, err := cv.Instance.AddDocument(opts, (shaHash),_institute)
 	if err != nil {
 		return err
 	}
 	return err
 }
 
-func (cv *ContractVerifyOperations)VerifyDocument(opts *bind.TransactOpts, shaHash string, institute string,_status uint8) error {
-	_, err := cv.Instance.VerifyDocument(opts, shaHash, institute, _status)
+func (cv *ContractVerifyOperations)VerifyDocument(
+	opts *bind.TransactOpts, 
+	shaHash string, 
+	institute string,
+	_status uint8,
+	_proofHash string,
+) error {
+	_, err := cv.Instance.VerifyDocument(opts, shaHash, institute, _status,_proofHash)
 	if err != nil {
 		return err
 	}
@@ -96,8 +102,6 @@ func (cv *ContractVerifyOperations)GetDocuments(opts *bind.CallOpts)([]Verificat
 			Requester: 		docs.Requester[i].Hex(),
 			Verifier: 		docs.Verifer[i].Hex(),
 			Institute: 		docs.Institute[i],
-			Name: 			docs.Name[i],
-			IpfsAddress:	docs.Ipfs[i],
 			ShaHash:        docs.Hash[i],
 			Stats: 			docs.Stats[i],
 		}

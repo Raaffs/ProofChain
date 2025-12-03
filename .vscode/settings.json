@@ -2,5 +2,10 @@
     "telemetry.feedback.enabled": false,
     "telemetry.editStats.enabled": false,
     "terminal.integrated.gpuAcceleration": "off",
-    "terminal.integrated.customGlyphs": false
+    "terminal.integrated.customGlyphs": false,
+    "gopls": {
+        "analyses": {
+            "ST1005": false 
+        }
+    }
 }

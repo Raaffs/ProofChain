@@ -1,11 +1,14 @@
 package users
 
 import (
+	"fmt"
+
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
+
 type Verifier struct{
 	Conn 		*blockchain.ClientConnection
 	Instance 	*blockchain.ContractVerifyOperations
@@ -91,4 +94,15 @@ func(v *Verifier)GetPendingDocuments(docs []blockchain.VerificationDocument)([]b
 	}
 	pendingDocs:=utils.FilterDocument(docs,pending)
 	return pendingDocs
+}
+
+func(v *Verifier)AddDocument(hash, institute string)error{
+	if err:=v.Instance.AddDocument(
+		v.GetTxOpts(),
+		hash,
+		institute,
+	);err!=nil{
+		return fmt.Errorf("error adding document: %w",err)
+	}
+	return nil 
 }

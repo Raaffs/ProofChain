@@ -7,6 +7,7 @@ import (
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
+
 type User interface{
 	SetTxOpts(*blockchain.ClientConnection,*blockchain.ContractVerifyOperations)
 	GetTxOpts() *bind.TransactOpts
@@ -22,6 +23,7 @@ type User interface{
 	SetName(string)
 	GetName()string
 	GetPublicAddress()string
+	AddDocument(hash, institute string)error
 }
 
 func UpdateNonce(u User)error{

@@ -101,3 +101,10 @@ func(r *Requester)GetPendingDocuments(docs []blockchain.VerificationDocument)([]
 	pendingDocs:=utils.FilterDocument(docs,pending)
 	return pendingDocs
 }
+
+func(r *Requester)AddDocument(hash, institute string)error{
+	if err:=r.Instance.AddDocument(r.GetTxOpts(),hash,institute);err!=nil{
+		return fmt.Errorf("error adding document: %w",err)
+	}
+	return nil
+}

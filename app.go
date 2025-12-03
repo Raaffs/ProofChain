@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -219,7 +218,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	document.Shahash=shaHash
 	document.PublicAddress=app.account.GetPublicAddress()
 	if account,ok:=app.account.(*users.Requester);ok{
-		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,"1",institute,name);err!=nil{
+		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,institute);err!=nil{
 			return err
 		}
 		return nil
@@ -274,52 +273,52 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	return pendingDocs, nil
 }
 
-func (app *App)ApproveDocument(status int,hash string)error{
-	if err:=users.UpdateNonce(app.account);err!=nil{
-		log.Println("Invalid transaction nonce: ",err)
-		return fmt.Errorf("Invalid transaction nonce")
+func (app *App)CreateDigitalCopy(status int,hash string, certificate models.CertificateData)error{
+	if status==2{
+		if verifier,ok:=app.account.(*users.Verifier);ok{
+			if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),hash);err!=nil{
+				log.Println("Error approving document : ",err)
+				return fmt.Errorf("An error occurred ")
+			}
+			return nil
+		}
 	}
-	//need to look at this again
+	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
+		log.Println(err)
+		return fmt.Errorf("An error occurred while issuing document")
+	}
 	if verifier,ok:=app.account.(*users.Verifier);ok{
-		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status));err!=nil{
+		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),publicCommit);err!=nil{
 			log.Println("Error approving document : ",err)
 			return fmt.Errorf("error approving document")
 		}
 		return nil
 	}
-	return fmt.Errorf("You're not authorized to perform this action")
+
+	if err:=app.storage.UploadDocument(doc);err!=nil{
+		log.Println(err)
+		return fmt.Errorf("Error creating certificate")
+	}
+	return nil
 }
 
 func (app *App)IssueCertificate(certificate models.CertificateData)error{
-	if err:=users.UpdateNonce(app.account);err!=nil{
-		log.Println("Invalid transaction nonce: ",err)
-		return fmt.Errorf("Invalid transaction nonce")
-	}
-	if _,ok:=app.account.(*users.Verifier);!ok{
-		return fmt.Errorf("You're not approved to issue certificate")
-	}
-	pubKey,err:=app.account.GetPublicKeys("",certificate.PublicAddress);if err!=nil{
-		log.Println("Error getting public key of user : ",err)
-		return fmt.Errorf("Error getting public key of user. Please check if public address is valid")
-	}
-	
-	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
+	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
 		log.Println(err)
-		return fmt.Errorf("An error occurred while issuing certificate")
+		return fmt.Errorf("An error occurred while issuing document")
 	}
-	log.Println(publicCommit,saltedCertificate)
-	json, err := json.Marshal(saltedCertificate);if err!=nil{
-		log.Println("Error marshaling the certificate: ",err)
-		return fmt.Errorf("Invalid certificate format")
-	}
-	encryptedCertificate,err:=app.Encrypt(json,pubKey);if err!=nil{
+	if err:=app.account.AddDocument(
+		string(publicCommit),
+		app.account.GetName(),
+	);err!=nil{
 		log.Println(err)
-		return fmt.Errorf("error encrypting document")
+		return fmt.Errorf("Error issuing certificate")
 	}
-	log.Println(string(encryptedCertificate))
-
+	if err:=app.storage.UploadDocument(doc);err!=nil{
+		log.Println(err)
+		return fmt.Errorf("Error creating certificate")
+	}
 	return nil
-
 }
 
 func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string,error){
@@ -327,7 +326,7 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}
-	
+
 	decryptedDoc,err:=app.TryDecrypt(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
 		log.Println("Error decrypting :",err)
 		return "",fmt.Errorf("Error decrypting document")
