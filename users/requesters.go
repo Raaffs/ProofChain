@@ -63,8 +63,8 @@ func(r *Requester)GetApprovalStatus()(bool,error){
 	return approved,nil
 }
 
-func (r *Requester)GetPublicKeys(institute string,user string)(string,error){
-	pub,err:=r.Instance.Instance.GetInstituePublicKey(r.Conn.CallOpts,institute);if err!=nil{
+func (r *Requester)GetPublicKeys(entity string)(string,error){
+	pub,err:=r.Instance.Instance.GetInstituePublicKey(r.Conn.CallOpts,entity);if err!=nil{
 		return "",err
 	}
 	log.Println("public key: ",pub)

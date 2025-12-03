@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/storage/models"
@@ -19,8 +20,15 @@ import (
 
 
 
-func (app *App)Encrypt(file []byte, publicKey string)([]byte,error){
-	if err:=app.keys.SetMultiSigKey(publicKey);err!=nil{
+func (app *App)Encrypt(file []byte, institute string)([]byte,error){
+	pubKey,err:=app.account.GetPublicKeys(strings.TrimSpace(institute));if err!=nil{
+		return nil,err
+	}
+	if pubKey==""{
+		log.Println("error retrieving the name of institute")
+		return nil,fmt.Errorf("invalid institution")
+	}
+	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
 		return nil,err
 	}
 	secretKey,err:=app.keys.GenerateSecret();if err!=nil{
@@ -33,7 +41,15 @@ func (app *App)Encrypt(file []byte, publicKey string)([]byte,error){
 }	
 
 func(app *App)TryDecrypt(encryptedDocument []byte,institute string,user string)([]byte,error){
-	pub,err:=app.account.GetPublicKeys(institute,user); if err!=nil{
+	var entity string
+	if _,ok:=app.account.(*users.Requester); ok{
+		entity=institute
+	}
+	if _,ok:=app.account.(*users.Verifier); ok{
+		entity=user
+	}
+
+	pub,err:=app.account.GetPublicKeys(entity); if err!=nil{
 		log.Println("error getting public key: ",err)
 		return nil,fmt.Errorf("Error retrieving public keys")
 	}
@@ -101,7 +117,7 @@ if err:=users.UpdateNonce(app.account);err!=nil{
 		log.Println("Invalid transaction nonce: ",err)
 		return models.Document{},"",fmt.Errorf("invalid transaction nonce")
 	}
-	pubKey,err:=app.account.GetPublicKeys("",certificate.PublicAddress);if err!=nil{
+	pubKey,err:=app.account.GetPublicKeys(certificate.PublicAddress);if err!=nil{
 		log.Println("Error getting public key of user : ",err)
 		return models.Document{},"",fmt.Errorf("error getting public key of user. Please check if public address is valid")
 	}

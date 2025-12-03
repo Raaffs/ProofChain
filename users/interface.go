@@ -15,7 +15,7 @@ type User interface{
 	GetInstance()*blockchain.ContractVerifyOperations
 	Register(string,string)error
 	GetApprovalStatus()(bool,error)
-	GetPublicKeys(string,string)(string,error)
+	GetPublicKeys(entity string)(string,error)
 	GetDocuments()([]blockchain.VerificationDocument,error)
 	GetAcceptedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)
 	GetRejectedDocuments([]blockchain.VerificationDocument)([]blockchain.VerificationDocument)

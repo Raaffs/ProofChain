@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
@@ -198,15 +197,8 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println("Error uploading File:",err)
 		return fmt.Errorf("Error uploading file")
 	}
-	//empty string, cause we don't want public keys of requester
-	pubKey,err:=app.account.GetPublicKeys(strings.TrimSpace(institute),"");if err!=nil{
-		return err
-	}
-	if pubKey==""{
-		log.Println("error retrieving the name of institute")
-		return fmt.Errorf("invalid institution")
-	}
-	encryptedDocument,err:=app.Encrypt(file,pubKey);if err!=nil{
+	
+	encryptedDocument,err:=app.Encrypt(file,institute);if err!=nil{
 		log.Println(err)
 		return fmt.Errorf("An error occurred while encrypting document")
 	}

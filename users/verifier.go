@@ -56,8 +56,8 @@ func(v *Verifier)GetApprovalStatus()(bool,error){
 	return true,nil
 }
 
-func (v *Verifier)GetPublicKeys(institute string,user string)(string,error){
-	pub,err:=v.Instance.Instance.GetUserPublicKey(v.Conn.CallOpts,common.HexToAddress(user));if err!=nil{
+func (v *Verifier)GetPublicKeys(entity string)(string,error){
+	pub,err:=v.Instance.Instance.GetUserPublicKey(v.Conn.CallOpts,common.HexToAddress(entity));if err!=nil{
 		return "",err
 	}
 	return pub,nil
