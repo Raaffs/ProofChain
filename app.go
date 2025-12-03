@@ -326,3 +326,4 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 	encodedDocument:=base64.StdEncoding.EncodeToString(decryptedDoc)
 	return encodedDocument, nil
 }
+

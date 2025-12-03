@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
@@ -141,63 +139,3 @@ if err:=users.UpdateNonce(app.account);err!=nil{
 	return doc,string(publicCommit),nil
 }
 
-func Walk[S any](s S) func(yield func(string, any) bool) {
-	v := reflect.ValueOf(s)
-
-	// Dereference pointer if needed
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Struct {
-		return func(yield func(string, any) bool) {}
-	}
-
-	return func(yield func(string, any) bool) {
-		t := v.Type()
-		numFields := v.NumField()
-
-		for i := range numFields {
-			field := t.Field(i)
-			value := v.Field(i)
-
-			if !field.IsExported() {
-				continue
-			}
-
-			switch value.Kind() {
-			case reflect.Map:
-				// Iterate map keys
-				for _, key := range value.MapKeys() {
-					val := value.MapIndex(key)
-					if !yield(fmt.Sprint(key.Interface()), val.Interface()) {
-						return
-					}
-				}
-			default:
-				if !yield(field.Name, value.Interface()) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func SaveProof(identityDir, certificateName string, proofs map[string]any) error {
-	if certificateName == "" {
-		return fmt.Errorf("certificate name cannot be empty")
-	}
-	if err := os.MkdirAll(identityDir, 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-	path := filepath.Join(identityDir, certificateName+".json")
-	
-	data, err := json.MarshalIndent(proofs, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal proofs: %w", err)
-	}
-	if err := os.WriteFile(path, data, 0600); err != nil {
-		return fmt.Errorf("failed to write proofs file: %w", err)
-	}
-	return nil
-}
