@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"fmt"
 
 	verify "github.com/Suy56/ProofChain/chaincore/verify"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -8,26 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-//GetDocument method in Verify.go returns an anonymous struct with corresponding
-//fields.
-type VerificationDocument struct{
-	//id field is required in frontend for data row element
-	ID			int
-	Requester   string
-	Verifier    string
-	Institute	string
-	Name        string
-	Desc        string
-	IpfsAddress string
-	ShaHash		string
-	Stats       uint8
-}
-
 type ContractVerifyOperations struct {
 	Address  common.Address
 	Instance *verify.Verify
 	Client   *ethclient.Client
 }
+
 func (cv *ContractVerifyOperations)SetClient(c *ethclient.Client){
 	cv.Client=c
 }
@@ -35,7 +22,7 @@ func (cv *ContractVerifyOperations)New(contractAddr string) error {
 	cv.Address = common.HexToAddress(contractAddr)
 	instance, err := verify.NewVerify(cv.Address, cv.Client)
 	if err != nil {
-		return err
+		return fmt.Errorf("instance.go: error connecting to contract %w",err)
 	}
 	cv.Instance = instance
 	return nil
@@ -45,14 +32,15 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts,publicK
 	_, err := cv.Instance.RegisterAsUser(opts,publicKey)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("instance.go: error registering institution. %w",err)
 	}
 	return nil
 }
+
 func (cv *ContractVerifyOperations)RegisterInstitution(opts *bind.TransactOpts, publicKey, institute string) error {
 	_, err := cv.Instance.RegisterInstitution(opts,publicKey,institute )
 	if err != nil {
-		return err
+		return fmt.Errorf("instance.go: error registering institution %w",err)
 	}
 	return nil
 }
@@ -60,7 +48,7 @@ func (cv *ContractVerifyOperations)RegisterInstitution(opts *bind.TransactOpts, 
 func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_institute string)error{
 	_,err:=cv.Instance.ApproveVerifier(opts, _institute)
 	if err!=nil{
-		return err
+		return fmt.Errorf("instance.go: error approving instiution %w",err)
 	}
 	return nil
 }
@@ -68,7 +56,8 @@ func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_inst
 func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, shaHash, _institute string) (error) {
 	_, err := cv.Instance.AddDocument(opts, (shaHash),_institute)
 	if err != nil {
-		return err
+		return fmt.Errorf("instance.go: error adding document %w",err)
+
 	}
 	return err
 }
@@ -82,7 +71,7 @@ func (cv *ContractVerifyOperations)VerifyDocument(
 ) error {
 	_, err := cv.Instance.VerifyDocument(opts, shaHash, institute, _status,_proofHash)
 	if err != nil {
-		return err
+		return fmt.Errorf("instance.go: error verifying document %w",err)
 	}
 	return nil
 }

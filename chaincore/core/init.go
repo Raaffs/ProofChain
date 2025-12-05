@@ -7,10 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type Connect interface{
-	New(string)error
-	SetClient(*ethclient.Client)
-}
 
 func Init(c Connect, i Connect, privateKey string, contractAddr string,clientUrl string)error{
 	client,err:=Client(clientUrl);if err!=nil{

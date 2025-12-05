@@ -5,9 +5,6 @@ export namespace blockchain {
 	    Requester: string;
 	    Verifier: string;
 	    Institute: string;
-	    Name: string;
-	    Desc: string;
-	    IpfsAddress: string;
 	    ShaHash: string;
 	    Stats: number;
 	
@@ -21,9 +18,6 @@ export namespace blockchain {
 	        this.Requester = source["Requester"];
 	        this.Verifier = source["Verifier"];
 	        this.Institute = source["Institute"];
-	        this.Name = source["Name"];
-	        this.Desc = source["Desc"];
-	        this.IpfsAddress = source["IpfsAddress"];
 	        this.ShaHash = source["ShaHash"];
 	        this.Stats = source["Stats"];
 	    }
@@ -55,6 +49,22 @@ export namespace models {
 	        this.age = source["age"];
 	        this.birthDate = source["birthDate"];
 	        this.uniqueId = source["uniqueId"];
+	    }
+	}
+	export class Document {
+	    shahash: string;
+	    encryptedDocument: number[];
+	    publicAddress: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Document(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.shahash = source["shahash"];
+	        this.encryptedDocument = source["encryptedDocument"];
+	        this.publicAddress = source["publicAddress"];
 	    }
 	}
 

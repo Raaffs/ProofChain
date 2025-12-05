@@ -39,15 +39,15 @@ func (app *App)Encrypt(file []byte, institute string)([]byte,error){
 }	
 
 func(app *App)TryDecrypt(encryptedDocument []byte,institute string,user string)([]byte,error){
-	var entity string
+	var targetEntity string
 	if _,ok:=app.account.(*users.Requester); ok{
-		entity=institute
+		targetEntity=institute
 	}
 	if _,ok:=app.account.(*users.Verifier); ok{
-		entity=user
+		targetEntity=user
 	}
 
-	pub,err:=app.account.GetPublicKeys(entity); if err!=nil{
+	pub,err:=app.account.GetPublicKeys(targetEntity); if err!=nil{
 		log.Println("error getting public key: ",err)
 		return nil,fmt.Errorf("Error retrieving public keys")
 	}
@@ -111,10 +111,7 @@ func (app *App)IsApprovedInstitute()bool{
 }
 
 func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Document,string,error){
-if err:=users.UpdateNonce(app.account);err!=nil{
-		log.Println("Invalid transaction nonce: ",err)
-		return models.Document{},"",fmt.Errorf("invalid transaction nonce")
-	}
+
 	pubKey,err:=app.account.GetPublicKeys(certificate.PublicAddress);if err!=nil{
 		log.Println("Error getting public key of user : ",err)
 		return models.Document{},"",fmt.Errorf("error getting public key of user. Please check if public address is valid")

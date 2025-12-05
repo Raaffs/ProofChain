@@ -11,7 +11,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles"; 
-import { IsApprovedInstitute } from "../../../wailsjs/go/main/App";
+import { IsApprovedInstitute, IssueCertificate } from "../../../wailsjs/go/main/App";
 import { 
   FileText, 
   User, 
@@ -41,6 +41,7 @@ export interface CertificateData {
 interface IssueCardProps {
   data: CertificateData | null;
   viewTitle: string;
+  onIssue: (cert:CertificateData) => void;
 }
 
 interface FieldConfig {
@@ -52,8 +53,7 @@ interface FieldConfig {
   isCustom?: boolean; // Flag to identify custom fields
 }
 
-// ---------- COMPONENT ----------
-const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle }) => {
+const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, onIssue }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode); 
 
@@ -301,6 +301,9 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle }) 
           color={isApproved ? "secondary" : "primary"} 
           size="large"
           sx={{ mt: 3 }}
+          onClick={()=>{
+            onIssue(data);
+          }}
         >
           {isApproved ? "Issue Certificate" : "View Data"}
         </Button>

@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import IssueCard from "../../components/cards/certificate";
 import Header from "../../components/Header";
+import { IssueCertificate } from "../../../wailsjs/go/main/App";
 
 const Issue = () => {
   return (
@@ -22,6 +23,7 @@ const Issue = () => {
       <IssueCard 
         data={null} 
         viewTitle="Issue Certificate"
+        onIssue={IssueCertificate}
       />
     </Box>
   );

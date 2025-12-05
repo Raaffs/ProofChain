@@ -17,7 +17,7 @@ func TestDeploy(t *testing.T){
 		in: &blockchain.ContractVerifyOperations{},
 	}
 
-	privateKey:="0x552d079fe5a76c34f075ddd694784a0f9a3c19aeadc62632fde406492073b48d"
+	privateKey:="0xc3f6861dda35480c7bda7dbaa57eb073cb0ec3fcd88c3fc2190c3ffdd7c215c8"
 	fmt.Println("p: ",privateKey)
 	if err:=blockchain.Init(app.conn,app.in,privateKey[2:],"",ETH_CLIENT_URL);err!=nil{
 		t.Fatal(err)

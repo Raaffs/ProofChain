@@ -174,7 +174,6 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 			return fmt.Errorf("error registering institution")
 		}
 		app.account.SetName(name)
-		log.Println("registered successful")
 	}else{
 		requester:=&users.Requester{Conn: c,Instance: i}
 		app.account=requester
@@ -266,25 +265,33 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 }
 
 func (app *App)CreateDigitalCopy(status int,hash string, certificate models.CertificateData)error{
-	if status==2{
-		if verifier,ok:=app.account.(*users.Verifier);ok{
+	if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return err
+	}
+	verifier,ok:=app.account.(*users.Verifier);if !ok{
+		return fmt.Errorf("You're not approved to perform this action")
+	}
+
+	switch status{
+		case blockchain.Rejected:
 			if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),hash);err!=nil{
 				log.Println("Error approving document : ",err)
 				return fmt.Errorf("An error occurred ")
 			}
 			return nil
-		}
+
+		case blockchain.Pending:
+			return nil
 	}
+
 	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
 		log.Println(err)
 		return fmt.Errorf("An error occurred while issuing document")
 	}
-	if verifier,ok:=app.account.(*users.Verifier);ok{
-		if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),publicCommit);err!=nil{
-			log.Println("Error approving document : ",err)
-			return fmt.Errorf("error approving document")
-		}
-		return nil
+	if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),publicCommit);err!=nil{
+		log.Println("Error approving document : ",err)
+		return fmt.Errorf("error approving document")
 	}
 
 	if err:=app.storage.UploadDocument(doc);err!=nil{
@@ -295,6 +302,10 @@ func (app *App)CreateDigitalCopy(status int,hash string, certificate models.Cert
 }
 
 func (app *App)IssueCertificate(certificate models.CertificateData)error{
+	if err:=users.UpdateNonce(app.account);err!=nil{
+		log.Println("Invalid transaction nonce: ",err)
+		return err
+	}
 	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
 		log.Println(err)
 		return fmt.Errorf("An error occurred while issuing document")

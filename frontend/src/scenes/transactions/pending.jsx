@@ -2,9 +2,11 @@ import { Box, Typography, useTheme, Button } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../themes";
 import Header from "../../components/Header";
-import { GetPendingDocuments, IsApprovedInstitute, ApproveDocument, ViewDocument } from "../../../wailsjs/go/main/App";
+import { GetPendingDocuments, IsApprovedInstitute, CreateDigitalCopy, ViewDocument } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
 import Modal from '@mui/material/Modal';
+import ModalIssueCard from "../../components/modal/issueModal";
+let isInstitute=false
 const PendingDocuments = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
@@ -53,6 +55,10 @@ const PendingDocuments = () => {
                 }
             })
             .catch((err) => setError(err.message));
+        <ModalIssueCard
+            open={true}
+            viewTitle="yoooooo"
+        />
     };
 
     const handleApprove = (doc) => {
@@ -63,7 +69,7 @@ const PendingDocuments = () => {
             return;
         }
 
-        ApproveDocument(0, doc.ShaHash)
+        CreateDigitalCopy(0, doc.ShaHash)
             .then(() => {
                 setMessage("Document approved successfully");
                 fetchDocuments(); // Refresh documents after approval
@@ -78,7 +84,7 @@ const PendingDocuments = () => {
             return;
         }
 
-        ApproveDocument(1, doc.ShaHash)
+        CreateDigitalCopy(1, doc.ShaHash)
             .then(() => {
                 setMessage("Document rejected successfully");
                 fetchDocuments(); // Refresh documents after rejection
@@ -90,6 +96,7 @@ const PendingDocuments = () => {
         IsApprovedInstitute()
             .then((isApproved) => {
                 if (isApproved) {
+                    isInstitute=true
                     setColumns((prevColumns) => [
                         ...prevColumns,
                         {
