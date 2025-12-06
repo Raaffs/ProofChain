@@ -23,7 +23,12 @@ type User interface{
 	SetName(string)
 	GetName()string
 	GetPublicAddress()string
-	AddDocument(hash, institute string)error
+	AddDocument(	
+		hash, 
+		institute string,
+		add func ()error,
+		approve func()error,
+	)error
 }
 
 func UpdateNonce(u User)error{

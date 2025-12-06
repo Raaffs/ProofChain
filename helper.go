@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/Suy56/ProofChain/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/storage/models"
@@ -18,12 +17,14 @@ import (
 
 
 
-func (app *App)Encrypt(file []byte, institute string)([]byte,error){
-	pubKey,err:=app.account.GetPublicKeys(strings.TrimSpace(institute));if err!=nil{
+// func (app *App)autoResvolvePublicKey(target string)(string,error)
+
+func (app *App)Encrypt(file []byte, entity string)([]byte,error){
+	pubKey,err:=app.account.GetPublicKeys(entity);if err!=nil{
 		return nil,err
 	}
 	if pubKey==""{
-		log.Println("error retrieving the name of institute")
+		log.Println("error retrieving public keys")
 		return nil,fmt.Errorf("invalid institution")
 	}
 	if err:=app.keys.SetMultiSigKey(pubKey);err!=nil{
@@ -48,8 +49,7 @@ func(app *App)TryDecrypt(encryptedDocument []byte,institute string,user string)(
 	}
 
 	pub,err:=app.account.GetPublicKeys(targetEntity); if err!=nil{
-		log.Println("error getting public key: ",err)
-		return nil,fmt.Errorf("Error retrieving public keys")
+		return nil,fmt.Errorf("helper.go: error retrieving public keys %w",err)
 	}
 	log.Println("public key of ins: ",pub)
 	if err:=app.keys.SetMultiSigKey(pub);err!=nil{
@@ -111,22 +111,17 @@ func (app *App)IsApprovedInstitute()bool{
 }
 
 func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Document,string,error){
-
-	pubKey,err:=app.account.GetPublicKeys(certificate.PublicAddress);if err!=nil{
-		log.Println("Error getting public key of user : ",err)
-		return models.Document{},"",fmt.Errorf("error getting public key of user. Please check if public address is valid")
-	}
 	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
 		log.Println(err)
 		return models.Document{},"",fmt.Errorf("an error occurred while issuing certificate")
 	}
+	log.Println("public commit: ",publicCommit)
 	json, err := json.Marshal(saltedCertificate);if err!=nil{
 		log.Println("Error marshaling the certificate: ",err)
 		return models.Document{},"",fmt.Errorf("invalid certificate format")
 	}
-	encryptedCertificate,err:=app.Encrypt(json,pubKey);if err!=nil{
-		log.Println(err)
-		return models.Document{},"",fmt.Errorf("error encrypting document")
+	encryptedCertificate,err:=app.Encrypt(json,certificate.PublicAddress);if err!=nil{
+		return models.Document{},"",fmt.Errorf("error encrypting document %w",err)
 	}
 	doc:=models.Document{
 		Shahash: string(publicCommit),

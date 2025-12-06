@@ -33,7 +33,6 @@ func(v *Verifier)GetInstance()*blockchain.ContractVerifyOperations{
 	return v.Instance
 }
 
-
 func(v *Verifier)SetTxOpts(c *blockchain.ClientConnection,i *blockchain.ContractVerifyOperations){
 	v.Conn=c
 	v.Instance=i
@@ -48,7 +47,9 @@ func(v *Verifier)UpdateTxOpts(opts *bind.TransactOpts)*bind.TransactOpts{
 }
 
 func(v *Verifier)Register(publicKey string,name string)error{
-	v.Instance.RegisterInstitution(v.Conn.TxOpts,publicKey,name)
+	if err:=v.Instance.RegisterInstitution(v.Conn.TxOpts,publicKey,name);err!=nil{
+		return fmt.Errorf("error registering institution %w",err)
+	}
 	return nil
 }
 
@@ -96,13 +97,24 @@ func(v *Verifier)GetPendingDocuments(docs []blockchain.VerificationDocument)([]b
 	return pendingDocs
 }
 
-func(v *Verifier)AddDocument(hash, institute string)error{
+func(v *Verifier)AddDocument(
+	hash, 
+	institute string,
+	add func ()error,
+	approve func()error,
+)error{
 	if err:=v.Instance.AddDocument(
 		v.GetTxOpts(),
 		hash,
 		institute,
 	);err!=nil{
 		return fmt.Errorf("error adding document: %w",err)
+	}
+	if err:=UpdateNonce(v);err!=nil{
+		return fmt.Errorf("error updating nonce %w",err)
+	}
+	if err:=v.Instance.VerifyDocument(v.GetTxOpts(),hash,v.Name,0,hash);err!=nil{
+		return err
 	}
 	return nil 
 }

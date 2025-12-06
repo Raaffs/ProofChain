@@ -95,6 +95,7 @@ func(r *Requester)GetRejectedDocuments(docs []blockchain.VerificationDocument)([
 }
 
 func(r *Requester)GetPendingDocuments(docs []blockchain.VerificationDocument)([]blockchain.VerificationDocument){
+	log.Println("YOOOOO")
 	pending:=func(doc blockchain.VerificationDocument)bool{
 		return doc.Requester==r.Conn.CallOpts.From.Hex() && doc.Stats==2
 	}
@@ -102,7 +103,12 @@ func(r *Requester)GetPendingDocuments(docs []blockchain.VerificationDocument)([]
 	return pendingDocs
 }
 
-func(r *Requester)AddDocument(hash, institute string)error{
+func(r *Requester)AddDocument(
+	hash, 
+	institute string,
+	add func ()error,
+	approve func()error,
+)error{
 	if err:=r.Instance.AddDocument(r.GetTxOpts(),hash,institute);err!=nil{
 		return fmt.Errorf("error adding document: %w",err)
 	}

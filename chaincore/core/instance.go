@@ -22,7 +22,7 @@ func (cv *ContractVerifyOperations)New(contractAddr string) error {
 	cv.Address = common.HexToAddress(contractAddr)
 	instance, err := verify.NewVerify(cv.Address, cv.Client)
 	if err != nil {
-		return fmt.Errorf("instance.go: error connecting to contract %w",err)
+		return fmt.Errorf("error connecting to contract %w",err)
 	}
 	cv.Instance = instance
 	return nil
@@ -32,7 +32,7 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts,publicK
 	_, err := cv.Instance.RegisterAsUser(opts,publicKey)
 
 	if err != nil {
-		return fmt.Errorf("instance.go: error registering institution. %w",err)
+		return fmt.Errorf("error registering institution. %w",err)
 	}
 	return nil
 }
@@ -40,7 +40,7 @@ func (cv *ContractVerifyOperations) RegisterUser(opts *bind.TransactOpts,publicK
 func (cv *ContractVerifyOperations)RegisterInstitution(opts *bind.TransactOpts, publicKey, institute string) error {
 	_, err := cv.Instance.RegisterInstitution(opts,publicKey,institute )
 	if err != nil {
-		return fmt.Errorf("instance.go: error registering institution %w",err)
+		return fmt.Errorf("error registering institution %w",err)
 	}
 	return nil
 }
@@ -48,7 +48,7 @@ func (cv *ContractVerifyOperations)RegisterInstitution(opts *bind.TransactOpts, 
 func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_institute string)error{
 	_,err:=cv.Instance.ApproveVerifier(opts, _institute)
 	if err!=nil{
-		return fmt.Errorf("instance.go: error approving instiution %w",err)
+		return fmt.Errorf("error approving instiution %w",err)
 	}
 	return nil
 }
@@ -56,10 +56,10 @@ func (cv *ContractVerifyOperations)ApproveVerifier(opts *bind.TransactOpts,_inst
 func (cv *ContractVerifyOperations) AddDocument(opts *bind.TransactOpts, shaHash, _institute string) (error) {
 	_, err := cv.Instance.AddDocument(opts, (shaHash),_institute)
 	if err != nil {
-		return fmt.Errorf("instance.go: error adding document %w",err)
+		return fmt.Errorf("error adding document %w",err)
 
 	}
-	return err
+	return nil
 }
 
 func (cv *ContractVerifyOperations)VerifyDocument(
@@ -71,7 +71,7 @@ func (cv *ContractVerifyOperations)VerifyDocument(
 ) error {
 	_, err := cv.Instance.VerifyDocument(opts, shaHash, institute, _status,_proofHash)
 	if err != nil {
-		return fmt.Errorf("instance.go: error verifying document %w",err)
+		return fmt.Errorf("error verifying document %w",err)
 	}
 	return nil
 }

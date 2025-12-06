@@ -126,7 +126,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, on
     
     setData((prev) => ({
       ...prev,
-      [name]: updatedValue, 
+      [name]: updatedValue.toString(), 
     }));
   };
 

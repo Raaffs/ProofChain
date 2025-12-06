@@ -79,8 +79,10 @@ contract Verification{
         institutions[_name].approved=true;
     }
     function addDocument(string memory shaHash, string memory _institute) public{
-        bool isUser=userList[msg.sender];
-        require(isUser==true,"register first to verify");
+        require( 
+            userList[msg.sender] ||
+            msg.sender==institutions[_institute].publicAddr,"register first to upload"
+        );
         documentList[shaHash]=docIndexCounter;
         requesters.push(msg.sender);
         verifiedBy.push(address(0));
@@ -90,6 +92,24 @@ contract Verification{
         //by the institution yet
         documentOrCertificateHash.push(shaHash);
         docIndexCounter++;
+    }
+
+    function addCertificate(string memory _hash, string memory _institute, address _requestor)public{
+        require( 
+            msg.sender==institutions[_institute].publicAddr,
+            "register first to upload"
+        );
+
+        documentList[_hash]=docIndexCounter;
+        requesters.push(_requestor);
+        verifiedBy.push(msg.sender);
+        institution.push(_institute);
+        status.push(DocStatus.accepted);
+        //the proof hash is initially empty as it's not approved
+        //by the institution yet
+        documentOrCertificateHash.push(_hash);
+        docIndexCounter++;
+
     }
     //returns all the documents
     function getDocuments()public view returns(

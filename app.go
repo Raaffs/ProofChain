@@ -13,6 +13,7 @@ import (
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
 	"github.com/Suy56/ProofChain/users"
 	"github.com/Suy56/ProofChain/wallet"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 	"golang.org/x/sync/errgroup"
 )
@@ -89,6 +90,7 @@ func (app *App)Login(username string, password string)(error){
 			log.Println("Error getting the account verification status : ",err)
 			return fmt.Errorf("error getting the account verification status")
 		}
+		log.Println("is approved: ",approved)
 		if approved{
 			app.account=&users.Verifier{Conn: c,Instance: i,Name: username}
 		}else{
@@ -201,6 +203,7 @@ func (app *App)UploadDocument(institute,name,description string)error{
 		log.Println(err)
 		return fmt.Errorf("An error occurred while encrypting document")
 	}
+
 	shaHash,err:=Keccak256File(path); if err!=nil{
 		log.Println("Error hashing file:",err)
 		return fmt.Errorf("Error uploading file")
@@ -208,17 +211,16 @@ func (app *App)UploadDocument(institute,name,description string)error{
 	document.EncryptedDocument=encryptedDocument
 	document.Shahash=shaHash
 	document.PublicAddress=app.account.GetPublicAddress()
-	if account,ok:=app.account.(*users.Requester);ok{
-		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,institute);err!=nil{
-			return err
-		}
-		return nil
-	}
 	if err:=app.storage.UploadDocument(document);err!=nil{
 		log.Println("Error uploading file to mongodb : ",err)
 		return fmt.Errorf("Error uploading file")
 	}
-	return fmt.Errorf("invalid account type")
+	if account,ok:=app.account.(*users.Requester);ok{
+		if err:=account.Instance.AddDocument(app.account.GetTxOpts(),shaHash,institute);err!=nil{
+			return err
+		}
+	}
+	return  nil
 }
 
 func (app *App)GetAllDocs()([]blockchain.VerificationDocument,error){
@@ -260,7 +262,9 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	docs, err := app.account.GetDocuments(); if err != nil {
 		return nil, err
 	}
+	log.Println("docs: ",docs)
 	pendingDocs := app.account.GetPendingDocuments(docs)
+	log.Println("pending: ",pendingDocs,app.account.GetName())
 	return pendingDocs, nil
 }
 
@@ -269,13 +273,20 @@ func (app *App)CreateDigitalCopy(status int,hash string, certificate models.Cert
 		log.Println("Invalid transaction nonce: ",err)
 		return err
 	}
-	verifier,ok:=app.account.(*users.Verifier);if !ok{
+	_,ok:=app.account.(*users.Verifier);if !ok{
 		return fmt.Errorf("You're not approved to perform this action")
 	}
 
 	switch status{
 		case blockchain.Rejected:
-			if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),hash);err!=nil{
+			if _,err:=
+			app.account.GetInstance().Instance.VerifyDocument(
+				app.account.GetTxOpts(),
+				hash,
+				app.account.GetName(),
+				uint8(status),
+				hash,
+			);err!=nil{
 				log.Println("Error approving document : ",err)
 				return fmt.Errorf("An error occurred ")
 			}
@@ -289,14 +300,20 @@ func (app *App)CreateDigitalCopy(status int,hash string, certificate models.Cert
 		log.Println(err)
 		return fmt.Errorf("An error occurred while issuing document")
 	}
-	if err:=verifier.Instance.VerifyDocument(app.account.GetTxOpts(),hash,verifier.Name,uint8(status),publicCommit);err!=nil{
-		log.Println("Error approving document : ",err)
-		return fmt.Errorf("error approving document")
-	}
 
 	if err:=app.storage.UploadDocument(doc);err!=nil{
 		log.Println(err)
 		return fmt.Errorf("Error creating certificate")
+	}
+
+	if _,err:=app.account.GetInstance().Instance.VerifyDocument(
+		app.account.GetTxOpts(),
+		hash,
+		app.account.GetName(),
+		0,
+		publicCommit,
+	);err!=nil{
+		return nil
 	}
 	return nil
 }
@@ -308,18 +325,20 @@ func (app *App)IssueCertificate(certificate models.CertificateData)error{
 	}
 	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
 		log.Println(err)
-		return fmt.Errorf("An error occurred while issuing document")
+		return fmt.Errorf("An error occurred while issuing certificate")
 	}
-	if err:=app.account.AddDocument(
-		string(publicCommit),
+	if _,err:=app.account.GetInstance().Instance.AddCertificate(
+		app.account.GetTxOpts(),
+		publicCommit,
 		app.account.GetName(),
+		common.HexToAddress(certificate.PublicAddress),
 	);err!=nil{
 		log.Println(err)
-		return fmt.Errorf("Error issuing certificate")
+		return fmt.Errorf("an error occurred while issuing certificate")
 	}
 	if err:=app.storage.UploadDocument(doc);err!=nil{
 		log.Println(err)
-		return fmt.Errorf("Error creating certificate")
+		return fmt.Errorf("Error issuing certificate")
 	}
 	return nil
 }
@@ -329,7 +348,7 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 		log.Println("Error retrieving document: ",err)
 		return "",fmt.Errorf("Error retrieving document")
 	}
-
+	log.Println("try dec: ",requesterAddress)
 	decryptedDoc,err:=app.TryDecrypt(encryptedDocument.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
 		log.Println("Error decrypting :",err)
 		return "",fmt.Errorf("Error decrypting document")

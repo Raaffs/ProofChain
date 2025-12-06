@@ -7,8 +7,8 @@ import (
 )
 
 func TestApprove(t *testing.T) {
-	pk:="0x552d079fe5a76c34f075ddd694784a0f9a3c19aeadc62632fde406492073b48d"
-	contract:="0xBBf03Cb4A6074844B40020acd6baAf4F436E9DCd"
+	pk:="0x4c940bf3f77c3c9251582a3c7b3849a5d08b89ff72f91d0a9e47b74c4338297e"
+	contract:="0xF63Ec2FE77E3125A0f2260cfFF03bD5Dc92BCE89"
 	c:=	&blockchain.ClientConnection{}
 	i:= &blockchain.ContractVerifyOperations{}
 	host:="http://localhost:7545"
@@ -22,7 +22,7 @@ func TestApprove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err:=i.ApproveVerifier(c.TxOpts,"ins");err!=nil{
+	_, err:=i.Instance.ApproveVerifier(c.TxOpts,"ins");if err!=nil{
 		t.Fatal(err)
 	}
 
