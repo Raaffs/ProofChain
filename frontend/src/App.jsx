@@ -14,10 +14,7 @@ import PendingDocuments from './scenes/transactions/pending';
 import UploadDocs from './scenes/upload'
 import { useState } from 'react';
 import Issue from './scenes/issue/issue';
-// import Documents from './scenes/documents';
-// import Line from './scenes/line';
-// import Pie from './scenes/pie';
-// import Form from './scenes/form';
+
 
 function App() {
     const [theme,colorMode]=useMode();

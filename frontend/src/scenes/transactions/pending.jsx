@@ -56,8 +56,9 @@ const PendingDocuments = () => {
             })
             .catch((err) => setError(err.message));
         <ModalIssueCard
-            open={true}
+            open={isModalOpen}
             viewTitle="yoooooo"
+            onClose={()=>{setModalOpen(false)}}
         />
     };
 

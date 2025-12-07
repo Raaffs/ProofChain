@@ -12,6 +12,7 @@ import StatusBreakdownChart from "../../components/PieChart";
 import InstituteStatusChart from "../../components/BarChart";
 const Dashboard=()=>{
     const theme=useTheme()
+    // const colors=tokens(theme.palette.mode)
     const colors=tokens(theme.palette.mode)
     const [docs, setdDocs]=useState([])
     const [approved,setApproved]=useState(0)
