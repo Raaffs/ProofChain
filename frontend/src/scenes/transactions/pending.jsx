@@ -97,43 +97,6 @@ const PendingDocuments = () => {
       .catch((err) => setError(err.message));
   };
 
-  const setupColumns = () => {
-    IsApprovedInstitute()
-      .then((isApproved) => {
-        if (isApproved) {
-          isInstitute = true;
-          setColumns((prevColumns) => [
-            ...prevColumns,
-            {
-              field: "verify",
-              headerName: "Verify",
-              flex: 1,
-              renderCell: (params) => (
-                <Box>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={() => handleApprove(params.row)}
-                    style={{ marginRight: "10px" }}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => handleReject(params.row)}
-                  >
-                    Reject
-                  </Button>
-                </Box>
-              ),
-            },
-          ]);
-        }
-      })
-      .catch((err) => console.log(err.message));
-  };
-
   const fetchDocuments = () => {
     GetPendingDocuments()
       .then((result) => {
@@ -150,7 +113,6 @@ const PendingDocuments = () => {
 
   useEffect(() => {
     fetchDocuments();
-    setupColumns();
   }, []); // Runs only once on mount
 
   return (
@@ -213,101 +175,117 @@ const PendingDocuments = () => {
         </Box>
       )}
       <Modal
-  open={isModalOpen}
-  onClose={() => setModalOpen(false)}
-  slotProps={{
-    backdrop: {
-      sx: {
-        backgroundColor: "rgba(0,0,0,0.65)",
-        backdropFilter: "blur(4px)",
-      },
-    },
-  }}
-  sx={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    p: 2,
-  }}
->
-  <Box
-    sx={{
-      backgroundColor: "white",
-      borderRadius: "18px",
-      boxShadow:
-        "0 12px 40px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)",
-      display: "flex",
-      gap: 4,
-      maxWidth: "1400px",
-      width: "95vw",
-      maxHeight: "92vh",
-      overflow: "hidden",
-      p: 4,
-    }}
-  >
-    {/* Left Side: Image */}
-    <Box
-      sx={{
-        flex: 1,
-        borderRight: "1px solid #e5e5e5",
-        pr: 4,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        overflowY: "auto",
-      }}
-    >
-      {image ? (
-        <img
-          src={`data:image/png;base64,${image}`}
-          alt="Document Preview"
-          style={{
-            width: "100%",
-            height: "auto",
-            maxHeight: "70vh",
-            objectFit: "contain",
-            borderRadius: "10px",
-          }}
-        />
-      ) : (
-        <Typography color="error" variant="h6" sx={{ py: 4 }}>
-          Failed to load image
-        </Typography>
-      )}
-
-      <Button
-        variant="contained"
-        onClick={() => setModalOpen(false)}
+        open={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        slotProps={{
+          backdrop: {
+            sx: {
+              backgroundColor: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(4px)",
+            },
+          },
+        }}
         sx={{
-          mt: 3,
-          borderRadius: "10px",
-          px: 4,
-          py: 1.5,
-          textTransform: "none",
-          fontSize: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
         }}
       >
-        Close Preview
-      </Button>
-    </Box>
+        <Box
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "18px",
+            boxShadow:
+              "0 12px 40px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.06)",
+            display: "flex",
+            gap: 4,
+            maxWidth: "1400px",
+            width: "95vw",
+            maxHeight: "92vh",
+            overflow: "hidden",
+            p: 4,
+          }}
+        >
+          {/* Left Side: Image */}
+          <Box
+            sx={{
+              flex: 1,
+              borderRight: "1px solid #e5e5e5",
+              pr: 4,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              overflowY: "auto",
+            }}
+          >
+            {image ? (
+              <img
+                src={`data:image/png;base64,${image}`}
+                alt="Document Preview"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  maxHeight: "70vh",
+                  objectFit: "contain",
+                  borderRadius: "10px",
+                }}
+              />
+            ) : (
+              <Typography color="error" variant="h6" sx={{ py: 4 }}>
+                Failed to load image
+              </Typography>
+            )}
 
-    {/* Right Side: Issue Card */}
-    <Box
-      sx={{
-        flex: 1,
-        pl: 2,
-        overflowY: "auto",
-      }}
-    >
-      <IssueCard
-        data={null}
-        viewTitle="viewTitleForCard"
-        onIssue={() => {}}
-      />
-    </Box>
-  </Box>
-</Modal>
+            <Button
+              variant="contained"
+              onClick={() => setModalOpen(false)}
+              sx={{
+                mt: 3,
+                borderRadius: "10px",
+                px: 4,
+                py: 1.5,
+                textTransform: "none",
+                fontSize: "16px",
+              }}
+            >
+              Close Preview
+            </Button>
+          </Box>
 
+          {/* Right Side: Issue Card */}
+          <Box
+            sx={{
+              flex: 1,
+              pl: 2,
+              overflowY: "auto",
+            }}
+          >
+            <IssueCard
+              data={null}
+              viewTitle="viewTitleForCard"
+              onIssue={() => {}}
+            />
+            <Box sx={{ mt: 2 }}> {/* Added margin-top for separation */}
+                <Button
+                variant="contained"
+                color="error"
+                onClick={() => handleReject(params.row)}
+                fullWidth // This MUI prop makes the button take the full width of its parent
+                sx={{
+                    borderRadius: "10px", // Optional: to match the style of the other button
+                    px: 4,
+                    py: 1.5,
+                    textTransform: "none",
+                    fontSize: "16px",
+                }}
+                >
+                Reject
+                </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };
