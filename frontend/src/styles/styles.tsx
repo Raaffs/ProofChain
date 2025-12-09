@@ -1,33 +1,33 @@
 export const textFieldSx = {
-    padding: "5px",
-    
-    // Target the label when focused
-    '& .MuiInputLabel-root.Mui-focused': {
-        color: '#E94057', // Deep Coral
-    },
-    
-    // Target the focused underline bar
-    '& .MuiInput-underline:after': {
-        borderBottomColor: '#E94057', // Deep Coral
-        borderBottomWidth: '2px', 
-    },
-    
-    // Target the underline bar when hovered, before focus
-    '& .MuiInput-underline:hover:not(.Mui-disabled):before': {
-        borderBottomColor: '#F27121', // Lighter Orange
-    },
+  padding: "5px",
+
+  // Target the label when focused
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: "#E94057", // Deep Coral
+  },
+
+  // Target the focused underline bar
+  "& .MuiInput-underline:after": {
+    borderBottomColor: "#E94057", // Deep Coral
+    borderBottomWidth: "2px",
+  },
+
+  // Target the underline bar when hovered, before focus
+  "& .MuiInput-underline:hover:not(.Mui-disabled):before": {
+    borderBottomColor: "#F27121", // Lighter Orange
+  },
 };
 
 export const btnstyle = {
-    background: "linear-gradient(90deg, #E94057 10%, #F27121 90%)",
-    padding: "8px 24px",
-    color: "white",
-    fontSize: "1rem",
-    fontWeight: 600,
-    borderRadius: "100px",
-    boxShadow: "0 4px 10px 0 rgba(233, 64, 87, 0.4)",
-    transition: "transform 0.2s ease-in-out",
-  };
+  background: "linear-gradient(90deg, #E94057 10%, #F27121 90%)",
+  padding: "8px 24px",
+  color: "white",
+  fontSize: "1rem",
+  fontWeight: 600,
+  borderRadius: "100px",
+  boxShadow: "0 4px 10px 0 rgba(233, 64, 87, 0.4)",
+  transition: "transform 0.2s ease-in-out",
+};
 
 export const menuItemStyle = {
   backgroundColor: "white",
@@ -64,8 +64,7 @@ export const DataGridSx = {
 
   /* ===== HEADER & FOOTER ===== */
   "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-footerContainer": {
-    background:
-      "linear-gradient(135deg, #fb7185 0%, #f97316 100%)",
+    background: "linear-gradient(135deg, #fb7185 0%, #f97316 100%)",
     color: "#ffffff",
     fontWeight: 700,
     border: "none",
@@ -131,17 +130,15 @@ export const DataGridDarkSx = {
   width: "dynamic",
   maxWidth: "170vh",
 
-  backgroundColor: "#020617", // deep slate
+  backgroundColor: "#151632", // deep slate
   borderRadius: "18px",
   border: "1px solid #1e293b",
   boxShadow: "0 18px 45px rgba(0,0,0,0.55)",
   overflow: "hidden",
   color: "#e5e7eb",
 
-  /* ===== HEADER & FOOTER ===== */
   "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-footerContainer": {
-    background:
-      "linear-gradient(135deg, #fb7185 0%, #f97316 100%)",
+    background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
     color: "#ffffff",
     fontWeight: 700,
     border: "none",
@@ -160,10 +157,10 @@ export const DataGridDarkSx = {
     borderTopLeftRadius: "18px",
     borderTopRightRadius: "18px",
   },
-  
+
   /* ===== ROWS ===== */
   "& .MuiDataGrid-row": {
-    backgroundColor: "#020617",
+    backgroundColor: "#151632",
     color: "#cbd5f5",
     fontWeight: 400,
     transition: "transform 0.15s ease, box-shadow 0.15s ease",
@@ -175,7 +172,7 @@ export const DataGridDarkSx = {
 
   /* classy dark hover */
   "& .MuiDataGrid-row:hover": {
-    backgroundColor: "#020617",
+    backgroundColor: "#2a2d64",
     transform: "translateY(-1px)",
     boxShadow: "inset 0 0 0 1px rgba(251,113,133,0.35)",
   },

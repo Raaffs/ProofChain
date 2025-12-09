@@ -175,6 +175,7 @@ const Sidebar = ({authStatus}) => {
               icon={<AddTaskOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
+              
             />
             <Item
               title="Rejected"

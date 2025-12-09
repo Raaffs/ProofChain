@@ -15,6 +15,7 @@ abigen
 wails
 build/*
 concept
+startup
 # Test binary, built with `go test -c`
 *.test
 .config_test.json

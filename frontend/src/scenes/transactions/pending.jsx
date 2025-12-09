@@ -196,7 +196,7 @@ const PendingDocuments = () => {
             columns={columns}
             rows={docs}
             getRowId={(row) => row.ID}
-            sx={DataGridDarkSx}
+            sx={theme.palette.mode === 'dark' ? DataGridDarkSx : DataGridSx}
           />
         </Box>
       )}
