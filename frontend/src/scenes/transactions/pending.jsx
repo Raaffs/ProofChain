@@ -2,6 +2,7 @@ import { Box, Typography, useTheme, Button, Fade } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../themes";
 import Header from "../../components/Header";
+import { btnstyle } from "../../styles/styles";
 import {
   GetPendingDocuments,
   IsApprovedInstitute,
@@ -11,7 +12,8 @@ import {
 import { useEffect, useState } from "react";
 import Modal from "@mui/material/Modal";
 import IssueCard from "../../components/cards/certificate";
-
+import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
+import { DataGridSx,DataGridDarkSx } from "../../styles/styles";
 let isInstitute = false;
 const PendingDocuments = () => {
   const theme = useTheme();
@@ -28,23 +30,47 @@ const PendingDocuments = () => {
     {
       field: "view",
       headerName: "View",
-      flex: 1,
+      flex: 0.5,
+      justifyContent: "center",
       renderCell: (params) => {
         const doc = docs.find((doc) => doc.ID === params.id);
         return (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              handleView(
-                params.row.ShaHash,
-                params.row.Institute,
-                params.row.Requester
-              );
-            }}
-          >
-            View
-          </Button>
+          <Box>
+            <Button
+              // Use 'outlined' variant for a cleaner, professional look
+              // variant="outlined"
+              // Use 'inherit' color to let the icon define the main color visually
+              color="info"
+              onClick={() => {
+                handleView(
+                  params.row.ShaHash,
+                  params.row.Institute,
+                  params.row.Requester
+                );
+              }}
+              sx={{
+                // Ensures the button is compact for an icon-only use case
+                minWidth: "auto",
+                padding: "6px 8px",
+                margin: 4,
+                // Subtle background for better visibility against white
+                // backgroundColor: 'rgba(0, 0, 0, 0.03)',
+                // Use hardcoded color for hover border
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.1)",
+                  // borderColor: '#64B5F6', // A light blue border on hover
+                },
+              }}
+            >
+              <RemoveRedEyeSharpIcon
+                sx={{
+                  // Professional Blue Color (e.g., MUI's standard info.main: #2196F3)
+                  color: `linear-gradient(45deg, #00C6FF 30%, #0072FF 90%)`,
+                  // fontSize: 20, // Adjusted size for visual balance
+                }}
+              />
+            </Button>
+          </Box>
         );
       },
     },
@@ -170,7 +196,7 @@ const PendingDocuments = () => {
             columns={columns}
             rows={docs}
             getRowId={(row) => row.ID}
-            sx={{ width: "dynamic", maxWidth: "170vh" }}
+            sx={DataGridDarkSx}
           />
         </Box>
       )}
@@ -266,22 +292,24 @@ const PendingDocuments = () => {
               viewTitle="viewTitleForCard"
               onIssue={() => {}}
             />
-            <Box sx={{ mt: 2 }}> {/* Added margin-top for separation */}
-                <Button
+            <Box sx={{ mt: 2 }}>
+              {" "}
+              {/* Added margin-top for separation */}
+              <Button
                 variant="contained"
                 color="error"
                 onClick={() => handleReject(params.row)}
                 fullWidth // This MUI prop makes the button take the full width of its parent
                 sx={{
-                    borderRadius: "10px", // Optional: to match the style of the other button
-                    px: 4,
-                    py: 1.5,
-                    textTransform: "none",
-                    fontSize: "16px",
+                  borderRadius: "10px", // Optional: to match the style of the other button
+                  px: 4,
+                  py: 1.5,
+                  textTransform: "none",
+                  fontSize: "16px",
                 }}
-                >
+              >
                 Reject
-                </Button>
+              </Button>
             </Box>
           </Box>
         </Box>

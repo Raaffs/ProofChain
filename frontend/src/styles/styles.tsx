@@ -50,3 +50,156 @@ export const menuItemStyle = {
     backgroundColor: "#D7374F", // slightly darker red on hover
   },
 };
+
+export const DataGridSx = {
+  width: "dynamic",
+  maxWidth: "170vh",
+
+  backgroundColor: "#ffffff",
+  borderRadius: "18px",
+  border: "1px solid #f1f5f9",
+  boxShadow: "0 16px 40px rgba(0,0,0,0.08)",
+  overflow: "hidden",
+  color: "#0f172a",
+
+  /* ===== HEADER & FOOTER ===== */
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-footerContainer": {
+    background:
+      "linear-gradient(135deg, #fb7185 0%, #f97316 100%)",
+    color: "#ffffff",
+    fontWeight: 700,
+    border: "none",
+  },
+
+  "& .MuiDataGrid-footerContainer": {
+    fontWeight: 500,
+  },
+
+  "& .MuiDataGrid-columnSeparator": {
+    display: "none",
+  },
+
+  /* rounded corners */
+  "& .MuiDataGrid-columnHeaders": {
+    borderTopLeftRadius: "18px",
+    borderTopRightRadius: "18px",
+  },
+
+  /* ===== ROWS ===== */
+  "& .MuiDataGrid-row": {
+    backgroundColor: "#ffffff",
+    color: "#475569",
+    fontWeight: 400,
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+  },
+
+  "& .MuiDataGrid-row:nth-of-type(even)": {
+    backgroundColor: "#f8fafc",
+  },
+
+  "& .MuiDataGrid-row:hover": {
+    backgroundColor: "#f1f5f9",
+    transform: "translateY(-1px)",
+    boxShadow: "0 6px 16px rgba(15,23,42,0.08)",
+  },
+
+  "& .MuiDataGrid-row.Mui-selected": {
+    backgroundColor: "#ffe4e6 !important",
+  },
+
+  /* ===== CELLS ===== */
+  "& .MuiDataGrid-cell": {
+    borderBottom: "1px solid #f1f5f9",
+    paddingY: 1.1,
+  },
+
+  /* ===== CHECKBOX ===== */
+  "& .MuiCheckbox-root": {
+    color: "#fde68a",
+  },
+  "& .MuiCheckbox-root.Mui-checked": {
+    color: "#ffffff",
+  },
+
+  /* no jank focus */
+  "& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus": {
+    outline: "none",
+  },
+};
+
+export const DataGridDarkSx = {
+  width: "dynamic",
+  maxWidth: "170vh",
+
+  backgroundColor: "#020617", // deep slate
+  borderRadius: "18px",
+  border: "1px solid #1e293b",
+  boxShadow: "0 18px 45px rgba(0,0,0,0.55)",
+  overflow: "hidden",
+  color: "#e5e7eb",
+
+  /* ===== HEADER & FOOTER ===== */
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-footerContainer": {
+    background:
+      "linear-gradient(135deg, #fb7185 0%, #f97316 100%)",
+    color: "#ffffff",
+    fontWeight: 700,
+    border: "none",
+  },
+
+  "& .MuiDataGrid-footerContainer": {
+    fontWeight: 500,
+  },
+
+  "& .MuiDataGrid-columnSeparator": {
+    display: "none",
+  },
+
+  /* rounded corners */
+  "& .MuiDataGrid-columnHeaders": {
+    borderTopLeftRadius: "18px",
+    borderTopRightRadius: "18px",
+  },
+  
+  /* ===== ROWS ===== */
+  "& .MuiDataGrid-row": {
+    backgroundColor: "#020617",
+    color: "#cbd5f5",
+    fontWeight: 400,
+    transition: "transform 0.15s ease, box-shadow 0.15s ease",
+  },
+
+  "& .MuiDataGrid-row:nth-of-type(even)": {
+    backgroundColor: "#020617",
+  },
+
+  /* classy dark hover */
+  "& .MuiDataGrid-row:hover": {
+    backgroundColor: "#020617",
+    transform: "translateY(-1px)",
+    boxShadow: "inset 0 0 0 1px rgba(251,113,133,0.35)",
+  },
+
+  "& .MuiDataGrid-row.Mui-selected": {
+    backgroundColor: "rgba(251,113,133,0.15) !important",
+  },
+
+  /* ===== CELLS ===== */
+  "& .MuiDataGrid-cell": {
+    borderBottom: "1px solid #1e293b",
+    paddingY: 1.1,
+  },
+
+  /* ===== CHECKBOX ===== */
+  "& .MuiCheckbox-root": {
+    color: "#fcd34d",
+  },
+  "& .MuiCheckbox-root.Mui-checked": {
+    color: "#ffffff",
+  },
+
+  /* no light flash focus */
+  "& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus": {
+    outline: "none",
+  },
+};

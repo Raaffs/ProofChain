@@ -4,7 +4,7 @@ import { tokens } from "../../themes";
 import Header from "../../components/Header";
 import { GetAcceptedDocs } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
-
+import { DataGridSx } from "../../styles/styles";
 const ApprovedDocuments = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
@@ -94,7 +94,7 @@ const ApprovedDocuments = () => {
                     columns={columns}
                     rows={docs}
                     getRowId={(row) => row.ID} // Use `ID` as a unique identifier
-                    sx={{ width: "dynamic", maxWidth: "170vh" }}
+                    sx={DataGridSx}
                 />
             </Box>
         </Box>
