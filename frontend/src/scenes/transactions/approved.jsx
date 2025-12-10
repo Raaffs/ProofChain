@@ -51,7 +51,6 @@ const ApprovedDocuments = () => {
   const columns = [
     { field: "Requester", headerName: "Requester", flex: 1 },
     { field: "Verifier", headerName: "Verifier", flex: 1 },
-    { field: "Name", headerName: "Name", flex: 1 },
     { field: "ShaHash", headerName: "Hash", flex: 1 },
   ];
 

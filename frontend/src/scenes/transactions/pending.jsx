@@ -20,11 +20,11 @@ const PendingDocuments = () => {
   const colors = tokens(theme.palette.mode);
   const [docs, setDocs] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedDoc, setSelectedDoc] = useState(null);
   const [message, setMessage] = useState("");
   const [columns, setColumns] = useState([
     { field: "Requester", headerName: "Requester", flex: 1 },
     { field: "Verifier", headerName: "Verifier", flex: 1 },
-    { field: "Name", headerName: "Name", flex: 1 },
     { field: "ShaHash", headerName: "Hash", flex: 1 },
     { field: "Institute", headerName: "Institute", flex: 1 },
     {
@@ -42,6 +42,7 @@ const PendingDocuments = () => {
               // Use 'inherit' color to let the icon define the main color visually
               color="info"
               onClick={() => {
+                setSelectedDoc(params.row); // save the row
                 handleView(
                   params.row.ShaHash,
                   params.row.Institute,
@@ -92,7 +93,7 @@ const PendingDocuments = () => {
       .catch((err) => setError(err.message));
   };
 
-  const handleApprove = (doc) => {
+  const handleApprove = (doc,data) => {
     console.log("document id: ", doc.ID);
     if (doc === undefined || doc === null) {
       setError("Document not found");
@@ -100,7 +101,7 @@ const PendingDocuments = () => {
       return;
     }
 
-    CreateDigitalCopy(0, doc.ShaHash)
+    CreateDigitalCopy(0, doc.ShaHash,data)
       .then(() => {
         setMessage("Document approved successfully");
         fetchDocuments(); // Refresh documents after approval
@@ -290,7 +291,7 @@ const PendingDocuments = () => {
             <IssueCard
               data={null}
               viewTitle="viewTitleForCard"
-              onIssue={() => {}}
+              onIssue={(certData) => {handleApprove(selectedDoc,certData)}}
             />
             <Box sx={{ mt: 2 }}>
               {" "}
@@ -298,7 +299,7 @@ const PendingDocuments = () => {
               <Button
                 variant="contained"
                 color="error"
-                onClick={() => handleReject(params.row)}
+                onClick={() => handleReject(selectedDoc)}
                 fullWidth // This MUI prop makes the button take the full width of its parent
                 sx={{
                   borderRadius: "10px", // Optional: to match the style of the other button

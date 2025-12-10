@@ -262,9 +262,7 @@ func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error)
 	docs, err := app.account.GetDocuments(); if err != nil {
 		return nil, err
 	}
-	log.Println("docs: ",docs)
 	pendingDocs := app.account.GetPendingDocuments(docs)
-	log.Println("pending: ",pendingDocs,app.account.GetName())
 	return pendingDocs, nil
 }
 
@@ -295,7 +293,6 @@ func (app *App)CreateDigitalCopy(status int,hash string, certificate models.Cert
 		case blockchain.Pending:
 			return nil
 	}
-
 	doc,publicCommit,err:=app.PrepareDigitalCopy(certificate);if err!=nil{
 		log.Println(err)
 		return fmt.Errorf("An error occurred while issuing document")
