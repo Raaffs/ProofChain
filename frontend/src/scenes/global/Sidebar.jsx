@@ -127,9 +127,14 @@ const Sidebar = ({authStatus}) => {
                 alignItems="center"
                 ml="15px"
               >
-                <Typography variant="h3" color={colors.greenAccent[300]}>
-                  ProofChain
-                </Typography>
+                <Typography
+  variant="h3"
+  color={colors.greenAccent[300]}
+  sx={{ fontFamily: "'Poppins', sans-serif" }}
+>
+  ProofChain
+</Typography>
+
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
                 </IconButton>

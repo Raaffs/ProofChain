@@ -1,3 +1,4 @@
+import { Theme } from "@mui/material/styles";
 export const textFieldSx = {
   padding: "5px",
 
@@ -200,3 +201,28 @@ export const DataGridDarkSx = {
     outline: "none",
   },
 };
+
+export const statBoxStyles = (theme: Theme, colors: any) => ({
+  gridColumn: "span 3",
+  backgroundColor:
+    theme.palette.mode === "dark" ? colors.primary[800] : "white",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  boxShadow:
+    theme.palette.mode === "dark"
+      ? "0px 4px 12px rgba(0,0,0,0)"
+      : "0px 4px 12px rgba(0,0,0,0.1)",
+  borderRadius: "12px", // added rounded corners
+});
+//   
+
+export const flexHeaderBoxStyles = (theme: Theme, colors: any) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  borderBottom: `4px solid ${colors.primary[500]}`,
+  color: theme.palette.mode === "dark" ? colors.grey[300] : colors.grey[500],
+  padding: "15px",
+
+});

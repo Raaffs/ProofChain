@@ -4,7 +4,7 @@ import { tokens } from "../../themes";
 import Header from "../../components/Header";
 import { GetRejectedDocuments } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
-
+import {DataGridDarkSx,DataGridSx} from '../../styles/styles'
 const RejectedDocuments = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
