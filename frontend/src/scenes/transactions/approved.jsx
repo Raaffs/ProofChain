@@ -1,15 +1,23 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme, Button, Modal } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../themes";
 import Header from "../../components/Header";
 import { GetAcceptedDocs } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
 import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
+import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
+import {
+  ViewDocument,
+  ViewDigitalCertificate,
+} from "../../../wailsjs/go/main/App";
+import IssueCard from "../../components/cards/certificate";
 const ApprovedDocuments = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [docs, setDocs] = useState([]);
   const [error, setError] = useState(null);
+  const [modal, setModal] = useState(false);
+  const [certificate, setCertificate] = useState(null);
 
   useEffect(() => {
     const getDocuments = () => {
@@ -22,9 +30,7 @@ const ApprovedDocuments = () => {
                 ID: "",
                 Requester: "",
                 Verifier: "",
-                Name: "",
                 ShaHash: "",
-                IpfsAddress: "",
               },
             ]);
             setError("No Verified Documents");
@@ -48,10 +54,74 @@ const ApprovedDocuments = () => {
     getDocuments();
   }, []);
 
+  const handleView = (hash, institute, requester) => {
+    setModal(true);
+    ViewDigitalCertificate(hash, institute, requester)
+      .then((data) => {
+        setCertificate({
+      certificateName: data.salted_fields.CertificateName.value,
+      publicAddress: data.salted_fields.PublicAddress.value,
+      name: data.salted_fields.Name.value,
+      address: data.salted_fields.Address.value,
+      age: data.salted_fields.Age.value,
+      birthDate: data.salted_fields.BirthDate.value,
+      uniqueId: data.salted_fields.UniqueID.value,
+    });
+        console.log("data: ", data);
+      })
+      .catch((err) => setError(err.message));
+  };
   const columns = [
     { field: "Requester", headerName: "Requester", flex: 1 },
     { field: "Verifier", headerName: "Verifier", flex: 1 },
     { field: "ShaHash", headerName: "Hash", flex: 1 },
+    {
+      field: "view",
+      headerName: "View",
+      flex: 0.5,
+      justifyContent: "center",
+      renderCell: (params) => {
+        const doc = docs.find((doc) => doc.ID === params.id);
+        return (
+          <Box>
+            <Button
+              // Use 'outlined' variant for a cleaner, professional look
+              // variant="outlined"
+              // Use 'inherit' color to let the icon define the main color visually
+              color="info"
+              onClick={() => {
+                handleView(
+                  params.row.ShaHash,
+                  params.row.Institute,
+                  params.row.Requester
+                );
+              }}
+              sx={{
+                // Ensures the button is compact for an icon-only use case
+                minWidth: "auto",
+                padding: "6px 8px",
+                margin: 4,
+                // Subtle background for better visibility against white
+                // backgroundColor: 'rgba(0, 0, 0, 0.03)',
+                // Use hardcoded color for hover border
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.1)",
+                  // borderColor: '#64B5F6', // A light blue border on hover
+                },
+              }}
+            >
+              <RemoveRedEyeSharpIcon
+                sx={{
+                  // Professional Blue Color (e.g., MUI's standard info.main: #2196F3)
+                  color: `linear-gradient(45deg, #00C6FF 30%, #0072FF 90%)`,
+                  // fontSize: 20, // Adjusted size for visual balance
+                }}
+              />
+            </Button>
+          </Box>
+        );
+      },
+    },
   ];
 
   return (
@@ -105,6 +175,18 @@ const ApprovedDocuments = () => {
           sx={theme.palette.mode === "dark" ? DataGridDarkSx : DataGridSx}
         />
       </Box>
+      <Modal
+        onClose={() => {
+          setModal(false);
+        }}
+        open={modal}
+      >
+        <IssueCard
+          data={certificate}
+          viewTitle="Digital Certificate"
+          onIssue={()=>{}}
+        />
+      </Modal>
     </Box>
   );
 };

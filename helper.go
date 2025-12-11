@@ -115,7 +115,6 @@ func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Doc
 		log.Println(err)
 		return models.Document{},"",fmt.Errorf("an error occurred while issuing certificate")
 	}
-	log.Println("public commit: ",publicCommit)
 	json, err := json.Marshal(saltedCertificate);if err!=nil{
 		log.Println("Error marshaling the certificate: ",err)
 		return models.Document{},"",fmt.Errorf("invalid certificate format")

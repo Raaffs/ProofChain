@@ -35,4 +35,6 @@ export function TryDecrypt(arg1:Array<number>,arg2:string,arg3:string):Promise<A
 
 export function UploadDocument(arg1:string,arg2:string,arg3:string):Promise<void>;
 
+export function ViewDigitalCertificate(arg1:string,arg2:string,arg3:string):Promise<Record<string, any>>;
+
 export function ViewDocument(arg1:string,arg2:string,arg3:string):Promise<string>;

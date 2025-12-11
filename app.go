@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -353,4 +354,24 @@ func(app *App)ViewDocument(shahash,instituteName,requesterAddress string)(string
 	encodedDocument:=base64.StdEncoding.EncodeToString(decryptedDoc)
 	return encodedDocument, nil
 }
+
+func(app *App)ViewDigitalCertificate(hash,instituteName,requesterAddress string)(map[string]any,error){
+	var cert map[string]any
+	encryptedDigitalCert,err:=app.storage.RetrieveDocument(hash); if err!=nil{
+		log.Println("Error retrieving document: ",err)
+		return cert,fmt.Errorf("Error retrieving document")
+	}
+	log.Println("try dec: ",requesterAddress)
+	decryptedCert,err:=app.TryDecrypt(encryptedDigitalCert.EncryptedDocument,instituteName,requesterAddress);if err!=nil{
+		log.Println("Error decrypting :",err)
+		return cert,fmt.Errorf("Error decrypting document")
+	}
+	log.Println("dec: ",decryptedCert)
+	if err:=json.Unmarshal(decryptedCert,&cert);err!=nil{
+		log.Println(err)
+	}
+	log.Println("json: ",cert)
+	return cert,nil
+}
+
 

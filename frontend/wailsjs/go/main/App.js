@@ -66,6 +66,10 @@ export function UploadDocument(arg1, arg2, arg3) {
   return window['go']['main']['App']['UploadDocument'](arg1, arg2, arg3);
 }
 
+export function ViewDigitalCertificate(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ViewDigitalCertificate'](arg1, arg2, arg3);
+}
+
 export function ViewDocument(arg1, arg2, arg3) {
   return window['go']['main']['App']['ViewDocument'](arg1, arg2, arg3);
 }
