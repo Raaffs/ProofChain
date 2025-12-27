@@ -182,7 +182,7 @@ Don't forget to give the project a star! Thanks again!
 Suyash - suyashsaraf5@gmail.com
 
 ---
-### **Thank You!**
+Thank You!
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
