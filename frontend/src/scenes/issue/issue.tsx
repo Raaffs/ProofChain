@@ -2,8 +2,13 @@ import { Box } from "@mui/material";
 import IssueCard from "../../components/cards/certificate";
 import Header from "../../components/Header";
 import { IssueCertificate } from "../../../wailsjs/go/main/App";
+import { useTheme } from "@mui/material/styles"; 
+import { tokens } from "../../themes";
 
 const Issue = () => {
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode); 
+
   return (
     <Box
       sx={{
@@ -14,7 +19,7 @@ const Issue = () => {
         
         // The fix is here:
         alignItems: "flex-start", // Aligns children to the left (cross axis)
-        
+        background: `${theme.palette.mode==="dark" ? 'black' : 'white'} !important`,
         p: 2,
         width: "100%", // Ensure the Box takes full width to see the alignment
       }}

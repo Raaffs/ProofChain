@@ -1,3 +1,6 @@
+//warning: this is all vibe coded
+//it works but I've zero clue how. 
+//at least it's not anything TOO important that breaks data integrity
 import React, { useState, useEffect, ChangeEvent } from "react";
 import {
   Box,
@@ -7,7 +10,6 @@ import {
   TextField,
   Button,
   Grid,
-  // Add IconButton for the dynamic add button
   IconButton,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles"; 
@@ -174,7 +176,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, on
         width: "100%",
         borderRadius: 3,
         margin: "16px auto", 
-        background: `${theme.palette.mode==="dark" ? 'transparent' : 'transparent'} !important`,
+        background: `${theme.palette.mode==="dark" ? 'black' : 'white'} !important`,
       }}
     >
       <CardContent>
@@ -184,6 +186,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, on
             alignItems: "center",
             pb: 2,
             mb: 2,
+          
             borderBottom: `2px solid ${theme.palette.primary.main}`, 
           }}
         >
@@ -203,7 +206,11 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, on
             {/* 4. RENDER ALL FIELDS (Standard and Custom) */}
             {allFields.map((f) => (
               <Grid item xs={12} sm={f.gridWidth} key={f.name}> 
-                <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start' 
+
+                  }}>
                     <TextField
                       fullWidth
                       variant="outlined"

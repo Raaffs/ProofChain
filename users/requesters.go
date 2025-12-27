@@ -2,7 +2,6 @@ package users
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
@@ -94,7 +93,6 @@ func(r *Requester)GetRejectedDocuments(docs []blockchain.VerificationDocument)([
 }
 
 func(r *Requester)GetPendingDocuments(docs []blockchain.VerificationDocument)([]blockchain.VerificationDocument){
-	log.Println("YOOOOO")
 	pending:=func(doc blockchain.VerificationDocument)bool{
 		return doc.Requester==r.Conn.CallOpts.From.Hex() && doc.Stats==2
 	}

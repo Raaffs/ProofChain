@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
 import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
 import {
-  ViewDocument,
   ViewDigitalCertificate,
 } from "../../../wailsjs/go/main/App";
 import IssueCard from "../../components/cards/certificate";
@@ -23,7 +22,6 @@ const ApprovedDocuments = () => {
     const getDocuments = () => {
       GetAcceptedDocs()
         .then((result) => {
-          console.log("approved documents: ", result);
           if (!result || result.length === 0) {
             setDocs([
               {
@@ -58,6 +56,7 @@ const ApprovedDocuments = () => {
     setModal(true);
     ViewDigitalCertificate(hash, institute, requester)
       .then((data) => {
+        console.log(data)
         setCertificate({
           certificateName: data.salted_fields.CertificateName.value,
           publicAddress: data.salted_fields.PublicAddress.value,
@@ -195,6 +194,8 @@ const ApprovedDocuments = () => {
             // gap: 4,
             // maxHeight: "92vh",
             overflow: "hidden",
+                    background: `${theme.palette.mode==="dark" ? 'black' : 'transparent'} !important`,
+
             // p: 4,
           }}
         >
