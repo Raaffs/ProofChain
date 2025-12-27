@@ -36,7 +36,7 @@ type Services struct {
 }
 
 func (c *Config) Load() error {
-	data, err := os.ReadFile(".config_test.json")
+	data, err := os.ReadFile(".config.json")
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
