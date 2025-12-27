@@ -1,9 +1,8 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 <br />
 <div align="center">
 
-  <h3 align="center">ProofChain</h3>
+  <h2 align="center">ProofChain</h2>
 
   <p align="center">
 </div>
@@ -183,7 +182,7 @@ Don't forget to give the project a star! Thanks again!
 Suyash - suyashsaraf5@gmail.com
 
 ---
-## **Thank You**
+## **Thank You!**
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
