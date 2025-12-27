@@ -33,7 +33,7 @@
 
 
 <!-- TABLE OF CONTENTS -->
-<details>
+<!-- <details>
   <summary>Table of Contents</summary>
   <ol>
     <li>
@@ -46,7 +46,7 @@
       <a href="#development">Development</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#Se">Installation</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -56,7 +56,7 @@
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
-</details>
+</details> -->
 
 
 
@@ -89,57 +89,87 @@ Proofchain is a document verficationa and certficate issuance platform, allowing
 
 ### Prerequisites
 
-* Ganache
-  ```sh
-  npm install ganache --global
-  ```
-* Wails
-  ```sh
-  go install github.com/wailsapp/wails/v2/cmd/wails@latest
-  ```
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone https://github.com/Raaffs/ProofChain.git
-   ```
-2. Set up Enviroment variables in `.env` file
+1. Ganache
+    ```sh
+    npm install ganache --global
     ```
-    CLIENT_URL=YOUR_CLIENT_URL #ganache, infura, public rpc, etc 
-    CONTRACT_ADDR=YOUR_CONTRACT_ADDRESS
+2. Wails
+    ```sh
+    go install github.com/wailsapp/wails/v2/cmd/wails@latest
+    ```
+3. ProofChain-store 
+    ```sh
+    git clone https://github.com/Raaffs/ProofChain-Store.git
+    ```
+4. Clone Repository
+    ```sh
+    git clone https://github.com/Raaffs/ProofChain.git
+    ```
+  ---
+### Set Up
+
+1. Set up Enviroment variables in `.env` file
+    ```
+    cd ProofChain
     PRIVATE_KEY=YOUR_PRIVATE_KEY
     ```
-   
-3. Install NPM packages
+2. Set up config
    ```sh
-   cd frontend
+   cp .config.example.json .config.json
    ```
+3. Deploy Contract
    ```sh
-   npm install
+   go test -v ./test -run TestDeploy
    ```
-4. Build 
-   ```js
-   wails build
-   ```
-### Starting Application
-1. Deploy Contract
+4. Add contract address to .config.json
    ```sh
-   go test -v -run TestDeploy
+   .config.json
+   ...
+       "services": {
+        "STORAGE": "localhost:8754",      
+        "CONTRACT_ADDR": "CONTRACT_ADDR" , #edit this
+        "RPC_PROVIDERS_URLS": {
+    ...
    ```
-   
-2. Launch Application
+---
+### Set Up storage service
+1. Go to the directory where you install ProofChain-Store
+2. Set up .env
+   ```sh
+   MONGO_URI=your_mongo_url
+   MONGO_DB=ProofChain
+   MONGO_COLLECTION_DOCUMENTS=Documents
+   MONGO_COLLECTION_INSTITUTES=institute
+   # Application Secret Key to access secure routes and perform sensitive operations
+   SECRET_KEY=secret
+   ```
+4. Install dependencies
+   ```sh
+   go mod download
+   ```
+3. Run the storage service
+   ```bash
+   go run .
+   ```
+  Storage service should be up on port 8754
+  
+  ___Note__: If you are running storage service on some other port, make sure to edit .config.json in proofchain to that specific port_
+  
+  ---
+### Build & Run the app
+Make sure you've ganache & storage service up and running
+```bash
+wails build
+```
+```bash
+./build/bin/ProofChain
+```
 
-   ```sh
-   ./build/bin/ProofChain
-   ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
 <!-- USAGE EXAMPLES -->
-## Usage
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
