@@ -1,14 +1,14 @@
 {
     "profiles": {
-        "Maria": {
-            "accountPath": "/home/user/.config/proofchain/account/UTC--2025-11-21T12-51-08.149230132Z--16f03eee7b03fcd7b549a94ba23f7ee938f3817a",
-            "keyPath": "/home/user/.config/proofchain/key/1763729468153239536",
-            "identityPath": "/home/user/.config/proofchain/identity/1763729468148826540.json"
+        "user": {
+            "accountPath": "/home/Ark/.config/proofchain/account/UTC--2025-12-06T13-03-13.806544668Z--c9b0645537e4806229364f395424f6fa57476a24",
+            "keyPath": "/home/Ark/.config/proofchain/key/1765026193811290412",
+            "identityPath": ""
         },
-        "John": {
-            "accountPath": "/home/user/.config/proofchain/account/UTC--2025-11-21T14-30-44.066488202Z--3455bf97131efa404999301b22a15f09ea606e13",
-            "keyPath": "/home/user/.config/proofchain/key/1763735444086752282",
-            "identityPath": "/home/user/.config/proofchain/identity/1763735444064090774.json"
+        "ins": {
+            "accountPath": "/home/Ark/.config/proofchain/account/UTC--2025-12-06T13-03-44.135552579Z--70fbad5fe3510c5786b2bef367bd9f94c5aec67a",
+            "keyPath": "/home/Ark/.config/proofchain/key/1765026224138359281",
+            "identityPath": ""
         }
     },
     "dirs": {
@@ -18,7 +18,7 @@
     },
     "services": {
         "STORAGE": "http://localhost:8000/",
-        "CONTRACT_ADDR": "0xBBf03Cb4A6074844B40020acd6baAf4F436E9DCd",
+        "CONTRACT_ADDR": "CONTRACT_ADDR",
         "RPC_PROVIDERS_URLS": {
             "local": {
                 "Ganache": "http://localhost:7545"
