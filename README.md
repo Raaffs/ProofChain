@@ -176,13 +176,16 @@ wails build
 <!-- UML -->
 ## UML
  ### 1. Uploading Documents
-![Alt text](./assest/Uploading.png)
+ <img width="1726" height="1363" alt="upload" src="https://github.com/user-attachments/assets/691bbee0-2e85-43f7-86fc-9ec532a17319" />
+
 ---
- ### 2. Verification
-![Alt text](./assest/verification.png)
+ ### 2. Issue certificate or create digital copy
+ <img width="1404" height="1310" alt="issue" src="https://github.com/user-attachments/assets/cc3359db-2b01-48b0-a3fb-94910cbb9ffc" />
+
 ---
- ### 3. API to check integrity of documents
-![Alt text](./assest/API.png)
+ ### 3. Third Party Verification
+ <img width="1474" height="1047" alt="verify" src="https://github.com/user-attachments/assets/d3a5d068-31ff-4a17-a50b-aa2cca800dfa" />
+
 ---
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -195,16 +198,6 @@ wails build
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give the project a star! Thanks again!
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- LICENSE -->
-## License
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTACT -->
 ## Contact
