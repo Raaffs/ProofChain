@@ -143,7 +143,7 @@ const Dashboard = () => {
           gridColumn="span 8"
           gridRow="span 3"
           backgroundColor={`${
-            theme.palette.mode === "dark" ? colors.primary[800] : "#ffffff"
+            theme.palette.mode === "dark" ? colors.primary[800] :colors.blueAccent[900]
           }`}
           overflow="auto"
           borderRadius="12px"
@@ -187,7 +187,7 @@ const Dashboard = () => {
               }`}
               p="15px 20px"
               backgroundColor={`${
-                theme.palette.mode === "dark" ? colors.primary[500] : "#ffffff"
+                theme.palette.mode === "dark" ? colors.primary[500] : colors.blueAccent[900]
               }`}
               sx={{
                 transition: "all 0.25s",
@@ -197,16 +197,16 @@ const Dashboard = () => {
                   theme.palette.mode === "dark"
                     ? "none"
                     : "0 2px 6px rgba(0,0,0,0.03)",
-                "&:hover": {
-                  backgroundColor:
-                    theme.palette.mode === "dark"
-                      ? colors.primary[500]
-                      : "#f7f7f7",
-                  boxShadow:
-                    theme.palette.mode === "dark"
-                      ? "none"
-                      : "0 4px 12px rgba(0,0,0,0.08)",
-                },
+                // "&:hover": {
+                //   backgroundColor:
+                //     theme.palette.mode === "dark"
+                //       ? colors.primary[500]
+                //       : "#f7f7f7",
+                //   boxShadow:
+                //     theme.palette.mode === "dark"
+                //       ? "none"
+                //       : "0 4px 12px rgba(0,0,0,0.08)",
+                // },
               }}
             >
               <Box>
@@ -263,7 +263,7 @@ const Dashboard = () => {
             boxShadow:"0px 4px 12px rgba(0,0,0,0.1)"
           }}
           backgroundColor={`${
-            theme.palette.mode === "dark" ? colors.primary[800] : "white"
+            theme.palette.mode === "dark" ? colors.primary[800] :colors.blueAccent[900]
           }`}
           overflow="auto"
         >
@@ -274,7 +274,7 @@ const Dashboard = () => {
           gridRow="span 2"
           borderRadius= "12px"
           backgroundColor={`${
-            theme.palette.mode === "dark" ? colors.primary[800] : "white"
+            theme.palette.mode === "dark" ? colors.primary[800] :colors.blueAccent[900]
           }`}
           sx={{
             boxShadow:"0px 4px 12px rgba(0,0,0,0.2)"

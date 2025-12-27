@@ -82,16 +82,25 @@ const Sidebar = ({ authStatus }) => {
         position: "sticky",
         display: "flex",
         height: "100vh",
-        top: 0,
-        bottom: 0,
+        top: 50,
+        bottom: 10,
+        left: 10,
         zIndex: 10000,
+        boxShadow:
+          theme.palette.mode === "dark"
+            ? "0px 4px 12px rgba(0,0,0,0.1)"
+            : "0px 4px 12px rgba(0,0,0,0.1)",
+        borderRadius: "27px", // added rounded corners
+
         "& .ps-menu-root": {
           position: "fixed",
         },
         "& .pro-sidebar-inner": {
           background: `${
-            theme.palette.mode === "dark" ? "transparent" : "transparent"
+            theme.palette.mode === "dark" ? colors.primary[800] :colors.blueAccent[900]
           } !important`,
+          borderRadius: "27px", // keep it rounded
+          overflow: "hidden", // make sure children don’t escape the rounding
         },
         "& .pro-icon-wrapper": {
           backgroundColor: "transparent !important",
@@ -111,13 +120,13 @@ const Sidebar = ({ authStatus }) => {
         collapsed={isCollapsed}
         // image={theme.palette.mode=="dark"?'https://user-images.githubusercontent.com/25878302/144499035-2911184c-76d3-4611-86e7-bc4e8ff84ff5.jpg':sidebarlogo}
       >
-        <Menu iconShape="square">
+        <Menu iconShape="circle">
           {/* LOGO AND MENU ICON */}
           <MenuItem
             onClick={() => setIsCollapsed(!isCollapsed)}
             icon={isCollapsed ? <MenuOutlinedIcon /> : undefined}
             style={{
-              margin: "10px 0px 20px 0px",
+              margin: "0px 0px 20px 0px",
               color: colors.grey[100],
             }}
           >
@@ -226,7 +235,7 @@ const Sidebar = ({ authStatus }) => {
                     setSelected={setSelected}
                   />
                 ) : (
-                  <div/>
+                  <div />
                 )}
               </>
             )}

@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import Modal from "@mui/material/Modal";
 import IssueCard from "../../components/cards/certificate";
 import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
-import { DataGridSx,DataGridDarkSx } from "../../styles/styles";
+import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
 let isInstitute = false;
 const PendingDocuments = () => {
   const theme = useTheme();
@@ -93,7 +93,7 @@ const PendingDocuments = () => {
       .catch((err) => setError(err.message));
   };
 
-  const handleApprove = (doc,data) => {
+  const handleApprove = (doc, data) => {
     console.log("document id: ", doc.ID);
     if (doc === undefined || doc === null) {
       setError("Document not found");
@@ -101,7 +101,7 @@ const PendingDocuments = () => {
       return;
     }
 
-    CreateDigitalCopy(0, doc.ShaHash,data)
+    CreateDigitalCopy(0, doc.ShaHash, data)
       .then(() => {
         setMessage("Document approved successfully");
         fetchDocuments(); // Refresh documents after approval
@@ -145,7 +145,11 @@ const PendingDocuments = () => {
   return (
     <Box
       m="20px"
-      sx={{ width: "dynamic", maxWidth: "95%", justifyContent: "center" }}
+      sx={{
+        width: "dynamic",
+        maxWidth: "95%",
+        justifyContent: "center",
+      }}
     >
       <Header title="Pending Documents" />
       {error && (
@@ -197,7 +201,7 @@ const PendingDocuments = () => {
             columns={columns}
             rows={docs}
             getRowId={(row) => row.ID}
-            sx={theme.palette.mode === 'dark' ? DataGridDarkSx : DataGridSx}
+            sx={theme.palette.mode === "dark" ? DataGridDarkSx : DataGridSx}
           />
         </Box>
       )}
@@ -291,7 +295,9 @@ const PendingDocuments = () => {
             <IssueCard
               data={null}
               viewTitle="viewTitleForCard"
-              onIssue={(certData) => {handleApprove(selectedDoc,certData)}}
+              onIssue={(certData) => {
+                handleApprove(selectedDoc, certData);
+              }}
             />
             <Box sx={{ mt: 2 }}>
               {" "}

@@ -305,7 +305,7 @@ const IssueCard: React.FC<IssueCardProps> = ({ data: incomingData, viewTitle, on
             onIssue(data);
           }}
         >
-          {isApproved ? "Issue Certificate" : "View Data"}
+          {isApproved ? "Issue Certificate" : ""}
         </Button>
       </CardContent>
     </Card>

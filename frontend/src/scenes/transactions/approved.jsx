@@ -59,14 +59,14 @@ const ApprovedDocuments = () => {
     ViewDigitalCertificate(hash, institute, requester)
       .then((data) => {
         setCertificate({
-      certificateName: data.salted_fields.CertificateName.value,
-      publicAddress: data.salted_fields.PublicAddress.value,
-      name: data.salted_fields.Name.value,
-      address: data.salted_fields.Address.value,
-      age: data.salted_fields.Age.value,
-      birthDate: data.salted_fields.BirthDate.value,
-      uniqueId: data.salted_fields.UniqueID.value,
-    });
+          certificateName: data.salted_fields.CertificateName.value,
+          publicAddress: data.salted_fields.PublicAddress.value,
+          name: data.salted_fields.Name.value,
+          address: data.salted_fields.Address.value,
+          age: data.salted_fields.Age.value,
+          birthDate: data.salted_fields.BirthDate.value,
+          uniqueId: data.salted_fields.UniqueID.value,
+        });
         console.log("data: ", data);
       })
       .catch((err) => setError(err.message));
@@ -180,12 +180,30 @@ const ApprovedDocuments = () => {
           setModal(false);
         }}
         open={modal}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
       >
-        <IssueCard
-          data={certificate}
-          viewTitle="Digital Certificate"
-          onIssue={()=>{}}
-        />
+        <Box
+          sx={{
+            backgroundColor: "white",
+            borderRadius: "18px",
+            // display: "flex",
+            // gap: 4,
+            // maxHeight: "92vh",
+            overflow: "hidden",
+            // p: 4,
+          }}
+        >
+          <IssueCard
+            data={certificate}
+            viewTitle="Digital Certificate"
+            onIssue={() => {}}
+          />
+        </Box>
       </Modal>
     </Box>
   );

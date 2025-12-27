@@ -56,9 +56,9 @@ export const DataGridSx = {
   width: "dynamic",
   maxWidth: "170vh",
 
-  backgroundColor: "#ffffff",
+  backgroundColor: "#e1e2fe",
   borderRadius: "18px",
-  border: "1px solid #f1f5f9",
+  border: "1px solid #c3c6fd",
   boxShadow: "0 16px 40px rgba(0,0,0,0.08)",
   overflow: "hidden",
   color: "#0f172a",
@@ -87,7 +87,7 @@ export const DataGridSx = {
 
   /* ===== ROWS ===== */
   "& .MuiDataGrid-row": {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f1b9b7",
     color: "#475569",
     fontWeight: 400,
     transition: "transform 0.15s ease, box-shadow 0.15s ease",
@@ -205,7 +205,8 @@ export const DataGridDarkSx = {
 export const statBoxStyles = (theme: Theme, colors: any) => ({
   gridColumn: "span 3",
   backgroundColor:
-    theme.palette.mode === "dark" ? colors.primary[800] : "white",
+    theme.palette.mode === "dark" ? colors.primary[800] :colors.blueAccent[900],
+    //  colors.blueAccent[800]
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
