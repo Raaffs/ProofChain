@@ -65,8 +65,7 @@
 Proofchain is a document verficationa and certficate issuance platform, allowing users to selectively disclose their identity to third party verifiers without exposing any extra Personally Identifiable Information
 * Digital certificates and Digital copies of documents issued by authorized institutions are structured as Merkle Trees where only the root is stored on-chain. This allows users to provide   cryptographic proofs for individual fields that verifiers can validate against the Ethereum ledger.
 * The public ECDH keys of institutions and requestors are stored on blockchain
-* The digital certificates and documents are encrypted using ECDH for key exchange and AES-256 for encryption and stored off-chain on mongodb, ensuring only the requestor and issuing institution can view the
-* document
+* The digital certificates and documents are encrypted using ECDH for key exchange and AES-256 for encryption and stored off-chain on mongodb, ensuring only the requestor and issuing institution can view the document
 * Third-party verifiers can recompute the Merkle tree from shared fields and confirm authenticity by comparing the result against the issuer’s on-chain root, verifying specific data points without accessing unrevealed fields.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
