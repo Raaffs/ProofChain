@@ -62,12 +62,12 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-ProofChain is a document verification desktop application using Ethereum Blockchain
-* Document uploaded by user gets stored on mongodb in an encrypted format, and meta data such as SHA-256 content hashes, requestor/verifier public
-keys and addresses, and verification status is stored on ethereum blockchain
-* Verifiers can view the document and set the status of document to either approved or rejected
-* Third parties can verify the authenticity of documents without seeing it's contents via digital signatures and on-chain public keys
-
+Proofchain is a document verficationa and certficate issuance platform, allowing users to selectively disclose their identity to third party verifiers without exposing any extra Personally Identifiable Information
+* Digital certificates and Digital copies of documents issued by authorized institutions are structured as Merkle Trees where only the root is stored on-chain. This allows users to provide   cryptographic proofs for individual fields that verifiers can validate against the Ethereum ledger.
+* The public ECDH keys of institutions and requestors are stored on blockchain
+* The digital certificates and documents are encrypted using ECDH for key exchange and AES-256 for encryption and stored off-chain on mongodb, ensuring only the requestor and issuing institution can view the
+* document
+* Third-party verifiers can recompute the Merkle tree from shared fields and confirm authenticity by comparing the result against the issuer’s on-chain root, verifying specific data points without accessing unrevealed fields.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
@@ -100,14 +100,13 @@ keys and addresses, and verification status is stored on ethereum blockchain
   ```
 ### Installation
 
-
 1. Clone the repo
    ```sh
    git clone https://github.com/Raaffs/ProofChain.git
    ```
 2. Set up Enviroment variables in `.env` file
     ```
-    CLIENT_URL=YOUR_CLIENT_URL
+    CLIENT_URL=YOUR_CLIENT_URL #ganache, infura, public rpc, etc 
     CONTRACT_ADDR=YOUR_CONTRACT_ADDRESS
     PRIVATE_KEY=YOUR_PRIVATE_KEY
     ```
