@@ -2,6 +2,8 @@ package download
 
 import (
 	"encoding/json"
+	"log/slog"
+	"os"
 	"testing"
 )
 func TestExtractProofValues_WithExtra(t *testing.T) {
@@ -24,7 +26,7 @@ func TestExtractProofValues_WithExtra(t *testing.T) {
 	inputBytes,err:=json.Marshal(input);if err!=nil{
 		t.Fatal("error marshalling json: ",err)
 	}
-	d,err:=NewDownloader(inputBytes);if err!=nil{
+	d,err:=NewDownloader(inputBytes, slog.New(slog.NewJSONHandler(os.Stdout,nil)));if err!=nil{
 		t.Fatal("error initializing downloader %w",err)
 	}
 	if err:=d.Exec();err!=nil{

@@ -36,27 +36,30 @@ type DownloadProof struct {
 type Downloader struct {
 	TargetDir string
 	ProofData DownloadProof
-	logger	  slog.Logger
+	logger	  *slog.Logger
 }
 
+type DocumentWrapper struct {
+    SaltedFields DownloadProof `json:"salted_fields"`
+}
 // NewDownloader initializes the downloader, determines the path, and unmarshals the data
-func NewDownloader(document []byte) (*Downloader, error) {
-	var doc DownloadProof
-	if err := json.Unmarshal(document, &doc); err != nil {
+func NewDownloader(document []byte, logger *slog.Logger) (*Downloader, error) {
+	var wrapper DocumentWrapper
+	if err := json.Unmarshal(document, &wrapper); err != nil {
 		return nil, fmt.Errorf("could not decode certificate proof: %w", err)
 	}
-
+	doc:=wrapper.SaltedFields
 	basePath, err := getDownloadDir()
 	if err != nil {
 		return nil, err
 	}
-
 	// Calculate the specific folder for this certificate
 	finalDir := filepath.Join(basePath, doc.CertificateName.Value)
 
 	return &Downloader{
 		TargetDir: finalDir,
 		ProofData: doc,
+		logger: logger,
 	}, nil
 }
 
@@ -68,7 +71,8 @@ func (d *Downloader) Exec() error {
 		proofK := d.extractProofValues(k, v)
 		
 		if err := d.store(k, proofK); err != nil {
-			slog.Error("Failed to store field proof", 
+			d.logger.Error(
+				"Failed to store field proof", 
 				"field", k, 
 				"directory", d.TargetDir, 
 				"error", err,

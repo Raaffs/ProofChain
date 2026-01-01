@@ -44,8 +44,7 @@ type App struct {
 func (app *App) startup(ctx context.Context) {
 	app.ctx=ctx
 	keyMap,err:=godotenv.Read(".env");if err!=nil{
-		log.Println("Error loading .env : " ,err)
-		return
+		log.Fatal("Error loading .env : " ,err)
 	}
 	for key,val:=range keyMap{
 		app.envMap[key]=val
@@ -79,8 +78,12 @@ func (app *App)Login(username string, password string)(error){
 				profile.AccountPath,
 			)
 			if err!=nil{
-			app.logger.Error("Error retrieving user's wallet", "user",username, "path",profile.AccountPath,"err",err)
-			log.Println("Error retrieving user's wallet in : ",err)
+			app.logger.Error(
+				"Error retrieving user's wallet", 
+				"user",username, 
+				"path",profile.AccountPath,
+				"err",err,
+			)
 			return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
 		}
 		if err:=blockchain.Init(
@@ -90,14 +93,24 @@ func (app *App)Login(username string, password string)(error){
 				app.config.Services.CONTRACT_ADDR,
 				app.config.Services.RPC_PROVIDERS_URLS.Local[GANACHE],
 			);err!=nil{
-			log.Println("Error connecting to the blockchain : ",err)
-			return fmt.Errorf("error connecting to the smart contract")
+			app.logger.Error(
+				"Error connecting to the blockchain",
+				"endpoint",app.config.Services.RPC_PROVIDERS_URLS.Local,
+				"contract address",app.config.Services.CONTRACT_ADDR,
+				"err",err,
+			)
+			return fmt.Errorf("error connecting to the blockchain")
 		}
 		approved,err:=i.Instance.IsApprovedInstitute(c.CallOpts,username); if err!=nil{
-			log.Println("Error getting the account verification status : ",err)
+			app.logger.Error(
+				"Error getting the account verification status",
+				"username",username,
+				"is approved",approved,
+				"err",err,
+			)
 			return fmt.Errorf("error getting the account verification status")
 		}
-		log.Println("is approved: ",approved)
+		app.logger.Info("Is authorized institution? ","status",approved)
 		if approved{
 			app.account=&users.Verifier{Conn: c,Instance: i,Name: username}
 		}else{
@@ -122,7 +135,6 @@ func (app *App)IsLoggedIn()(bool){
 
 func(app *App)Register(privateKeyString,name,password string, isInstitute bool)error{
 	if len(privateKeyString)<64{
-		log.Println("private key error")
 		return fmt.Errorf("invalid private key")
 	}
 	if _,exist:=app.config.Profiles[name];exist{
@@ -143,8 +155,15 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 			app.config.Services.CONTRACT_ADDR,
 			app.config.Services.RPC_PROVIDERS_URLS.Local[GANACHE],
 		);err!=nil{
-		return err
+			app.logger.Error(
+				"Error connecting to the blockchain",
+				"endpoint",app.config.Services.RPC_PROVIDERS_URLS.Local,
+				"contract address",app.config.Services.CONTRACT_ADDR,
+				"err",err,
+			)
+		return fmt.Errorf("error connecting to the blockchain")
 	}
+
 	g,_:=errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		pub, path,err:=app.keys.OnRegister(password,app.config.Dirs.Key); if err!=nil{
@@ -154,6 +173,7 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 		keyPath=path
 		return nil
 	})
+
 	g.Go(func() error {
 		path,err:=wallet.NewWallet(
 				privateKeyString[2:],
@@ -167,11 +187,18 @@ func(app *App)Register(privateKeyString,name,password string, isInstitute bool)e
 		return nil
 	})
 	if err:=g.Wait();err!=nil{
-		return err
+		app.logger.Error(
+			"Error registering user",
+			"err",err,
+		)
+		return fmt.Errorf("error connecting to blockchain")
 	}
 	
 	if err:=app.config.AddProfile(name,accountPath,keyPath,identityPath);err!=nil{
-		log.Fatalf("Error creating profile : %v",err)
+		app.logger.Error(
+			"Error adding profile",
+			"err",err,
+		)
 		return fmt.Errorf("Failed to create profile")
 	}
 
@@ -379,21 +406,20 @@ func(app *App)Download(hash, instituteName, requesterAddress string, )(string,er
 		return "",fmt.Errorf("an error occurred while downloading")
 	}
 
-	downloader,err:=download.NewDownloader(decryptedCert);if err!=nil{
+	downloader,err:=download.NewDownloader(decryptedCert,NewLogger(os.Stdout));if err!=nil{
 		app.logger.Error(
 			"error creating new downloader",
 			"err",err,
 		)
+		return "",fmt.Errorf("an error occurred while downloading")
 	}
 
 	if err:=downloader.Exec();err!=nil{
-		
+		app.logger.Error(
+			"error downloading",
+			"err",err,
+		)
 	}
-
-	// if err:=download.Download(decryptedCert);err!=nil{
-	// 	return "",fmt.Errorf("an error occurred while downloading")
-	// }
-	fmt.Println(decryptedCert)
 	return "Downloaded successfully",nil
 }
 

@@ -2,7 +2,7 @@ import { Box, Typography, useTheme, Button, Modal } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../themes";
 import Header from "../../components/Header";
-import { GetAcceptedDocs } from "../../../wailsjs/go/main/App";
+import { Download, GetAcceptedDocs } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
 import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
 import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
@@ -85,9 +85,6 @@ const ApprovedDocuments = () => {
         return (
           <Box>
             <Button
-              // Use 'outlined' variant for a cleaner, professional look
-              // variant="outlined"
-              // Use 'inherit' color to let the icon define the main color visually
               color="info"
               onClick={() => {
                 handleView(
@@ -111,6 +108,50 @@ const ApprovedDocuments = () => {
               }}
             >
               <RemoveRedEyeSharpIcon
+                sx={{
+                  // Professional Blue Color (e.g., MUI's standard info.main: #2196F3)
+                  color: `linear-gradient(45deg, #00C6FF 30%, #0072FF 90%)`,
+                  // fontSize: 20, // Adjusted size for visual balance
+                }}
+              />
+            </Button>
+          </Box>
+        );
+      },
+    },
+    {
+      field: "download",
+      headerName: "Download",
+      flex: 0.5,
+      justifyContent: "center",
+      renderCell: (params) => {
+        const doc = docs.find((doc) => doc.ID === params.id);
+        return (
+          <Box>
+            <Button
+              color="info"
+              onClick={() => {
+                Download(
+                  params.row.ShaHash,
+                  params.row.Institute,
+                  params.row.Requester
+                );
+              }}
+              sx={{
+                // Ensures the button is compact for an icon-only use case
+                minWidth: "auto",
+                padding: "6px 8px",
+                margin: 4,
+                // Subtle background for better visibility against white
+                // backgroundColor: 'rgba(0, 0, 0, 0.03)',
+                // Use hardcoded color for hover border
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.1)",
+                  // borderColor: '#64B5F6', // A light blue border on hover
+                },
+              }}
+            >
+              <DownloadForOfflineSharpIcon
                 sx={{
                   // Professional Blue Color (e.g., MUI's standard info.main: #2196F3)
                   color: `linear-gradient(45deg, #00C6FF 30%, #0072FF 90%)`,
