@@ -2,7 +2,11 @@ package main
 
 import (
 	"embed"
-
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log/slog"
 	"github.com/Suy56/ProofChain/internal/crypto/keyUtils"
 	"github.com/joho/godotenv"
 	"github.com/wailsapp/wails/v2"
@@ -12,6 +16,46 @@ import (
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+type SlogHandler struct {
+	slog.Handler
+	l io.Writer
+}
+
+func (h *SlogHandler) Handle(ctx context.Context, r slog.Record) error {
+	level := r.Level.String()
+	fields := make(map[string]any, r.NumAttrs())
+
+	r.Attrs(func(a slog.Attr) bool {
+		fields[a.Key] = a.Value.Any()
+		return true
+	})
+
+	// Structure the log output
+	output := map[string]any{
+		"time":    r.Time.Format("15:04:05"),
+		"level":   level,
+		"message": r.Message,
+		"fields":  fields,
+	}
+
+	// Marshal with indentation
+	b, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(h.l, string(b))
+	return nil
+}
+
+func NewLogger(out io.Writer) *slog.Logger {
+	h := &SlogHandler{
+		Handler: slog.NewJSONHandler(out, nil),
+		l:       out,
+	}
+	return slog.New(h)
+}
 
 func main() {
 	// Create an instance of the app structure

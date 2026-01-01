@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
 	"github.com/Suy56/ProofChain/internal/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/internal/crypto/zkp"
-	// "github.com/Suy56/ProofChain/internal/download"
+	"github.com/Suy56/ProofChain/internal/download"
 	"github.com/Suy56/ProofChain/internal/users"
 	"github.com/Suy56/ProofChain/storage/models"
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
@@ -35,6 +37,7 @@ type App struct {
 	storage 		*storageclient.Client
 	proof			zkp.ZKProof
 	config			Config
+	logger			*slog.Logger		
 }
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
@@ -52,6 +55,7 @@ func (app *App) startup(ctx context.Context) {
 	}
 	app.proof=zkp.NewMerkleProof()
 	app.storage=storageclient.New(app.config.Services.STORAGE)
+	app.logger=NewLogger(os.Stdout)
 }
 
 func (app *App)Login(username string, password string)(error){
@@ -75,6 +79,7 @@ func (app *App)Login(username string, password string)(error){
 				profile.AccountPath,
 			)
 			if err!=nil{
+			app.logger.Error("Error retrieving user's wallet", "user",username, "path",profile.AccountPath,"err",err)
 			log.Println("Error retrieving user's wallet in : ",err)
 			return fmt.Errorf("error retrieving account. Make sure the credentials are correct")
 		}
@@ -373,6 +378,18 @@ func(app *App)Download(hash, instituteName, requesterAddress string, )(string,er
 		log.Println(err)
 		return "",fmt.Errorf("an error occurred while downloading")
 	}
+
+	downloader,err:=download.NewDownloader(decryptedCert);if err!=nil{
+		app.logger.Error(
+			"error creating new downloader",
+			"err",err,
+		)
+	}
+
+	if err:=downloader.Exec();err!=nil{
+		
+	}
+
 	// if err:=download.Download(decryptedCert);err!=nil{
 	// 	return "",fmt.Errorf("an error occurred while downloading")
 	// }
