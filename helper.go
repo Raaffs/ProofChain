@@ -130,3 +130,19 @@ func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Doc
 	return doc,string(publicCommit),nil
 }
 
+// getDecryptedCertificate centralizes the retrieval and decryption logic.
+func (app *App) getDecryptedCertificate(hash, instituteName, requesterAddress string) ([]byte, error) {
+    encryptedCert, err := app.storage.RetrieveDocument(hash)
+    if err != nil {
+        log.Println("Error retrieving document:", err)
+        return nil, fmt.Errorf("error retrieving document")
+    }
+
+    decryptedCert, err := app.TryDecrypt(encryptedCert.EncryptedDocument, instituteName, requesterAddress)
+    if err != nil {
+        log.Println("Error decrypting:", err)
+        return nil, fmt.Errorf("error decrypting document")
+    }
+
+    return decryptedCert, nil
+}

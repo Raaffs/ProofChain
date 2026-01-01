@@ -1,10 +1,10 @@
-package utils
+package download
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,45 +32,80 @@ type DownloadProof struct {
 	Extra           map[string]hashedField `json:"Extra"`
 }
 
-func Download(document []byte) error {
+// Downloader manages the lifecycle of exporting proof files
+type Downloader struct {
+	TargetDir string
+	ProofData DownloadProof
+	logger	  slog.Logger
+}
+
+// NewDownloader initializes the downloader, determines the path, and unmarshals the data
+func NewDownloader(document []byte) (*Downloader, error) {
 	var doc DownloadProof
-	path, err := getDownloadDir()
-	if err != nil {
-		return err
-	}
 	if err := json.Unmarshal(document, &doc); err != nil {
-		return err
+		return nil, fmt.Errorf("could not decode certificate proof: %w", err)
 	}
-	for k, v := range utils.Walk(doc) {
-		proof_k := extractProofValues(doc, k, v)
-		dir:=filepath.Join(path,"ProofChain",doc.CertificateName.Value)
-		if err:=store(k,dir,proof_k);err!=nil{
-			log.Println(err)
+
+	basePath, err := getDownloadDir()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate the specific folder for this certificate
+	finalDir := filepath.Join(basePath, doc.CertificateName.Value)
+
+	return &Downloader{
+		TargetDir: finalDir,
+		ProofData: doc,
+	}, nil
+}
+
+// Exec starts the download process for all fields in the ProofChain
+func (d *Downloader) Exec() error {
+	var errs []error
+
+	for k, v := range utils.Walk(d.ProofData) {
+		proofK := d.extractProofValues(k, v)
+		
+		if err := d.store(k, proofK); err != nil {
+			slog.Error("Failed to store field proof", 
+				"field", k, 
+				"directory", d.TargetDir, 
+				"error", err,
+			)
+			errs = append(errs, err)
+			continue
 		}
+		
+		slog.Info("Field proof saved", "field", k)
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("completed with %d failures", len(errs))
 	}
 	return nil
 }
 
-func store(key string, dir string, proof DownloadProof)error{
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+func (d *Downloader) store(key string, proof DownloadProof) error {
+	if err := os.MkdirAll(d.TargetDir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	data, err := json.MarshalIndent(proof, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal proof JSON: %w", err)
 	}
 
-	filename := filepath.Join(dir, key+".json")
+	filename := filepath.Join(d.TargetDir, key+".json")
 	return os.WriteFile(filename, data, 0644)
 }
 
-func extractProofValues(v DownloadProof, activeKey string, fullValue any) DownloadProof {
+func (d *Downloader) extractProofValues(activeKey string, fullValue any) DownloadProof {
 	slim := func(f hashedField) hashedField {
 		return hashedField{Hash: f.Hash, Key: f.Key}
 	}
 
-	// 1. Create the template where EVERYTHING is slimmed
+	v := d.ProofData
 	result := DownloadProof{
 		Address:         slim(v.Address),
 		Age:             slim(v.Age),
@@ -82,40 +117,30 @@ func extractProofValues(v DownloadProof, activeKey string, fullValue any) Downlo
 		Extra:           make(map[string]hashedField),
 	}
 
-	// 2. Slim down the Extra map fields
 	for k, val := range v.Extra {
 		result.Extra[k] = slim(val)
 	}
 
-	// 3. RESTORE the full value for the active key
-	// We use reflection to find the field by string name
 	rv := reflect.ValueOf(&result).Elem()
 	field := rv.FieldByName(activeKey)
 
-	// First: assert fullValue is actually a hashedField
 	hf, ok := fullValue.(hashedField)
 	if !ok {
-		// optional: log / return / silently ignore
 		return result
 	}
 
-	if field.IsValid() && field.CanSet() {
-		// Make sure the types actually match before Set
-		if field.Type() == reflect.TypeOf(hf) {
-			field.Set(reflect.ValueOf(hf))
-		}
+	if field.IsValid() && field.CanSet() && field.Type() == reflect.TypeOf(hf) {
+		field.Set(reflect.ValueOf(hf))
 	} else {
-		// Falls back to Extra map
 		result.Extra[activeKey] = hf
 	}
 	return result
 }
 
-
 func getDownloadDir() (string, error) {
 	var downloadDir string
 
-	// 1. Try to get the localized/configured path via xdg-user-dir (Linux standard)
+	// 1. Try Linux standard
 	cmd := exec.Command("xdg-user-dir", "DOWNLOAD")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -123,21 +148,18 @@ func getDownloadDir() (string, error) {
 		downloadDir = strings.TrimSpace(out.String())
 	}
 
-	// 2. Fallback for macOS or Linux systems without xdg-user-dir
+	// 2. Fallback for macOS/Other
 	if downloadDir == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("error getting download dir %w", err)
+			return "", fmt.Errorf("failed to detect home directory: %w", err)
 		}
 		downloadDir = filepath.Join(home, "Downloads")
 	}
 
-	// 3. Create your app-specific subfolder
 	finalPath := filepath.Join(downloadDir, "ProofChain")
-
-	// Perm 0755: Owner can Read/Write/Execute, others can Read/Execute
 	if err := os.MkdirAll(finalPath, 0755); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to ensure ProofChain directory: %w", err)
 	}
 
 	return finalPath, nil

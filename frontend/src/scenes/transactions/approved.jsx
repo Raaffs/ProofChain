@@ -6,6 +6,7 @@ import { GetAcceptedDocs } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
 import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
 import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
+import DownloadForOfflineSharpIcon from '@mui/icons-material/DownloadForOfflineSharp';
 import {
   ViewDigitalCertificate,
 } from "../../../wailsjs/go/main/App";
