@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
-	"github.com/Suy56/ProofChain/utils"
+	"github.com/Suy56/ProofChain/internal/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )

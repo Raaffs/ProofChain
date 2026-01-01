@@ -29,6 +29,7 @@ func FilterDocument(docs []blockchain.VerificationDocument, condition func(block
 }
 
 
+
 func Walk[S any](s S) func(yield func(string, any) bool) {
 	v := reflect.ValueOf(s)
 

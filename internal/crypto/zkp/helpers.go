@@ -7,7 +7,7 @@ import (
 	"sort"
 
 	"github.com/Suy56/ProofChain/storage/models"
-	"github.com/Suy56/ProofChain/utils"
+	"github.com/Suy56/ProofChain/internal/utils"
 )
 
 type Hash string

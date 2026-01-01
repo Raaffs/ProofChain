@@ -5,6 +5,8 @@ import {blockchain} from '../models';
 
 export function CreateDigitalCopy(arg1:number,arg2:string,arg3:models.CertificateData):Promise<void>;
 
+export function Download(arg1:string,arg2:string,arg3:models.CertificateData):Promise<string>;
+
 export function Encrypt(arg1:Array<number>,arg2:string):Promise<Array<number>>;
 
 export function GetAcceptedDocs():Promise<Array<blockchain.VerificationDocument>>;

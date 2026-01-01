@@ -21,6 +21,7 @@ type Dirs struct {
 	Identity string `json:"identity"`
 	Account  string `json:"account"`
 	Key      string `json:"key"`
+	Proofs	 string	`json:"proofs"`
 }
 
 type RPCProviders struct {

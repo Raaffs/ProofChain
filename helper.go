@@ -8,9 +8,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Suy56/ProofChain/crypto/keyUtils"
+	"github.com/Suy56/ProofChain/internal/crypto/keyUtils"
 	"github.com/Suy56/ProofChain/storage/models"
-	"github.com/Suy56/ProofChain/users"
+	"github.com/Suy56/ProofChain/internal/users"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"golang.org/x/crypto/sha3"
 )

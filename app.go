@@ -8,11 +8,11 @@ import (
 	"log"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
-	"github.com/Suy56/ProofChain/crypto/keyUtils"
-	"github.com/Suy56/ProofChain/crypto/zkp"
+	"github.com/Suy56/ProofChain/internal/crypto/keyUtils"
+	"github.com/Suy56/ProofChain/internal/crypto/zkp"
 	"github.com/Suy56/ProofChain/storage/models"
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
-	"github.com/Suy56/ProofChain/users"
+	"github.com/Suy56/ProofChain/internal/users"
 	"github.com/Suy56/ProofChain/wallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
@@ -374,4 +374,16 @@ func(app *App)ViewDigitalCertificate(hash,instituteName,requesterAddress string)
 	return cert,nil
 }
 
+func(app *App)Download(shahash, instituteName string, certificate models.CertificateData)(string,error){
+	encryptedDocument,err:=app.storage.RetrieveDocument(shahash); if err!=nil{
+		log.Println("Error retrieving document: ",err)
+		return "",fmt.Errorf("Error retrieving document")
+	}
+	decryptedDoc,err:=app.TryDecrypt(encryptedDocument.EncryptedDocument,instituteName,"requesterAddress");if err!=nil{
+		log.Println("Error decrypting :",err)
+		return "",fmt.Errorf("Error decrypting document")
+	}
+	print(decryptedDoc)
+	return "Downloaded successfully",nil
+}
 

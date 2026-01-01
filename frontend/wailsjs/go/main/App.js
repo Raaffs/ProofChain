@@ -6,6 +6,10 @@ export function CreateDigitalCopy(arg1, arg2, arg3) {
   return window['go']['main']['App']['CreateDigitalCopy'](arg1, arg2, arg3);
 }
 
+export function Download(arg1, arg2, arg3) {
+  return window['go']['main']['App']['Download'](arg1, arg2, arg3);
+}
+
 export function Encrypt(arg1, arg2) {
   return window['go']['main']['App']['Encrypt'](arg1, arg2);
 }
