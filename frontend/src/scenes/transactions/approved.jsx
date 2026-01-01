@@ -6,10 +6,8 @@ import { Download, GetAcceptedDocs } from "../../../wailsjs/go/main/App";
 import { useEffect, useState } from "react";
 import { DataGridSx, DataGridDarkSx } from "../../styles/styles";
 import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
-import DownloadForOfflineSharpIcon from '@mui/icons-material/DownloadForOfflineSharp';
-import {
-  ViewDigitalCertificate,
-} from "../../../wailsjs/go/main/App";
+import DownloadForOfflineSharpIcon from "@mui/icons-material/DownloadForOfflineSharp";
+import { ViewDigitalCertificate } from "../../../wailsjs/go/main/App";
 import IssueCard from "../../components/cards/certificate";
 const ApprovedDocuments = () => {
   const theme = useTheme();
@@ -18,6 +16,7 @@ const ApprovedDocuments = () => {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(false);
   const [certificate, setCertificate] = useState(null);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const getDocuments = () => {
@@ -57,7 +56,7 @@ const ApprovedDocuments = () => {
     setModal(true);
     ViewDigitalCertificate(hash, institute, requester)
       .then((data) => {
-        console.log(data)
+        console.log(data);
         setCertificate({
           certificateName: data.salted_fields.CertificateName.value,
           publicAddress: data.salted_fields.PublicAddress.value,
@@ -131,11 +130,20 @@ const ApprovedDocuments = () => {
             <Button
               color="info"
               onClick={() => {
-                Download(
-                  params.row.ShaHash,
-                  params.row.Institute,
-                  params.row.Requester
-                );
+                Promise.resolve()
+                  .then(() => {
+                    return Download(
+                      params.row.ShaHash,
+                      params.row.Institute,
+                      params.row.Requester
+                    );
+                  })
+                  .then(() => {
+                    setMessage("Downloaded successfully");
+                  })
+                  .catch((err) => {
+                    setError(err);
+                  });
               }}
               sx={{
                 // Ensures the button is compact for an icon-only use case
@@ -236,7 +244,9 @@ const ApprovedDocuments = () => {
             // gap: 4,
             // maxHeight: "92vh",
             overflow: "hidden",
-                    background: `${theme.palette.mode==="dark" ? 'black' : 'transparent'} !important`,
+            background: `${
+              theme.palette.mode === "dark" ? "black" : "transparent"
+            } !important`,
 
             // p: 4,
           }}

@@ -182,7 +182,7 @@ function LoginUser({ setAuthStatus }) {
           </Box>
         </Box>
       </Card>
-     <PlatformOverviewCard/>
+      <PlatformOverviewCard />
     </Box>
   );
 }

@@ -33,8 +33,7 @@ func (h *SlogHandler) Handle(ctx context.Context, r slog.Record) error {
 
 	// Structure the log output
 	output := map[string]any{
-		"time":    r.Time.Format("15:04:05"),
-		"level":   level,
+		"time":    r.Time.Format("2006-01-02 15:04:05"),		"level":   level,
 		"message": r.Message,
 		"fields":  fields,
 	}

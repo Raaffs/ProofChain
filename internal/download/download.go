@@ -81,7 +81,7 @@ func (d *Downloader) Exec() error {
 			continue
 		}
 		
-		slog.Info("Field proof saved", "field", k)
+		d.logger.Info("Field proof saved", "field", k)
 	}
 
 	if len(errs) > 0 {
