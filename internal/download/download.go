@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/Suy56/ProofChain/internal/utils"
 )
 
 type hashedField struct {
@@ -19,14 +22,14 @@ type hashedField struct {
 }
 
 type DownloadProof struct {
-	Address         hashedField            			`json:"Address"`
-	Age             hashedField            			`json:"Age"`
-	BirthDate       hashedField            			`json:"BirthDate"`
-	CertificateName hashedField            			`json:"CertificateName"`
-	Name            hashedField            			`json:"Name"`
-	PublicAddress   hashedField            			`json:"PublicAddress"`
-	UniqueID        hashedField            			`json:"UniqueID"`
-	Extra           map[string]hashedField 			`json:"Extra"`
+	Address         hashedField            `json:"Address"`
+	Age             hashedField            `json:"Age"`
+	BirthDate       hashedField            `json:"BirthDate"`
+	CertificateName hashedField            `json:"CertificateName"`
+	Name            hashedField            `json:"Name"`
+	PublicAddress   hashedField            `json:"PublicAddress"`
+	UniqueID        hashedField            `json:"UniqueID"`
+	Extra           map[string]hashedField `json:"Extra"`
 }
 
 func Download(document []byte) error {
@@ -35,24 +38,31 @@ func Download(document []byte) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(path)
-	// Use a helper to ensure Extra map is populated from JSON
 	if err := json.Unmarshal(document, &doc); err != nil {
 		return err
 	}
-	fmt.Println("doc: ",doc)
-	// Manual step if your JSON has extra fields and you aren't using a custom unmarshaler:
-
-	for k, v := range Walk(doc) {
-		// Pass 'v' (the full field) into the extractor
+	for k, v := range utils.Walk(doc) {
 		proof_k := extractProofValues(doc, k, v)
-		
-		if  k=="Name" || k=="BirthDate" || k=="Address" || k=="Extra"{
-			fmt.Printf("\n--- Generated Proof for Key: %s ---\n", k)
-			fmt.Printf("%v\n%v\n%v\n%v\n", proof_k.Name,proof_k.BirthDate,proof_k.Address, proof_k.Extra,)
+		dir:=filepath.Join(path,"ProofChain",doc.CertificateName.Value)
+		if err:=store(k,dir,proof_k);err!=nil{
+			log.Println(err)
 		}
 	}
 	return nil
+}
+
+func store(key string, dir string, proof DownloadProof)error{
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(proof, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	filename := filepath.Join(dir, key+".json")
+	return os.WriteFile(filename, data, 0644)
 }
 
 func extractProofValues(v DownloadProof, activeKey string, fullValue any) DownloadProof {
@@ -73,55 +83,36 @@ func extractProofValues(v DownloadProof, activeKey string, fullValue any) Downlo
 	}
 
 	// 2. Slim down the Extra map fields
-	for k, val:=range v.Extra{
-		result.Extra[k]=slim(val)
+	for k, val := range v.Extra {
+		result.Extra[k] = slim(val)
 	}
+
 	// 3. RESTORE the full value for the active key
 	// We use reflection to find the field by string name
 	rv := reflect.ValueOf(&result).Elem()
 	field := rv.FieldByName(activeKey)
 
-	if field.IsValid() && field.CanSet() {
-		// The key matches a struct field (e.g., "BirthDate")
-		field.Set(reflect.ValueOf(fullValue))
-	} else {
-		// The key belongs in the Extra map
-		result.Extra[activeKey] = fullValue.(hashedField)
+	// First: assert fullValue is actually a hashedField
+	hf, ok := fullValue.(hashedField)
+	if !ok {
+		// optional: log / return / silently ignore
+		return result
 	}
 
+	if field.IsValid() && field.CanSet() {
+		// Make sure the types actually match before Set
+		if field.Type() == reflect.TypeOf(hf) {
+			field.Set(reflect.ValueOf(hf))
+		}
+	} else {
+		// Falls back to Extra map
+		result.Extra[activeKey] = hf
+	}
 	return result
 }
 
-// Helper to grab fields not defined in the struct from the raw JSON
-// func extractExtraFields(data []byte) map[string]hashedField {
-// 	var raw map[string]hashedField
-// 	json.Unmarshal(data, &raw)
-// 	fixed := map[string]bool{
-// 		"Address": true, "Age": true, "BirthDate": true, 
-// 		"CertificateName": true, "Name": true, "PublicAddress": true, "UniqueID": true,
-// 	}
-// 	extra := make(map[string]hashedField)
-// 	for k, v := range raw {
-// 		if !fixed[k] {
-// 			fmt.Println("k,v",k,v)
-// 			// If it looks like a hashedField map, convert it
-// 				if _, hasHash := m["Hash"]; hasHash {
-// 					extra[k] = hashedField{
-// 						Hash:  fmt.Sprint(v["Hash"]),
-// 						Key:   fmt.Sprint(v["Key"]),
-// 						Salt:  fmt.Sprint(v["Salt"]),
-// 						Value: fmt.Sprint(v["Value"]),
-// 					}
-// 					continue
-// 				}
-			
-// 			extra[k] = v
-// 		}
-// 	}
-// 	return extra
-// }
 
-func getDownloadDir()(string,error){
+func getDownloadDir() (string, error) {
 	var downloadDir string
 
 	// 1. Try to get the localized/configured path via xdg-user-dir (Linux standard)
@@ -136,14 +127,14 @@ func getDownloadDir()(string,error){
 	if downloadDir == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("error getting download dir %w",err)
+			return "", fmt.Errorf("error getting download dir %w", err)
 		}
 		downloadDir = filepath.Join(home, "Downloads")
 	}
 
 	// 3. Create your app-specific subfolder
 	finalPath := filepath.Join(downloadDir, "ProofChain")
-	
+
 	// Perm 0755: Owner can Read/Write/Execute, others can Read/Execute
 	if err := os.MkdirAll(finalPath, 0755); err != nil {
 		return "", err
