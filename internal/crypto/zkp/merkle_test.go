@@ -98,14 +98,14 @@ func TestVerifyProof_Scenarios(t *testing.T) {
 
 	t.Run("Wrong Root Check", func(t *testing.T) {
 		p := Proof{
-			RootHash:    root,
+			//fake root
+			RootHash:    Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
 			Attribute:   "Name",
 			Value:       saltedCert.SaltedFields["Name"].Value,
 			Salt:        saltedCert.SaltedFields["Name"].Salt,
 			MerkleProof: allLeaves,
 		}
-		fakeRoot := Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-		if ok := VerifyProof(p, fakeRoot); ok {
+		if ok := VerifyProof(p, Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")); ok {
 			t.Errorf("Expected failure: Proof is valid but root hash doesn't match expectedRoot")
 		}
 	})
