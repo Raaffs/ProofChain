@@ -112,11 +112,14 @@ func (app *App)IsApprovedInstitute()bool{
 
 func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Document,string,error){
 	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
-		log.Println(err)
+		app.logger.Error(
+			"error generating proof",
+			"err",err,
+		)
 		return models.Document{},"",fmt.Errorf("an error occurred while issuing certificate")
 	}
 	json, err := json.Marshal(saltedCertificate);if err!=nil{
-		log.Println("Error marshaling the certificate: ",err)
+		app.logger.Error("Error Marshalling salted certificate", "err", err)
 		return models.Document{},"",fmt.Errorf("invalid certificate format")
 	}
 	encryptedCertificate,err:=app.Encrypt(json,certificate.PublicAddress);if err!=nil{
@@ -134,7 +137,12 @@ func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Doc
 func (app *App) getDecryptedCertificate(hash, instituteName, requesterAddress string) ([]byte, error) {
     encryptedCert, err := app.storage.RetrieveDocument(hash)
     if err != nil {
-        log.Println("Error retrieving document:", err)
+        app.logger.Error(
+			"Error retrieving document",
+			"storage endpoint",app.config.Services.STORAGE,
+			"hash",hash,
+			"err",err,
+		)
         return nil, fmt.Errorf("error retrieving document")
     }
 

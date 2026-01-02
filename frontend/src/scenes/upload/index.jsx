@@ -2,7 +2,6 @@ import { Box, Button, Snackbar, IconButton, TextField } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
-import { ClassNames } from "@emotion/react";
 import { useState } from "react";
 import { UploadDocument } from "../../../wailsjs/go/main/App";
 import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";

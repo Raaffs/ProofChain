@@ -71,19 +71,12 @@ func (d *Downloader) Exec() error {
 		proofK := d.extractProofValues(k, v)
 		
 		if err := d.store(k, proofK); err != nil {
-			d.logger.Error(
-				"Failed to store field proof", 
-				"field", k, 
-				"directory", d.TargetDir, 
-				"error", err,
-			)
+			d.logger.Error("Failed to store field proof", "field", k, "directory", d.TargetDir, "error", err)
 			errs = append(errs, err)
 			continue
 		}
-		
 		d.logger.Info("Field proof saved", "field", k)
 	}
-
 	if len(errs) > 0 {
 		return fmt.Errorf("completed with %d failures", len(errs))
 	}

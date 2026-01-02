@@ -9,6 +9,7 @@ import RemoveRedEyeSharpIcon from "@mui/icons-material/RemoveRedEyeSharp";
 import DownloadForOfflineSharpIcon from "@mui/icons-material/DownloadForOfflineSharp";
 import { ViewDigitalCertificate } from "../../../wailsjs/go/main/App";
 import IssueCard from "../../components/cards/certificate";
+import PopUp from "../../components/PopUp";
 const ApprovedDocuments = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -178,6 +179,25 @@ const ApprovedDocuments = () => {
       m="20px"
       sx={{ width: "dynamic", maxWidth: "95%", justifyContent: "center" }}
     >
+            {error && (
+        <PopUp
+          Error={error}
+          Message=""
+          onClose={() => {
+            setError(null);
+          }}
+        />
+      )}
+      {message && (
+        <PopUp
+          Message={message}
+          Error={null}
+          onClose={() => {
+            setError(null);
+          }}
+        />
+      )}
+
       <Header title="Approved Documents" />
       {error && (
         <Typography
