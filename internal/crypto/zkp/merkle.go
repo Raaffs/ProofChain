@@ -1,6 +1,7 @@
 package zkp
 
 import (
+	"slices"
 	"fmt"
 	"sort"
 
@@ -121,28 +122,26 @@ func (id *MerkleProof) Disclose(attribute string) (Proof, error) {
 // VerifyProof checks if a disclosed proof matches the expected root hash.
 // This runs on the client/verifier side.
 func VerifyProof(p Proof, expectedRoot Hash) bool {
-	// 1. Re-calculate the leaf hash: Hash(Value + Salt)
-	leafHash := HashData([]byte(p.Value), []byte(p.Salt))
-	
-	currentHash := leafHash
+    // 1. Re-calculate the leaf hash for the field we are checking
+    disclosedLeafHash := HashData([]byte(p.Value), []byte(p.Salt))
+    
+    // 2. We need to find this hash in the list of all leaves provided in the proof.
+    // This proves the disclosed value actually belongs to the set.
+    found := slices.Contains(p.MerkleProof, disclosedLeafHash)
+    
+    if !found {
+        // If the hash isn't in the list, the user is showing 
+        // a valid value/salt for a DIFFERENT certificate.
+        return false 
+    }
 
-	// 2. Traverse the Merkle path to reconstruction the root
-	for _, sibling := range p.MerkleProof {
-		h1 := currentHash
-		h2 := sibling
-		
-		// Apply canonical ordering (same as in construction)
-		if h1 < h2 {
-			currentHash = HashData([]byte(h1), []byte(h2))
-		} else {
-			currentHash = HashData([]byte(h2), []byte(h1))
-		}
-	}
+    // 3. Re-calculate the root using YOUR recursive function
+    // We pass the full list of leaves (p.MerkleProof)
+    calculatedRoot := calculateMerkleRoot(p.MerkleProof)
 
-	// 3. Compare calculated root with expected root
-	return currentHash == expectedRoot && currentHash == p.RootHash
+    // 4. Verification
+    return calculatedRoot == expectedRoot && calculatedRoot == p.RootHash
 }
-
 
 // calculateMerkleRoot calculates the root hash from an ordered list of leaf hashes.
 func calculateMerkleRoot(leaves []Hash) Hash {

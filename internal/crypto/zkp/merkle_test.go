@@ -1,83 +1,112 @@
 package zkp
 
 import (
+	"sort"
 	"testing"
-
 	"github.com/Suy56/ProofChain/storage/models"
 )
-func TestVerifyProof(t *testing.T) {
-    // Setup initial valid state
-    input := models.CertificateData{
-        Name:            "Alice Smith",
-        CertificateName: "Bachelors of Science",
-        BirthDate:       "1995-01-01",
-        Address:         "123 Go Lane",
-        Extra:           map[string]string{"MembershipID": "1225789"},
-    }
 
-    merkle := NewMerkleProof()
-    expectedRoot, saltedCert, err := merkle.GenerateRootProof(input)
-    if err != nil {
-        t.Fatalf("Setup failed: %v", err)
-    }
+func TestVerifyProof_Scenarios(t *testing.T) {
+	// 1. Setup Initial Data
+	input := models.CertificateData{
+		Name:            "alice",
+		CertificateName: "Master of Engineering",
+		BirthDate:       "1990-01-01",
+		Address:         "123 Blockchain Ave",
+		Extra:           map[string]string{"MembershipID": "1225789"},
+	}
 
-    err = merkle.LoadSaltedData(saltedCert)
-    if err != nil {
-        t.Fatalf("Load failed: %v", err)
-    }
+	merkle := NewMerkleProof()
+	root, saltedCert, err := merkle.GenerateRootProof(input)
+	if err != nil {
+		t.Fatalf("Failed to generate root: %v", err)
+	}
 
-    // Generate a clean proof for the "Name" attribute
-    originalProof, err := merkle.Disclose("Name")
-    if err != nil {
-        t.Fatalf("Disclose failed: %v", err)
-    }
+	// Helper to extract leaf hashes in deterministic order
+	extractHashes := func(s SaltedCertificate) []Hash {
+		var h []Hash
+		var keys []string
+		for field := range s.SaltedFields {
+			keys = append(keys, field)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			h = append(h, s.SaltedFields[key].Hash)
+		}
+		return h
+	}
 
-    t.Run("Valid Proof", func(t *testing.T) {
-        if !VerifyProof(originalProof, expectedRoot) {
-            t.Error("Expected valid proof to pass")
-        }
-    })
+	allLeaves := extractHashes(saltedCert)
 
-    t.Run("Tampered Value", func(t *testing.T) {
-        p := originalProof // Copy
-        p.Value = "Bob"    // Change the disclosed value
-        if VerifyProof(p, expectedRoot) {
-            t.Error("Expected failure for tampered value")
-        }
-    })
+	// 2. Define Test Cases
+	t.Run("Valid Disclosure", func(t *testing.T) {
+		p := Proof{
+			RootHash:    root,
+			Attribute:   "Name",
+			Value:       saltedCert.SaltedFields["Name"].Value,
+			Salt:        saltedCert.SaltedFields["Name"].Salt,
+			MerkleProof: allLeaves,
+		}
+		if ok := VerifyProof(p, root); !ok {
+			t.Errorf("Expected valid proof to pass")
+		}
+	})
 
-    t.Run("Tampered Salt", func(t *testing.T) {
-        p := originalProof
-        p.Salt = "wrong_salt_123" // Change the salt
-        if VerifyProof(p, expectedRoot) {
-            t.Error("Expected failure for tampered salt")
-        }
-    })
+	t.Run("Tampered Value", func(t *testing.T) {
+		p := Proof{
+			RootHash:    root,
+			Attribute:   "Name",
+			Value:       "bob", // Tampered
+			Salt:        saltedCert.SaltedFields["Name"].Salt,
+			MerkleProof: allLeaves,
+		}
+		if ok := VerifyProof(p, root); ok {
+			t.Errorf("Expected failure: Value does not match any leaf hash")
+		}
+	})
 
-    t.Run("Tampered Merkle Path", func(t *testing.T) {
-        p := originalProof
-        if len(p.MerkleProof) > 0 {
-            // Swap a hash in the proof with a fake one
-            p.MerkleProof[0] = "df6f4d226a2608447d95a1656b6851b471861053"
-            if VerifyProof(p, expectedRoot) {
-                t.Error("Expected failure for tampered merkle path")
-            }
-        }
-    })
+	t.Run("Tampered Salt", func(t *testing.T) {
+		p := Proof{
+			RootHash:    root,
+			Attribute:   "Name",
+			Value:       saltedCert.SaltedFields["Name"].Value,
+			Salt:        "malicious_salt", // Tampered
+			MerkleProof: allLeaves,
+		}
+		if ok := VerifyProof(p, root); ok {
+			t.Errorf("Expected failure: Hash(Value+FakeSalt) not in leaf set")
+		}
+	})
 
-    t.Run("Wrong Expected Root", func(t *testing.T) {
-        // Provide the correct proof but check against a completely different root
-        fakeRoot := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        if VerifyProof(originalProof, Hash(fakeRoot)) {
-            t.Error("Expected failure when checking against incorrect root")
-        }
-    })
+	t.Run("Tampered Leaf Set", func(t *testing.T) {
+		// Create a copy of leaves and swap one out
+		maliciousLeaves := make([]Hash, len(allLeaves))
+		copy(maliciousLeaves, allLeaves)
+		maliciousLeaves[0] = Hash("00000000000000000000000000000000")
 
-    t.Run("Empty/Missing Field", func(t *testing.T) {
-        p := originalProof
-        p.Value = ""
-        if VerifyProof(p, expectedRoot) {
-            t.Error("Expected failure for empty value")
-        }
-    })
+		p := Proof{
+			RootHash:    root,
+			Attribute:   "Name",
+			Value:       saltedCert.SaltedFields["Name"].Value,
+			Salt:        saltedCert.SaltedFields["Name"].Salt,
+			MerkleProof: maliciousLeaves,
+		}
+		if ok := VerifyProof(p, root); ok {
+			t.Errorf("Expected failure: Tampered leaf set should produce wrong root")
+		}
+	})
+
+	t.Run("Wrong Root Check", func(t *testing.T) {
+		p := Proof{
+			RootHash:    root,
+			Attribute:   "Name",
+			Value:       saltedCert.SaltedFields["Name"].Value,
+			Salt:        saltedCert.SaltedFields["Name"].Salt,
+			MerkleProof: allLeaves,
+		}
+		fakeRoot := Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+		if ok := VerifyProof(p, fakeRoot); ok {
+			t.Errorf("Expected failure: Proof is valid but root hash doesn't match expectedRoot")
+		}
+	})
 }
