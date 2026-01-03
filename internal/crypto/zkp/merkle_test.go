@@ -96,7 +96,7 @@ func TestVerifyProof_Scenarios(t *testing.T) {
 		}
 	})
 
-	t.Run("Wrong Root Check", func(t *testing.T) {
+	t.Run("Malicious institute and requestor roots", func(t *testing.T) {
 		p := Proof{
 			//fake root
 			RootHash:    Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),

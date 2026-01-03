@@ -23,15 +23,7 @@ type SaltedCertificate struct {
 
 type ZKProof interface {
 	New() 
-	
-	// For Issuer: Generates Merkle Root and Salted Certificate for transmission
 	GenerateRootProof(c models.CertificateData) (Hash, SaltedCertificate, error)
-
-	// For Requestor: Loads salted data to prepare for disclosure
-	LoadSaltedData(sc SaltedCertificate) error
-
-	// For Requestor: Retrieves the proof for a single attribute
-	Disclose(attribute string) (Proof, error)
 }
 
 // Proof contains the components needed for a third-party verifier.

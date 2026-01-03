@@ -16,7 +16,7 @@ import (
 	"github.com/Suy56/ProofChain/internal/users"
 	"github.com/Suy56/ProofChain/storage/models"
 	storageclient "github.com/Suy56/ProofChain/storage/storage_client"
-	"github.com/Suy56/ProofChain/wallet"
+	"github.com/Suy56/ProofChain/internal/wallet"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 	"golang.org/x/sync/errgroup"
@@ -193,18 +193,12 @@ func (app *App) Register(privateKeyString, name, password string, isInstitute bo
 		return nil
 	})
 	if err := g.Wait(); err != nil {
-		app.logger.Error(
-			"Error registering user",
-			"err", err,
-		)
+		app.logger.Error("Error registering user", "err", err)
 		return fmt.Errorf("error connecting to blockchain")
 	}
 
 	if err := app.config.AddProfile(name, accountPath, keyPath, identityPath); err != nil {
-		app.logger.Error(
-			"Error adding profile",
-			"err", err,
-		)
+		app.logger.Error("Error adding profile","err", err)
 		return fmt.Errorf("Failed to create profile")
 	}
 
@@ -224,10 +218,7 @@ func (app *App) Register(privateKeyString, name, password string, isInstitute bo
 		requester := &users.Requester{Conn: c, Instance: i}
 		app.account = requester
 		if err := app.account.Register(publicKey, name); err != nil {
-			app.logger.Error(
-				"error registering requester",
-				"err", err,
-			)
+			app.logger.Error("error registering requester","err", err)
 			return fmt.Errorf("error registering institution")
 		}
 		app.account.SetName(name)
@@ -240,34 +231,26 @@ func (app *App) UploadDocument(institute, name, description string) error {
 	if err := users.UpdateNonce(app.account); err != nil {
 		app.logger.Error(
 			"Invalid transaction nonce",
+			"nonce",app.account.GetClient().TxOpts.Nonce,
 			"err", err,
 		)
 		return fmt.Errorf("invalid transaction nonce")
 	}
 	file, path, err := app.GetFileAndPath()
 	if err != nil {
-		app.logger.Error(
-			"Error uploading File",
-			"err", err,
-		)
+		app.logger.Error("Error uploading File","err", err)
 		return fmt.Errorf("Error uploading file")
 	}
 
 	encryptedDocument, err := app.Encrypt(file, institute)
 	if err != nil {
-		app.logger.Error(
-			"An error occurred while encrypting document",
-			"err", err,
-		)
+		app.logger.Error("An error occurred while encrypting document","err", err)
 		return fmt.Errorf("An error occurred while encrypting document")
 	}
 
 	shaHash, err := Keccak256File(path)
 	if err != nil {
-		app.logger.Error(
-			"Error hashing file",
-			"err", err,
-		)
+		app.logger.Error("Error hashing file","err", err,)
 		return fmt.Errorf("Error uploading file")
 	}
 	document.EncryptedDocument = encryptedDocument
@@ -315,10 +298,7 @@ func (app *App) GetAllDocs() ([]blockchain.VerificationDocument, error) {
 func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	docs, err := app.account.GetDocuments()
 	if err != nil {
-		app.logger.Error(
-			"Error retrieving accepted documents",
-			"err", err,
-		)
+		app.logger.Error("Error retrieving accepted documents","err", err)
 		return nil, err
 	}
 	verifiedDocs := app.account.GetAcceptedDocuments(docs)
@@ -328,10 +308,7 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error) {
 	docs, err := app.account.GetDocuments()
 	if err != nil {
-		app.logger.Error(
-			"Error retrieving documents for rejection check",
-			"err", err,
-		)
+		app.logger.Error("Error retrieving documents for rejection check","err", err)
 		return nil, err
 	}
 	rejectedDocs := app.account.GetRejectedDocuments(docs)
@@ -341,10 +318,7 @@ func (app *App) GetRejectedDocuments() ([]blockchain.VerificationDocument, error
 func (app *App) GetPendingDocuments() ([]blockchain.VerificationDocument, error) {
 	docs, err := app.account.GetDocuments()
 	if err != nil {
-		app.logger.Error(
-			"Error retrieving documents for pending check",
-			"err", err,
-		)
+		app.logger.Error("Error retrieving documents for pending check","err", err,)
 		return nil, err
 	}
 	pendingDocs := app.account.GetPendingDocuments(docs)
@@ -354,6 +328,7 @@ func (app *App) CreateDigitalCopy(status int, hash string, certificate models.Ce
 	if err := users.UpdateNonce(app.account); err != nil {
 		app.logger.Error(
 			"Invalid transaction nonce",
+			"nonce",app.account.GetClient().TxOpts.Nonce,
 			"err", err,
 		)
 		return err
@@ -373,10 +348,7 @@ func (app *App) CreateDigitalCopy(status int, hash string, certificate models.Ce
 				uint8(status),
 				hash,
 			); err != nil {
-			app.logger.Error(
-				"Error approving document (rejection path)",
-				"err", err,
-			)
+			app.logger.Error("Error approving document (rejection path)","err", err)
 			return fmt.Errorf("An error occurred ")
 		}
 		return nil
@@ -386,18 +358,12 @@ func (app *App) CreateDigitalCopy(status int, hash string, certificate models.Ce
 	}
 	doc, publicCommit, err := app.PrepareDigitalCopy(certificate)
 	if err != nil {
-		app.logger.Error(
-			"Error preparing digital copy",
-			"err", err,
-		)
+		app.logger.Error("Error preparing digital copy","err", err)
 		return fmt.Errorf("An error occurred while issuing document")
 	}
 
 	if err := app.storage.UploadDocument(doc); err != nil {
-		app.logger.Error(
-			"Error uploading certificate to storage",
-			"err", err,
-		)
+		app.logger.Error("Error uploading certificate to storage","err", err)
 		return fmt.Errorf("Error creating certificate")
 	}
 
@@ -408,10 +374,7 @@ func (app *App) CreateDigitalCopy(status int, hash string, certificate models.Ce
 		0,
 		publicCommit,
 	); err != nil {
-		app.logger.Error(
-			"Error verifying document on blockchain",
-			"err", err,
-		)
+		app.logger.Error("Error verifying document on blockchain","err", err)
 		return nil
 	}
 	return nil
@@ -421,16 +384,14 @@ func (app *App) IssueCertificate(certificate models.CertificateData) error {
     if err := users.UpdateNonce(app.account); err != nil {
         app.logger.Error(
             "Invalid transaction nonce",
+			"nonce",app.account.GetTxOpts().Nonce,
             "err", err,
         )
         return err
     }
     doc, publicCommit, err := app.PrepareDigitalCopy(certificate)
     if err != nil {
-        app.logger.Error(
-            "Error preparing digital copy",
-            "err", err,
-        )
+        app.logger.Error("Error preparing digital copy","err", err)
         return fmt.Errorf("An error occurred while issuing certificate")
     }
     if _, err := app.account.GetInstance().Instance.AddCertificate(
@@ -439,17 +400,11 @@ func (app *App) IssueCertificate(certificate models.CertificateData) error {
         app.account.GetName(),
         common.HexToAddress(certificate.PublicAddress),
     ); err != nil {
-        app.logger.Error(
-            "Error adding certificate to blockchain",
-            "err", err,
-        )
+        app.logger.Error("Error adding certificate to blockchain","err", err)
         return fmt.Errorf("an error occurred while issuing certificate")
     }
     if err := app.storage.UploadDocument(doc); err != nil {
-        app.logger.Error(
-            "Error uploading document to storage",
-            "err", err,
-        )
+        app.logger.Error("Error uploading document to storage","err", err)
         return fmt.Errorf("Error issuing certificate")
     }
     return nil
@@ -511,18 +466,12 @@ func (app *App) Download(hash, instituteName, requesterAddress string) (string, 
 
 	downloader, err := download.NewDownloader(decryptedCert, NewLogger(os.Stdout))
 	if err != nil {
-		app.logger.Error(
-			"error creating new downloader",
-			"err", err,
-		)
+		app.logger.Error("error creating new downloader","err", err)
 		return "", fmt.Errorf("an error occurred while downloading")
 	}
 
 	if err := downloader.Exec(); err != nil {
-		app.logger.Error(
-			"error downloading",
-			"err", err,
-		)
+		app.logger.Error("error downloading", "err", err)
 	}
 	return "Downloaded successfully", nil
 }

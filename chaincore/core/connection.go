@@ -3,7 +3,7 @@ package blockchain
 import (
 	"context"
 	"crypto/ecdsa"
-	"log"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -25,64 +25,57 @@ func (conn *ClientConnection)SetClient(c *ethclient.Client) {
 	conn.Client=c
 }
 
-func (conn *ClientConnection)New(privateKey string) error {
-	conn.ctx=context.Background()
-	chainID,err:=conn.Client.ChainID(conn.ctx);if err!=nil{
-		log.Println("Error  getting chain ID:",err)
-		return err
-	}
-	
-	conn.ChainId=chainID
+func (conn *ClientConnection) New(privateKey string) error {
+    conn.ctx = context.Background()
+    chainID, err := conn.Client.ChainID(conn.ctx)
+    if err != nil {
+        return fmt.Errorf("Error getting chain ID: %v", err)
+    }
+    
+    conn.ChainId = chainID
 
-	if err:=conn.setTxOpts(privateKey); err!=nil{
-		log.Println("Error setting txOpts:",err)
-		return err
-	}
+    if err := conn.setTxOpts(privateKey); err != nil {
+        return fmt.Errorf("Error setting txOpts: %v", err)
+    }
 
-	return nil
+    return nil
 }
 
 func (conn *ClientConnection) setTxOpts(privateKeyString string) error {
-	privateKey, err := crypto.HexToECDSA(privateKeyString)
-	if err != nil {
-		log.Println("Error parsing private key:", err)
-		return err
-	}
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	if !ok {
-		log.Println("Error casting public key to ECDSA")
-		return err
-	}
-	nonce, err := conn.Client.PendingNonceAt(conn.ctx, fromAddress)
-	if err != nil {
-		log.Println("Error getting nonce:", err)
-		return err 
-	}
+    privateKey, err := crypto.HexToECDSA(privateKeyString)
+    if err != nil {
+        return fmt.Errorf("Error parsing private key: %v", err)
+    }
+    publicKey := privateKey.Public()
+    publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+    fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+    if !ok {
+        return fmt.Errorf("Error casting public key to ECDSA")
+    }
+    nonce, err := conn.Client.PendingNonceAt(conn.ctx, fromAddress)
+    if err != nil {
+        return fmt.Errorf("Error getting nonce: %v", err)
+    }
 
-	gasPrice, err := conn.Client.SuggestGasPrice(conn.ctx)
-	if err != nil {
-		log.Println("Error getting gas price:", err)
-		return err
-	}
-	chainID, err := conn.Client.ChainID(conn.ctx)
-	if err != nil {
-		log.Println("Error getting chain ID:", err)
-		return err 
-	}
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
-	if err != nil {
-		log.Println("Error creating auth:", err)
-		return err
-	}
-	auth.Nonce = big.NewInt(int64(nonce))
-	auth.Value = big.NewInt(0)
-	auth.GasLimit = uint64(3000000)
-	auth.GasPrice = gasPrice
-	conn.TxOpts = auth
-	conn.setCallOpts(fromAddress)
-	return nil
+    gasPrice, err := conn.Client.SuggestGasPrice(conn.ctx)
+    if err != nil {
+        return fmt.Errorf("Error getting gas price: %v", err)
+    }
+    chainID, err := conn.Client.ChainID(conn.ctx)
+    if err != nil {
+        return fmt.Errorf("Error getting chain ID: %v", err)
+    }
+    auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+    if err != nil {
+        return fmt.Errorf("Error creating auth: %v", err)
+    }
+    auth.Nonce = big.NewInt(int64(nonce))
+    auth.Value = big.NewInt(0)
+    auth.GasLimit = uint64(3000000)
+    auth.GasPrice = gasPrice
+    conn.TxOpts = auth
+    conn.setCallOpts(fromAddress)
+    return nil
 }
 
 func (conn *ClientConnection)setCallOpts(fromAddress common.Address)  {

@@ -64,7 +64,7 @@ func main() {
 	}
 	
 	err := wails.Run(&options.App{
-		Title:  "ProofChainV2",
+		Title:  "ProofChainV3",
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{

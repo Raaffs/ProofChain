@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -21,24 +20,29 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-func GetECDSAPrivateKeyFromPEM(pk string)(*ecdh.PrivateKey,error){
-	block, _ := pem.Decode([]byte(pk))
-if block == nil || block.Type!= "PRIVATE KEY" {
-        log.Fatal("Failed to decode PEM block containing private key")
+func GetECDSAPrivateKeyFromPEM(pk string) (*ecdh.PrivateKey, error) {
+    block, _ := pem.Decode([]byte(pk))
+    if block == nil || block.Type != "PRIVATE KEY" {
+        return nil, fmt.Errorf("failed to decode PEM block containing private key")
     }
+
     privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-    if err!= nil {
-        log.Fatalf("Error parsing private key: %v", err)
+    if err != nil {
+        return nil, fmt.Errorf("error parsing private key: %w", err)
     }
+
     ecdsaPrivateKey, ok := privateKey.(*ecdsa.PrivateKey)
-    if!ok {
-        log.Fatal("Expected *ecdh.PrivateKey, got another type : ",ok)
+    if !ok {
+        // We use %T to show the actual type received for better debugging
+        return nil, fmt.Errorf("expected *ecdsa.PrivateKey, got %T", privateKey)
     }
-	ecdhPrivateKey,err:=ecdsaPrivateKey.ECDH()
-	if err!=nil{
-		return nil,err
-	}
-	return ecdhPrivateKey,nil
+
+    ecdhPrivateKey, err := ecdsaPrivateKey.ECDH()
+    if err != nil {
+        return nil, fmt.Errorf("failed to convert ECDSA to ECDH: %w", err)
+    }
+
+    return ecdhPrivateKey, nil
 }
 
 //The public key string retrieved from smart contract is converted to public key object
@@ -156,25 +160,22 @@ func Encrypt(sharedKey []byte, plaintext []byte)([]byte,error){
 func Decrypt(sharedKey []byte, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(sharedKey)
 	if err != nil {
-		log.Println("error decrypting ipfs hash : ",err)
-		return nil, err
+		return nil, fmt.Errorf("error generating new aes cipher %w",err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		log.Println("error decrypting ipfs hash : ",err)
-		return nil, err
+		return nil, fmt.Errorf("error generating new gcm block %w",err)
 	}
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
 		return nil, errors.New("ciphertext too short")
 	}
-	// Extract the nonce and the actual ciphertext
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
-	
+
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		log.Println("error decrypting ipfs hash : ",err)
-		return nil, err
+		return nil, fmt.Errorf("error decrypting gcm block %w",err)
+
 	}
 	return plaintext, nil
 }

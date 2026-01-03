@@ -9,13 +9,12 @@ import (
 	"os"
 
 	"github.com/Suy56/ProofChain/internal/crypto/keyUtils"
-	"github.com/Suy56/ProofChain/storage/models"
+	"github.com/Suy56/ProofChain/internal/crypto/zkp"
 	"github.com/Suy56/ProofChain/internal/users"
+	"github.com/Suy56/ProofChain/storage/models"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"golang.org/x/crypto/sha3"
 )
-
-
 
 // func (app *App)autoResvolvePublicKey(target string)(string,error)
 
@@ -111,7 +110,8 @@ func (app *App)IsApprovedInstitute()bool{
 }
 
 func (app *App)PrepareDigitalCopy(certificate models.CertificateData)(models.Document,string,error){
-	publicCommit,saltedCertificate,err:=app.proof.GenerateRootProof(certificate);if err!=nil{
+	proof:=zkp.NewMerkleProof()
+	publicCommit,saltedCertificate,err:=proof.GenerateRootProof(certificate);if err!=nil{
 		app.logger.Error(
 			"error generating proof",
 			"err",err,

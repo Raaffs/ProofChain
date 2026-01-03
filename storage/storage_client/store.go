@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/Suy56/ProofChain/storage/models"
@@ -30,7 +29,7 @@ func (c *Client) UploadDocument(doc models.Document) error {
 func (c *Client) RetrieveDocument(sha string) (models.Document, error) {
 	payload := map[string]string{"shahash": sha}
 	var result models.Document
-
+	
 	err := c.DoRequest("GET", "retrieve", payload, &result)
 	if err != nil {
 		return models.Document{}, err
@@ -52,7 +51,6 @@ func (c *Client) GetApprovedInstitution() ([]string, error) {
 
 func (c *Client) DoRequest(method, path string, body interface{}, out interface{}) error {
 	url := fmt.Sprintf("%s%s", c.BaseURL, path)
-	log.Println("do req: ",url)
 	var reqBody io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
@@ -87,7 +85,6 @@ func (c *Client) DoRequest(method, path string, body interface{}, out interface{
 	if err := json.Unmarshal(respData, out); err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
-	log.Println("done do req")
 	return nil
 }
 

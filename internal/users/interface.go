@@ -1,7 +1,7 @@
 package users
 
 import (
-	"log"
+	"fmt"
 	"math/big"
 
 	"github.com/Suy56/ProofChain/chaincore/core"
@@ -33,8 +33,7 @@ type User interface{
 
 func UpdateNonce(u User)error{
 	nonce,err:=u.GetClient().Client.PendingNonceAt(u.GetTxOpts().Context,u.GetTxOpts().From);if err!=nil{
-		log.Println("Error getting nonce :",err)
-		return err
+		return fmt.Errorf("error updating nonce %w",err)
 	}
 	u.GetTxOpts().Nonce=big.NewInt(int64(nonce))
 	return nil

@@ -46,8 +46,7 @@ func RetriveAccount(username, password, path string) (string, error) {
 
 	privateKey, err := keystore.DecryptKey(accountFile, password)
 	if err != nil {
-		fmt.Println("Error in retriving Account")
-		return "", err
+		return "", fmt.Errorf("Error in retriving Account %w",err)
 	}
 	privateKeyBytes := privateKey.PrivateKey.D.Bytes()
 	privateKeyHex := hex.EncodeToString(privateKeyBytes)

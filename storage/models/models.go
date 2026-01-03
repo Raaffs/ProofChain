@@ -6,13 +6,6 @@ type Document struct {
 	PublicAddress     string `bson:"publicAddress" json:"publicAddress"`
 }
 
-type Certificate struct{
-    Issuer string
-    Hash   string
-    //Data should contain object of type CertificateData in json format
-    Data []byte
-}
-
 type CertificateData struct {
     CertificateName string     			`json:"certificateName" bson:"certificateName"`
     PublicAddress   string     			`json:"publicAddress" bson:"publicAddress"`
