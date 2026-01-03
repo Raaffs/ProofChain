@@ -153,7 +153,7 @@ wails build
 <!-- UML -->
 ## UML
  ### 1. Uploading Documents
- <img width="1726" height="1363" alt="upload" src="https://github.com/user-attachments/assets/691bbee0-2e85-43f7-86fc-9ec532a17319" />
+<img width="1759" height="1335" alt="Sequence diagram(1)" src="https://github.com/user-attachments/assets/5cddf928-6f11-494f-bc87-1eecbf4f1ef9" />
 
 ---
  ### 2. Issue certificate or create digital copy
