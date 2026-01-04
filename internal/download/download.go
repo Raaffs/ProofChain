@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/Suy56/ProofChain/internal/utils"
@@ -36,19 +35,20 @@ type DownloadProof struct {
 type Downloader struct {
 	TargetDir string
 	ProofData DownloadProof
-	logger	  *slog.Logger
+	logger    *slog.Logger
 }
 
 type DocumentWrapper struct {
-    SaltedFields DownloadProof `json:"salted_fields"`
+	SaltedFields DownloadProof `json:"salted_fields"`
 }
+
 // NewDownloader initializes the downloader, determines the path, and unmarshals the data
 func NewDownloader(document []byte, logger *slog.Logger) (*Downloader, error) {
 	var wrapper DocumentWrapper
 	if err := json.Unmarshal(document, &wrapper); err != nil {
 		return nil, fmt.Errorf("could not decode certificate proof: %w", err)
 	}
-	doc:=wrapper.SaltedFields
+	doc := wrapper.SaltedFields
 	basePath, err := getDownloadDir()
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func NewDownloader(document []byte, logger *slog.Logger) (*Downloader, error) {
 	return &Downloader{
 		TargetDir: finalDir,
 		ProofData: doc,
-		logger: logger,
+		logger:    logger,
 	}, nil
 }
 
@@ -69,7 +69,7 @@ func (d *Downloader) Exec() error {
 
 	for k, v := range utils.Walk(d.ProofData) {
 		proofK := d.extractProofValues(k, v)
-		
+
 		if err := d.store(k, proofK); err != nil {
 			d.logger.Error("Failed to store field proof", "field", k, "directory", d.TargetDir, "error", err)
 			errs = append(errs, err)
@@ -83,7 +83,7 @@ func (d *Downloader) Exec() error {
 	return nil
 }
 
-func (d *Downloader) store(key string, proof DownloadProof) error {
+func (d *Downloader) store(key string, proof map[string]hashedField) error {
 	if err := os.MkdirAll(d.TargetDir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
@@ -97,39 +97,29 @@ func (d *Downloader) store(key string, proof DownloadProof) error {
 	return os.WriteFile(filename, data, 0644)
 }
 
-func (d *Downloader) extractProofValues(activeKey string, fullValue any) DownloadProof {
+func (d *Downloader) extractProofValues(activeKey string, fullValue any) map[string]hashedField {
 	slim := func(f hashedField) hashedField {
 		return hashedField{Hash: f.Hash, Key: f.Key}
 	}
 
 	v := d.ProofData
-	result := DownloadProof{
-		Address:         slim(v.Address),
-		Age:             slim(v.Age),
-		BirthDate:       slim(v.BirthDate),
-		CertificateName: slim(v.CertificateName),
-		Name:            slim(v.Name),
-		PublicAddress:   slim(v.PublicAddress),
-		UniqueID:        slim(v.UniqueID),
-		Extra:           make(map[string]hashedField),
+	result := map[string]hashedField{
+		"Address":         slim(v.Address),
+		"Age":             slim(v.Age),
+		"BirthDate":       slim(v.BirthDate),
+		"CertificateName": slim(v.CertificateName),
+		"Name":            slim(v.Name),
+		"PublicAddress":   slim(v.PublicAddress),
+		"UniqueID":        slim(v.UniqueID),
 	}
 
 	for k, val := range v.Extra {
-		result.Extra[k] = slim(val)
+		result[k] = slim(val)
 	}
-
-	rv := reflect.ValueOf(&result).Elem()
-	field := rv.FieldByName(activeKey)
 
 	hf, ok := fullValue.(hashedField)
-	if !ok {
-		return result
-	}
-
-	if field.IsValid() && field.CanSet() && field.Type() == reflect.TypeOf(hf) {
-		field.Set(reflect.ValueOf(hf))
-	} else {
-		result.Extra[activeKey] = hf
+	if ok {
+		result[activeKey] = slim(hf)
 	}
 	return result
 }
