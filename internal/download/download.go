@@ -69,7 +69,6 @@ func (d *Downloader) Exec() error {
 
 	for k, v := range utils.Walk(d.ProofData) {
 		proofK := d.extractProofValues(k, v)
-
 		if err := d.store(k, proofK); err != nil {
 			d.logger.Error("Failed to store field proof", "field", k, "directory", d.TargetDir, "error", err)
 			errs = append(errs, err)
@@ -116,10 +115,11 @@ func (d *Downloader) extractProofValues(activeKey string, fullValue any) map[str
 	for k, val := range v.Extra {
 		result[k] = slim(val)
 	}
-
 	hf, ok := fullValue.(hashedField)
+	d.logger.Info("current field","field",activeKey,"hash field",hf)
 	if ok {
-		result[activeKey] = slim(hf)
+		d.logger.Info("hash ok",fullValue)
+		result[activeKey] = hf
 	}
 	return result
 }
