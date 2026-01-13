@@ -299,7 +299,7 @@ func (app *App) GetAcceptedDocs() ([]blockchain.VerificationDocument, error) {
 	docs, err := app.account.GetDocuments()
 	if err != nil {
 		app.logger.Error("Error retrieving accepted documents","err", err)
-		return nil, err
+		return nil, fmt.Errorf("Error retrieving accepted documents")
 	}
 	verifiedDocs := app.account.GetAcceptedDocuments(docs)
 	return verifiedDocs, nil

@@ -69,7 +69,6 @@ func (d *Downloader) Exec() error {
 
 	for k, v := range utils.Walk(d.ProofData) {
 		proofK := d.extractProofValues(k, v)
-		d.logger.Info("proof","proof",proofK)
 		if err := d.store(k, proofK); err != nil {
 			d.logger.Error("Failed to store field proof", "field", k, "directory", d.TargetDir, "error", err)
 			errs = append(errs, err)
@@ -83,7 +82,7 @@ func (d *Downloader) Exec() error {
 	return nil
 }
 
-func (d *Downloader) store(key string, proof map[string]hashedField) error {
+func (d *Downloader) store(key string, proof any) error {
 	if err := os.MkdirAll(d.TargetDir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}

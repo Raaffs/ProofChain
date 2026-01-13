@@ -24,6 +24,7 @@ func Init(c Connect, i Connect, privateKey string, contractAddr string, clientUr
     return nil
 }
 
+//todo: turn this into a load balancer
 func Client(clientUrl string) (*ethclient.Client, error) {
     client, err := ethclient.Dial(clientUrl)
     if err != nil {
