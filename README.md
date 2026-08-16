@@ -117,7 +117,7 @@ Starkle is a privacy-preserving identity platform that allows users to selective
      cd Starkle/internal/crypto/zkp
    ```
    ```sh
-   NVCC_APPEND_FLAGS="-arch=sm_86 -DNDEBUG" \
+   NVCC_APPEND_FLAGS="-arch=sm_86 -DNDEBUG" \ #use your specific GPU architecture
    RISC0_GPU_BACKEND=cuda \
    cargo build --release --bin host
    ```
